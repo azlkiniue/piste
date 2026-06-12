@@ -1,0 +1,33 @@
+@import 'tailwindcss';
+
+/* Class-based dark mode: `dark:` utilities apply when a `.dark` ancestor exists.
+   The class is toggled on <html> (system default, with a persisted manual override). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+	color-scheme: light;
+}
+html.dark {
+	color-scheme: dark;
+}
+
+html,
+body {
+	height: 100%;
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+	}
+}
+
+/* Thin scrollbars for the timeline scroll containers. */
+.scrollbar-thin {
+	scrollbar-width: thin;
+	scrollbar-color: color-mix(in oklab, currentColor 25%, transparent) transparent;
+}

@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content="Piste — a Gantt-style timeline of everyone who has been to space, from Yuri Gagarin to the people in orbit today. Filter by nationality, agency, gender and more." />
+		<!-- Set the theme before paint to avoid a flash (system default, persisted manual override). -->
+		<script>
+			try {
+				const stored = localStorage.getItem('piste-theme');
+				const dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+				document.documentElement.classList.toggle('dark', dark);
+			} catch (e) {}
+		</script>
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents">%sveltekit.body%</div>
+	</body>
+</html>

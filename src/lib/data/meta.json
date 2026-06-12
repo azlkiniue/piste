@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-06-12T11:30:48.657Z",
+  "asOf": "2026-06-12",
+  "sources": [
+    {
+      "name": "Wikidata",
+      "url": "https://www.wikidata.org",
+      "license": "CC0"
+    },
+    {
+      "name": "Open Notify — People in Space",
+      "url": "http://open-notify.org",
+      "license": "Public"
+    },
+    {
+      "name": "Launch Library 2 (The Space Devs)",
+      "url": "https://thespacedevs.com/llapi",
+      "license": "CC BY-NC 4.0"
+    }
+  ],
+  "counts": {
+    "people": 697,
+    "flights": 1513,
+    "inSpace": 10,
+    "orbital": 1461,
+    "suborbital": 52,
+    "countries": 52,
+    "agencies": 12
+  },
+  "coverage": {
+    "genderKnown": 697,
+    "withImage": 658,
+    "withAgency": 665,
+    "realLandingFlights": 1454,
+    "approxFlights": 59
+  },
+  "inSpaceUnmatched": [
+    "Oleg Kononenko",
+    "Nikolay Chub",
+    "Tracy Caldwell Dyson",
+    "Matthew Dominick",
+    "Michael Barratt",
+    "Jeanette J. Epps",
+    "Alexander Grebenkin",
+    "Barry E. Wilmore",
+    "Sunita Williams",
+    "Li Guangsu",
+    "Li Cong",
+    "Ye Guangfu"
+  ]
+}

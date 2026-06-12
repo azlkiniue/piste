@@ -1,0 +1,64 @@
+<script lang="ts">
+	import { base } from '$app/paths';
+	import metaData from '$lib/data/meta.json';
+	import type { Meta } from '$lib/types';
+
+	const meta = metaData as Meta;
+	const generated = new Date(meta.generatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+</script>
+
+<svelte:head>
+	<title>About — Piste</title>
+</svelte:head>
+
+<div class="mx-auto max-w-2xl px-5 py-10 leading-relaxed">
+	<a href="{base}/" class="text-sm text-zinc-500 underline-offset-2 hover:text-zinc-800 hover:underline dark:hover:text-zinc-200">← Back to the timeline</a>
+
+	<h1 class="mt-6 text-3xl font-bold tracking-tight">Piste</h1>
+	<p class="mt-2 text-zinc-600 dark:text-zinc-300">
+		A Gantt-style timeline of everyone who has been to space — from Yuri Gagarin in 1961 to the people in orbit
+		right now. <em>Piste</em> means a trail or track: each bar traces a person's time off the planet.
+	</p>
+
+	<h2 class="mt-8 text-lg font-semibold">How it works</h2>
+	<p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+		Every spaceflight is a separate bar on a person's row (launch → landing). Station stays that span several
+		ferries — a Soyuz up, a different Soyuz down, with expeditions in between — are merged into one continuous
+		trip, so the bar reflects real time in space rather than double-counting overlapping records. Suborbital
+		hops (Blue Origin, Virgin Galactic, X-15) are included and can be filtered out.
+	</p>
+	<p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+		The whole dataset is baked into the page at build time — there are no live API calls, so the site is fast,
+		works offline, and hosts anywhere static.
+	</p>
+
+	<h2 class="mt-8 text-lg font-semibold">Data sources</h2>
+	<ul class="mt-2 space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
+		<li>
+			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a>
+			<span class="text-zinc-400">· CC0</span> — the primary source: people, gender, citizenship, photos, and
+			per-mission launch/landing dates via crew links.
+		</li>
+		<li>
+			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="http://open-notify.org" target="_blank" rel="noopener">Open Notify</a>
+			<span class="text-zinc-400">· public</span> — cross-check for who is in space now.
+		</li>
+		<li>
+			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="https://thespacedevs.com/llapi" target="_blank" rel="noopener">Launch Library 2</a>
+			<span class="text-zinc-400">· CC BY-NC 4.0</span> — optional enrichment for agency, spacewalks and photos.
+		</li>
+	</ul>
+
+	<h2 class="mt-8 text-lg font-semibold">Caveats</h2>
+	<ul class="mt-2 list-disc space-y-1.5 pl-5 text-sm text-zinc-600 dark:text-zinc-300">
+		<li><strong>Agency</strong> is inferred from nationality where an explicit affiliation isn't recorded, so it's approximate (Europeans are grouped under ESA). It sharpens as Launch Library 2 enrichment is applied.</li>
+		<li><strong>Status</strong> is <em>In space / Living / Deceased</em>; "in space now" is a snapshot taken when the data was built.</li>
+		<li>A handful of early or suborbital flights may be missing if Wikidata doesn't link their crew.</li>
+	</ul>
+
+	<div class="mt-10 border-t border-zinc-200 pt-4 text-xs text-zinc-400 dark:border-zinc-800">
+		{meta.counts.people.toLocaleString()} people · {meta.counts.flights.toLocaleString()} flights ·
+		{meta.counts.countries} countries · data built {generated}.
+		Built with SvelteKit, Tailwind and Bun.
+	</div>
+</div>
