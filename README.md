@@ -34,16 +34,33 @@ with:
 bun run update-data      # Wikidata + open-notify — no rate limits, ~1 min
 ```
 
-`update-data` is the primary, self-sufficient pipeline. **Launch Library 2** enrichment (cleaner
-agency, spacewalk counts, extra photos) is optional and rate-limited (~15 calls/hour on the free
-tier), so it runs separately and caches its pages:
+`update-data` is the primary, self-sufficient pipeline. **Launch Library 2** enrichment is optional
+but recommended — it is the authoritative source for two things Wikidata gets wrong:
+
+- **Flight timelines** — each person's flights are rebuilt by zipping their LL2 launches with their
+  returns, so the Gantt bars show real intervals (and seat-swap up/down craft, e.g. Kononenko's
+  record MS-24→MS-25 mission).
+- **Days in space** — taken from LL2's lifetime `time_in_space`, but only when those rebuilt flights
+  corroborate it. Wikidata derives days from each *spacecraft's* launch/landing dates, over-counting
+  every seat-swapping crew member (a visitor inherits the craft's whole 6-month span instead of their
+  ~10-day stay): Kononenko →1110, Whitson →695, Avdeyev 1142→747. The dozen Apollo/Gemini/Skylab
+  veterans whose LL2 `time_in_space` is itself buggy (e.g. Conrad) keep their correct Wikidata figure.
+
+It fetches the astronaut list with `?mode=detailed` (flights & landings inlined), so a full refresh
+is **~9 paginated calls**. LL2's free tier is heavily rate-limited (~15 calls/hour), so the script
+paces calls, honours `Retry-After`, backs off, and caches every page — it **resumes** wherever it
+left off. It also fills cleaner agency, spacewalk counts and missing photos.
 
 ```bash
-bun run enrich-ll2       # run AFTER update-data; re-run later to resume
+bun run enrich-ll2                     # run AFTER update-data; re-run later to resume
+MAX_LL2_CALLS=100 bun run enrich-ll2   # cap network calls this run (resume later)
+MAX_LL2_CALLS=0   bun run enrich-ll2   # apply cached pages only, no network
+LL2_DELAY_MS=4000 bun run enrich-ll2   # gentler pacing (default 2000ms)
+LL2_API_KEY=…     bun run enrich-ll2   # authenticated tier — higher throttle ceiling
 ```
 
 Sources: **Wikidata** (CC0, primary), **Open Notify** (in-space cross-check), **Launch Library 2**
-(CC BY-NC 4.0, optional). See the in-app About page for methodology and caveats.
+(CC BY-NC 4.0 — authoritative day counts & timelines). See the in-app About page for methodology.
 
 ## Deploy
 

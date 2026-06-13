@@ -20,19 +20,19 @@
   ],
   "counts": {
     "people": 697,
-    "flights": 1513,
+    "flights": 1546,
     "inSpace": 10,
-    "orbital": 1461,
-    "suborbital": 52,
+    "orbital": 1437,
+    "suborbital": 109,
     "countries": 52,
     "agencies": 12
   },
   "coverage": {
     "genderKnown": 697,
-    "withImage": 658,
-    "withAgency": 665,
-    "realLandingFlights": 1454,
-    "approxFlights": 59
+    "withImage": 696,
+    "withAgency": 683,
+    "realLandingFlights": 1543,
+    "approxFlights": 3
   },
   "inSpaceUnmatched": [
     "Oleg Kononenko",
