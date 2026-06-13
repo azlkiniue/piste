@@ -24,13 +24,13 @@
     "inSpace": 10,
     "orbital": 1437,
     "suborbital": 109,
-    "countries": 52,
-    "agencies": 12
+    "countries": 45,
+    "agencies": 22
   },
   "coverage": {
     "genderKnown": 697,
     "withImage": 696,
-    "withAgency": 683,
+    "withAgency": 695,
     "realLandingFlights": 1543,
     "approxFlights": 3
   },

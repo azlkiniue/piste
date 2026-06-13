@@ -15,7 +15,11 @@
  * it (their summed duration agrees within ~2 days). They disagree for a dozen Apollo/Gemini/Skylab
  * veterans whose LL2 `time_in_space` is buggy (e.g. Conrad 49→21) or whose landing dates are broken
  * — there Wikidata is correct (those crews didn't seat-swap), so its number and bars are kept.
- * Also fills cleaner agency, spacewalk counts and missing photos (always safe).
+ *
+ * LL2 is also authoritative for two descriptive attributes Wikidata gets wrong, applied as always-safe
+ * list-field overrides: NATIONALITY (Wikidata often stores a birthplace — Kononenko → Turkmenistan — or
+ * a stale/secondary citizenship; LL2's demonym is the flown-under nation) and AGENCY (LL2's affiliation
+ * fills the gaps Wikidata leaves blank, e.g. Korea/Yi So-yeon). Also fills spacewalk counts and photos.
  *
  * Data comes from the astronaut LIST fetched with `?mode=detailed`, which inlines each person's
  * flights & landings — so the whole dataset is ~9 paginated calls, not one per astronaut. (If a
@@ -85,6 +89,49 @@ const matchAgency = (labels: (string | undefined)[]) => {
 	for (const l of labels) if (l) for (const [re, name] of AGENCY_RULES) if (re.test(l)) return name;
 	return undefined;
 };
+
+// LL2 reports nationality as a demonym ("Russian"), occasionally compound ("Vietnamese American").
+// It's authoritative here — Wikidata frequently stores a *birthplace* (Kononenko → Turkmenistan) or a
+// historic/secondary citizenship. Map each demonym to the app's country name + ISO 3166-1 alpha-2.
+const DEMONYM: Record<string, [country: string, iso2: string]> = {
+	American: ['United States', 'us'], Russian: ['Russia', 'ru'], Chinese: ['China', 'cn'], Canadian: ['Canada', 'ca'],
+	French: ['France', 'fr'], German: ['Germany', 'de'], Japanese: ['Japan', 'jp'], British: ['United Kingdom', 'gb'],
+	Italian: ['Italy', 'it'], Ukrainian: ['Ukraine', 'ua'], Kazakh: ['Kazakhstan', 'kz'], Spanish: ['Spain', 'es'],
+	Indian: ['India', 'in'], Belgian: ['Belgium', 'be'], Hungarian: ['Hungary', 'hu'], Polish: ['Poland', 'pl'],
+	Dutch: ['Netherlands', 'nl'], Saudi: ['Saudi Arabia', 'sa'], Australian: ['Australia', 'au'], Turkish: ['Turkey', 'tr'],
+	Swiss: ['Switzerland', 'ch'], Bulgarian: ['Bulgaria', 'bg'], Swedish: ['Sweden', 'se'], Belarusian: ['Belarus', 'by'],
+	Mexican: ['Mexico', 'mx'], Brazilian: ['Brazil', 'br'], Israeli: ['Israel', 'il'], Czech: ['Czechia', 'cz'],
+	Austrian: ['Austria', 'at'], Emirati: ['United Arab Emirates', 'ae'], Antiguan: ['Antigua and Barbuda', 'ag'],
+	Slovak: ['Slovakia', 'sk'], Syrian: ['Syria', 'sy'], Mongolian: ['Mongolia', 'mn'], Danish: ['Denmark', 'dk'],
+	Afghan: ['Afghanistan', 'af'], Vietnamese: ['Vietnam', 'vn'], Romanian: ['Romania', 'ro'], Kyrgyz: ['Kyrgyzstan', 'kg'],
+	Malaysian: ['Malaysia', 'my'], Cuban: ['Cuba', 'cu'], Iranian: ['Iran', 'ir'], Portuguese: ['Portugal', 'pt'],
+	Egyptian: ['Egypt', 'eg'], Pakistani: ['Pakistan', 'pk'], Singaporean: ['Singapore', 'sg'], Maltese: ['Malta', 'mt'],
+	Panamanian: ['Panama', 'pa'], Norwegian: ['Norway', 'no'], Bahamian: ['Bahamas', 'bs'], Kittitian: ['Saint Kitts and Nevis', 'kn'],
+	Kiwi: ['New Zealand', 'nz'], 'Puerto Rican': ['United States', 'us'], 'South Korean': ['South Korea', 'kr'],
+	'South African': ['South Africa', 'za']
+};
+
+/** Resolve an LL2 demonym to { nationality, countryCode }. Multi-word demonyms ("South Korean") are
+ *  matched whole; compound ones ("Vietnamese American", "American Australian") are split into their
+ *  parts — if one part is the person's current country we keep it (LL2 confirms that citizenship),
+ *  otherwise the first listed nationality wins. Returns null when unmappable (e.g. "Earthling" test
+ *  dummies) so the caller leaves the existing value untouched. */
+function resolveNationality(demonym: string | null | undefined, current: string): { nationality: string; countryCode: string } | null {
+	if (!demonym) return null;
+	const whole = DEMONYM[demonym];
+	if (whole) return { nationality: whole[0], countryCode: whole[1] };
+	const tokens = demonym.split(' ');
+	const parts: [string, string][] = [];
+	for (let i = 0; i < tokens.length; ) {
+		const two = tokens.slice(i, i + 2).join(' ');
+		if (DEMONYM[two]) { parts.push(DEMONYM[two]); i += 2; }
+		else if (DEMONYM[tokens[i]]) { parts.push(DEMONYM[tokens[i]]); i += 1; }
+		else i += 1;
+	}
+	if (!parts.length) return null;
+	const pick = parts.find((p) => p[0] === current) ?? parts[0];
+	return { nationality: pick[0], countryCode: pick[1] };
+}
 
 // Crewed *suborbital* programs — their "flights" are same-day, with no orbital re-entry / landing record.
 const SUBORBITAL_RE =
@@ -346,6 +393,7 @@ async function main() {
 	const people: Person[] = await Bun.file(DATA).json();
 
 	let agencyFixed = 0,
+		natFixed = 0,
 		spacewalks = 0,
 		photos = 0,
 		daysFixed = 0,
@@ -356,6 +404,7 @@ async function main() {
 		detailRemaining = 0,
 		unmatched = 0;
 	const topCorrections: { name: string; from: number; to: number }[] = [];
+	const natChanges: { name: string; from: string; to: string }[] = [];
 
 	for (const p of people) {
 		const r = findLL2(p);
@@ -364,10 +413,21 @@ async function main() {
 			continue;
 		}
 
-		// ----- Always-safe list fields: agency, spacewalk count, photo -----
+		// ----- Nationality (LL2 authoritative): demonym → country + ISO code -----
+		const nat = resolveNationality(r.nationality, p.nationality);
+		if (nat && (nat.nationality !== p.nationality || nat.countryCode !== p.countryCode)) {
+			if (nat.nationality !== p.nationality) natChanges.push({ name: p.name, from: p.nationality, to: nat.nationality });
+			p.nationality = nat.nationality;
+			p.countryCode = nat.countryCode;
+			natFixed++;
+		}
+
+		// ----- Agency: canonical short name where known, else fill blanks with LL2's own label -----
 		const ag = matchAgency([r.agency?.abbrev, r.agency?.name]);
-		if (ag && ag !== p.agency) {
-			p.agency = ag;
+		const llAgency = r.agency?.name?.trim();
+		const newAgency = ag ?? (p.agency === 'Unknown' && llAgency ? llAgency : undefined);
+		if (newAgency && newAgency !== p.agency) {
+			p.agency = newAgency;
 			agencyFixed++;
 		}
 		if (r.agency?.type) p.agencyType = r.agency.type;
@@ -425,15 +485,21 @@ async function main() {
 	await refreshMeta(people);
 
 	topCorrections.sort((a, b) => Math.abs(b.to - b.from) - Math.abs(a.to - a.from));
+	natChanges.sort((a, b) => a.name.localeCompare(b.name));
 	console.log('\n──────── LL2 enrichment report ────────');
 	console.log(`matched:           ${people.length - unmatched}/${people.length}  (unmatched ${unmatched})`);
 	console.log(`days corrected:    ${daysFixed}  (${daysBig} by ≥30 days)`);
 	console.log(`flight bars rebuilt:${barsFixed}  (kept Wikidata for ${barsSkipped} with inconsistent LL2 data; detail used: ${detailFetched})`);
+	console.log(`nationalities set:  ${natFixed}  (changed ${natChanges.length})`);
 	console.log(`agencies refined:  ${agencyFixed}`);
 	console.log(`spacewalk counts:  ${spacewalks}`);
 	console.log(`photos filled:     ${photos}`);
 	console.log(`network calls:     ${calls}`);
 	if (detailRemaining) console.log(`detail remaining:  ${detailRemaining}  ← re-run \`bun run enrich-ll2\` to fetch more`);
+	if (natChanges.length) {
+		console.log('nationality changes:');
+		for (const c of natChanges) console.log(`   ${c.name}: ${c.from} → ${c.to}`);
+	}
 	if (topCorrections.length) {
 		console.log('largest day fixes:');
 		for (const c of topCorrections.slice(0, 8)) console.log(`   ${c.name}: ${c.from} → ${c.to}`);

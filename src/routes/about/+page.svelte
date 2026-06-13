@@ -36,7 +36,7 @@
 	<ul class="mt-2 space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
 		<li>
 			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a>
-			<span class="text-zinc-400">· CC0</span> — the primary source: people, gender, citizenship, photos, and
+			<span class="text-zinc-400">· CC0</span> — the base dataset: people, gender, photos, and
 			per-mission launch/landing dates via crew links.
 		</li>
 		<li>
@@ -45,13 +45,14 @@
 		</li>
 		<li>
 			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="https://thespacedevs.com/llapi" target="_blank" rel="noopener">Launch Library 2</a>
-			<span class="text-zinc-400">· CC BY-NC 4.0</span> — optional enrichment for agency, spacewalks and photos.
+			<span class="text-zinc-400">· CC BY-NC 4.0</span> — the authoritative source for nationality, agency,
+			flight timelines, day counts, spacewalks and photos.
 		</li>
 	</ul>
 
 	<h2 class="mt-8 text-lg font-semibold">Caveats</h2>
 	<ul class="mt-2 list-disc space-y-1.5 pl-5 text-sm text-zinc-600 dark:text-zinc-300">
-		<li><strong>Agency</strong> is inferred from nationality where an explicit affiliation isn't recorded, so it's approximate (Europeans are grouped under ESA). It sharpens as Launch Library 2 enrichment is applied.</li>
+		<li><strong>Nationality</strong> and <strong>agency</strong> come from Launch Library 2 where it has a record, falling back to Wikidata. Nationality is the nation a person flew under (so Soviet-era cosmonauts show their present-day country, e.g. Gagarin → Russia), Europeans are grouped under ESA, and a few self-funded tourists have no agency.</li>
 		<li><strong>Status</strong> is <em>In space / Living / Deceased</em>; "in space now" is a snapshot taken when the data was built.</li>
 		<li>A handful of early or suborbital flights may be missing if Wikidata doesn't link their crew.</li>
 	</ul>

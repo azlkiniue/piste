@@ -34,9 +34,14 @@ with:
 bun run update-data      # Wikidata + open-notify — no rate limits, ~1 min
 ```
 
-`update-data` is the primary, self-sufficient pipeline. **Launch Library 2** enrichment is optional
-but recommended — it is the authoritative source for two things Wikidata gets wrong:
+`update-data` builds a complete, self-sufficient dataset from Wikidata. **Launch Library 2** enrichment
+then runs as the **authoritative source** wherever it and Wikidata disagree — Wikidata supplies the base
+(the crew list, dates, photos, gender, dob/dod) and LL2 corrects four things on top of it:
 
+- **Nationality** — LL2's flown-under nation overrides Wikidata, which often stores a *birthplace*
+  (Kononenko was tagged Turkmenistan, not Russia) or a stale/secondary citizenship.
+- **Agency** — LL2's affiliation fills the gaps Wikidata leaves blank (e.g. Yi So-yeon → Korean
+  Astronaut Program) and sharpens the rest.
 - **Flight timelines** — each person's flights are rebuilt by zipping their LL2 launches with their
   returns, so the Gantt bars show real intervals (and seat-swap up/down craft, e.g. Kononenko's
   record MS-24→MS-25 mission).
@@ -49,7 +54,7 @@ but recommended — it is the authoritative source for two things Wikidata gets 
 It fetches the astronaut list with `?mode=detailed` (flights & landings inlined), so a full refresh
 is **~9 paginated calls**. LL2's free tier is heavily rate-limited (~15 calls/hour), so the script
 paces calls, honours `Retry-After`, backs off, and caches every page — it **resumes** wherever it
-left off. It also fills cleaner agency, spacewalk counts and missing photos.
+left off. It also fills spacewalk counts and missing photos.
 
 ```bash
 bun run enrich-ll2                     # run AFTER update-data; re-run later to resume
@@ -59,8 +64,9 @@ LL2_DELAY_MS=4000 bun run enrich-ll2   # gentler pacing (default 2000ms)
 LL2_API_KEY=…     bun run enrich-ll2   # authenticated tier — higher throttle ceiling
 ```
 
-Sources: **Wikidata** (CC0, primary), **Open Notify** (in-space cross-check), **Launch Library 2**
-(CC BY-NC 4.0 — authoritative day counts & timelines). See the in-app About page for methodology.
+Sources: **Wikidata** (CC0, base dataset), **Open Notify** (in-space cross-check), **Launch Library 2**
+(CC BY-NC 4.0 — authoritative for nationality, agency, day counts & timelines). See the in-app About
+page for methodology.
 
 ## Deploy
 
