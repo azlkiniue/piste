@@ -14,10 +14,10 @@
 <div class="mx-auto max-w-2xl px-5 py-10 leading-relaxed">
 	<a href="{base}/" class="text-sm text-zinc-500 underline-offset-2 hover:text-zinc-800 hover:underline dark:hover:text-zinc-200">← Back to the timeline</a>
 
-	<h1 class="mt-6 text-3xl font-bold tracking-tight">Piste</h1>
+	<h1 class="mt-6 text-3xl font-bold tracking-tight">People in space timeline (Piste)</h1>
 	<p class="mt-2 text-zinc-600 dark:text-zinc-300">
-		A Gantt-style timeline of everyone who has been to space — from Yuri Gagarin in 1961 to the people in orbit
-		right now. <em>Piste</em> means a trail or track: each bar traces a person's time off the planet.
+		A Gantt-style timeline of everyone who has been to space, from Yuri Gagarin in 1961 to the people in orbit
+		right now. <em>Piste</em> — originating from French — means a trail or track: each bar traces a person's time off the planet.
 	</p>
 
 	<h2 class="mt-8 text-lg font-semibold">How it works</h2>

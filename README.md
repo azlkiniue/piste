@@ -4,7 +4,7 @@ A Gantt-style timeline of **everyone who has been to space** — from Yuri Gagar
 people in orbit right now. Filter by nationality, agency, gender, status and orbital/suborbital;
 click anyone for their full flight history.
 
-_Piste_ is an acronym and also means a trail or track — each bar traces a person's time in space.
+_Piste_ is an acronym for "People in space timeline" and also a word originating from French which means a trail or track — each bar traces a person's time in space.
 
 - **Static site** — the whole dataset is baked in at build time, no runtime API calls.
 - **Stack** — SvelteKit (Svelte 5) · Tailwind v4 · TypeScript, built and run with **Bun**.

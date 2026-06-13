@@ -39,14 +39,14 @@
 </script>
 
 <svelte:head>
-	<title>Piste — everyone who has been to space</title>
+	<title>Piste — People in Space Timeline</title>
 </svelte:head>
 
 <div class="flex h-screen flex-col overflow-hidden">
 	<header class="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-zinc-200 px-4 py-2.5 dark:border-zinc-800">
 		<div class="mr-auto">
 			<h1 class="text-base font-bold leading-tight tracking-tight">
-				Piste <span class="font-normal text-zinc-400">· people in space</span>
+				Piste <span class="font-normal text-zinc-400">· People in space timeline</span>
 			</h1>
 			<p class="text-[11px] text-zinc-500 dark:text-zinc-400">
 				{#if filters.activeCount}
