@@ -41,7 +41,9 @@ then runs as the **authoritative source** wherever it and Wikidata disagree — 
 - **Nationality** — LL2's flown-under nation overrides Wikidata, which often stores a *birthplace*
   (Kononenko was tagged Turkmenistan, not Russia) or a stale/secondary citizenship.
 - **Agency** — LL2's affiliation fills the gaps Wikidata leaves blank (e.g. Yi So-yeon → Korean
-  Astronaut Program) and sharpens the rest.
+  Astronaut Program) and sharpens the rest. Where LL2 has a person but lists *no* agency, that's
+  trusted too: early space tourists (Tito, Simonyi…) are left agency-less rather than inheriting a
+  nation-default like NASA.
 - **Flight timelines** — each person's flights are rebuilt by zipping their LL2 launches with their
   returns, so the Gantt bars show real intervals (and seat-swap up/down craft, e.g. Kononenko's
   record MS-24→MS-25 mission).

@@ -41,6 +41,13 @@ function slugify(s: string): string {
 		.replace(/^-+|-+$/g, '');
 }
 
+/** Recover a display name from an English Wikipedia article URL, for the rare item whose Wikidata
+ *  label service returns the bare QID (no en label). e.g. …/wiki/Franco_Malerba → "Franco Malerba". */
+function nameFromArticle(url?: string): string | undefined {
+	const slug = url?.match(/\/wiki\/(.+)$/)?.[1];
+	return slug ? decodeURIComponent(slug).replace(/_/g, ' ') : undefined;
+}
+
 // ---------------------------------------------------------------- normalization tables
 const COUNTRY_RENAME: Record<string, string> = {
 	'United States of America': 'United States',
@@ -418,7 +425,11 @@ async function main() {
 		let image = agg.image ? agg.image.replace(/^http:/, 'https:') : null;
 		if (image) image += (image.includes('?') ? '&' : '?') + 'width=320';
 
-		let slug = slugify(agg.name) || pq.toLowerCase();
+		// A handful of Wikidata items have no English label — the service hands back the QID. Fall
+		// back to the Wikipedia article title so the person shows a real name (and a sane slug).
+		const name = /^Q\d+$/.test(agg.name) ? (nameFromArticle(agg.article) ?? agg.name) : agg.name;
+
+		let slug = slugify(name) || pq.toLowerCase();
 		if (usedSlugs.has(slug)) slug = `${slug}-${pq.toLowerCase()}`;
 		usedSlugs.add(slug);
 
@@ -432,7 +443,7 @@ async function main() {
 		persons.push({
 			id: pq,
 			qid: pq,
-			name: agg.name,
+			name,
 			slug,
 			nationality,
 			countryCode,

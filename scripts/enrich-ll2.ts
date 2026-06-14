@@ -61,6 +61,8 @@ const normName = (s: string) =>
 	s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
 const normWiki = (url?: string | null) =>
 	url ? decodeURIComponent(url).replace(/\/$/, '').toLowerCase().replace(/^https?:\/\/[a-z-]+\.wikipedia\.org\/wiki\//, '') : null;
+const slugify = (s: string) =>
+	s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 const dayISO = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
 /** ISO-8601 duration (e.g. "P1110DT12H9M55S") → fractional days. */
@@ -391,9 +393,11 @@ async function main() {
 	}
 	const findLL2 = buildIndex(records);
 	const people: Person[] = await Bun.file(DATA).json();
+	const usedSlugs = new Set(people.map((p) => p.slug));
 
 	let agencyFixed = 0,
 		natFixed = 0,
+		namesRecovered = 0,
 		spacewalks = 0,
 		photos = 0,
 		daysFixed = 0,
@@ -405,12 +409,26 @@ async function main() {
 		unmatched = 0;
 	const topCorrections: { name: string; from: number; to: number }[] = [];
 	const natChanges: { name: string; from: string; to: string }[] = [];
+	const agencyBlanked: { name: string; from: string }[] = [];
 
 	for (const p of people) {
 		const r = findLL2(p);
 		if (!r) {
 			unmatched++;
 			continue;
+		}
+
+		// ----- Name recovery: Wikidata had no label, so build-data fell back to the bare QID -----
+		// (e.g. Q957368 → Franco Malerba). Take LL2's name and rebuild a real, unique slug.
+		if (/^Q\d+$/.test(p.name) && r.name?.trim()) {
+			const id = (p.qid ?? p.id).toLowerCase();
+			usedSlugs.delete(p.slug);
+			p.name = r.name.trim();
+			let slug = slugify(p.name) || id;
+			if (usedSlugs.has(slug)) slug = `${slug}-${id}`;
+			usedSlugs.add(slug);
+			p.slug = slug;
+			namesRecovered++;
 		}
 
 		// ----- Nationality (LL2 authoritative): demonym → country + ISO code -----
@@ -422,11 +440,17 @@ async function main() {
 			natFixed++;
 		}
 
-		// ----- Agency: canonical short name where known, else fill blanks with LL2's own label -----
-		const ag = matchAgency([r.agency?.abbrev, r.agency?.name]);
+		// ----- Agency (LL2 authoritative) -----
+		// Canonical short name when LL2's label maps to one; otherwise LL2's own label fills a blank.
+		// When LL2 has the person but lists NO agency, trust that and blank ours — these are private
+		// space tourists (Tito, Simonyi, Laliberté, Akiyama…) that build-data wrongly tagged with a
+		// nation-default like NASA. (ESA grouping is preserved: a non-canonical LL2 label only fills an
+		// Unknown, it never re-labels someone already grouped.)
 		const llAgency = r.agency?.name?.trim();
-		const newAgency = ag ?? (p.agency === 'Unknown' && llAgency ? llAgency : undefined);
+		const canonical = matchAgency([r.agency?.abbrev, r.agency?.name]);
+		const newAgency = canonical ?? (llAgency ? (p.agency === 'Unknown' ? llAgency : undefined) : 'Unknown');
 		if (newAgency && newAgency !== p.agency) {
+			if (newAgency === 'Unknown') agencyBlanked.push({ name: p.name, from: p.agency });
 			p.agency = newAgency;
 			agencyFixed++;
 		}
@@ -490,8 +514,9 @@ async function main() {
 	console.log(`matched:           ${people.length - unmatched}/${people.length}  (unmatched ${unmatched})`);
 	console.log(`days corrected:    ${daysFixed}  (${daysBig} by ≥30 days)`);
 	console.log(`flight bars rebuilt:${barsFixed}  (kept Wikidata for ${barsSkipped} with inconsistent LL2 data; detail used: ${detailFetched})`);
+	console.log(`names recovered:   ${namesRecovered}  (Wikidata had only a QID)`);
 	console.log(`nationalities set:  ${natFixed}  (changed ${natChanges.length})`);
-	console.log(`agencies refined:  ${agencyFixed}`);
+	console.log(`agencies refined:  ${agencyFixed}  (incl. ${agencyBlanked.length} agency-less tourists blanked)`);
 	console.log(`spacewalk counts:  ${spacewalks}`);
 	console.log(`photos filled:     ${photos}`);
 	console.log(`network calls:     ${calls}`);
@@ -499,6 +524,10 @@ async function main() {
 	if (natChanges.length) {
 		console.log('nationality changes:');
 		for (const c of natChanges) console.log(`   ${c.name}: ${c.from} → ${c.to}`);
+	}
+	if (agencyBlanked.length) {
+		console.log('agency blanked (LL2 lists no agency):');
+		for (const c of agencyBlanked.sort((a, b) => a.name.localeCompare(b.name))) console.log(`   ${c.name}: ${c.from} → Unknown`);
 	}
 	if (topCorrections.length) {
 		console.log('largest day fixes:');

@@ -30,7 +30,7 @@
   "coverage": {
     "genderKnown": 697,
     "withImage": 696,
-    "withAgency": 695,
+    "withAgency": 689,
     "realLandingFlights": 1543,
     "approxFlights": 3
   },
