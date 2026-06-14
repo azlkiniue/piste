@@ -1,12 +1,13 @@
 import type { Person } from './types';
 import { valueOf, type ColorBy } from './colors';
 
-export type SortKey = 'firstLaunch' | 'name' | 'days' | 'flights';
+export type SortKey = 'firstLaunch' | 'lastFlight' | 'name' | 'days' | 'flights';
 export type FlightType = 'all' | 'orbital' | 'suborbital';
 export type Dim = 'nationality' | 'agency' | 'gender' | 'status';
 
 export const SORT_OPTIONS: { id: SortKey; label: string }[] = [
 	{ id: 'firstLaunch', label: 'First flight' },
+	{ id: 'lastFlight', label: 'Last flight' },
 	{ id: 'name', label: 'Name' },
 	{ id: 'days', label: 'Time in space' },
 	{ id: 'flights', label: 'Flight count' }
@@ -78,8 +79,13 @@ export function matches(p: Person, f: Filters, skip?: Dim | 'flightType'): boole
 	return true;
 }
 
+// Launch date of a person's most recent mission (flights are stored oldest-first). For someone still
+// in space this is their ongoing flight, so they sort last under an ascending "Last flight" order.
+const lastFlightLaunch = (p: Person): string => p.flights[p.flights.length - 1]?.launch ?? p.firstLaunch;
+
 const SORTERS: Record<SortKey, (a: Person, b: Person) => number> = {
 	firstLaunch: (a, b) => a.firstLaunch.localeCompare(b.firstLaunch) || a.name.localeCompare(b.name),
+	lastFlight: (a, b) => lastFlightLaunch(a).localeCompare(lastFlightLaunch(b)) || a.name.localeCompare(b.name),
 	name: (a, b) => a.name.localeCompare(b.name),
 	days: (a, b) => b.totalDaysInSpace - a.totalDaysInSpace || a.firstLaunch.localeCompare(b.firstLaunch),
 	flights: (a, b) => b.flights.length - a.flights.length || a.firstLaunch.localeCompare(b.firstLaunch)
