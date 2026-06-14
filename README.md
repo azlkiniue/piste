@@ -36,7 +36,8 @@ bun run update-data      # Wikidata + open-notify — no rate limits, ~1 min
 
 `update-data` builds a complete, self-sufficient dataset from Wikidata. **Launch Library 2** enrichment
 then runs as the **authoritative source** wherever it and Wikidata disagree — Wikidata supplies the base
-(the crew list, dates, photos, gender, dob/dod) and LL2 corrects four things on top of it:
+(the crew list, dates, photos, gender, dob/dod) and LL2 corrects four things on top of it, then backfills
+the people Wikidata never had:
 
 - **Nationality** — LL2's flown-under nation overrides Wikidata, which often stores a *birthplace*
   (Kononenko was tagged Turkmenistan, not Russia) or a stale/secondary citizenship.
@@ -53,6 +54,18 @@ then runs as the **authoritative source** wherever it and Wikidata disagree — 
   ~10-day stay): Kononenko →1110, Whitson →695, Avdeyev 1142→747. The dozen Apollo/Gemini/Skylab
   veterans whose LL2 `time_in_space` is itself buggy (e.g. Conrad) keep their correct Wikidata figure.
 
+And then it **backfills people Wikidata is missing**. Wikidata has no item (or no crew-link) for most
+recent suborbital tourists, so the base list stops ~700; LL2 catalogues ~800 who have flown, and anyone
+it lists as flown but no Wikidata person matched is added as a new record (`id: "ll2-<id>"`). This is the
+broad **US 50-mile / 80 km** definition the dataset already uses — it counts Virgin Galactic, whose
+SpaceShipTwo tops out ~85 km, below the 100 km Kármán line (so the total runs a little above the
+Kármán-only tally you'll see quoted elsewhere). Three things are deliberately left out: non-human test
+articles LL2 lists as astronauts (Starman, the Artemis-I manikins, zero-g-indicator plushes…),
+name-variant duplicates already in the set (caught by an exact-DOB guard), and "flights" that never
+reached space — the Apollo 1 pad fire and the SpaceShipTwo glide/powered atmospheric tests (which also
+trims real pilots' logs, e.g. Sturckow 17→12). LL2 carries no gender, so backfilled people take theirs
+from bio pronouns where present, else `unknown`.
+
 It fetches the astronaut list with `?mode=detailed` (flights & landings inlined), so a full refresh
 is **~9 paginated calls**. LL2's free tier is heavily rate-limited (~15 calls/hour), so the script
 paces calls, honours `Retry-After`, backs off, and caches every page — it **resumes** wherever it
@@ -67,8 +80,8 @@ LL2_API_KEY=…     bun run enrich-ll2   # authenticated tier — higher throttl
 ```
 
 Sources: **Wikidata** (CC0, base dataset), **Open Notify** (in-space cross-check), **Launch Library 2**
-(CC BY-NC 4.0 — authoritative for nationality, agency, day counts & timelines). See the in-app About
-page for methodology.
+(CC BY-NC 4.0 — authoritative for nationality, agency, day counts, timelines & backfilling the people
+Wikidata misses). See the in-app About page for methodology.
 
 ## Deploy
 

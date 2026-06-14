@@ -37,7 +37,7 @@
  * NOTE: run AFTER `bun run update-data` (which rebuilds astronauts.json from Wikidata). Re-running
  * is idempotent given the cache.
  */
-import type { Flight, Meta, Person, Status } from '../src/lib/types';
+import type { Flight, Gender, Meta, Person, Status } from '../src/lib/types';
 
 const UA = 'PisteDataPipeline/1.0 (https://github.com/piste; static people-in-space timeline)';
 const LL2 = 'https://ll.thespacedevs.com/2.2.0/astronaut/';
@@ -140,6 +140,13 @@ const SUBORBITAL_RE =
 	/New Shepard|Blue Origin|Virgin Galactic|SpaceShip(One|Two)?|VSS |\bX-15\b|Mercury-Redstone|Freedom 7|Liberty Bell 7/i;
 const cleanMission = (s?: string | null) => (s ? (s.includes('|') ? s.split('|').pop()!.trim() : s.trim()) : '');
 
+// SpaceShipTwo/One glide (GF), captive-carry (CC), cold-flow (CF) and powered (PF) runs are logged as
+// "flights" but never reached space — the VSS Enterprise era topped out ~22 km. Drop them so a test
+// pilot keeps only real spaceflights (e.g. Mark Stucky's 30 LL2 entries collapse to one: VSS Unity VP-03).
+const SS2_TEST_CODE = /^(GF|CF|CC|PF)\d*$/i;
+const isSpaceShipTest = (name?: string | null) =>
+	/SpaceShip(One|Two)/i.test(name ?? '') && SS2_TEST_CODE.test((name ?? '').split('|').pop()!.trim().split(' ').pop()!);
+
 interface LL2Astro {
 	id: number;
 	name: string;
@@ -153,6 +160,13 @@ interface LL2Astro {
 	// Present only with ?mode=detailed (or from the per-astronaut endpoint).
 	flights?: any[];
 	landings?: any[];
+	// Used by the backfill layer (people Wikidata missed) — present on every list record.
+	bio?: string | null;
+	nationality?: string | null;
+	date_of_birth?: string | null;
+	date_of_death?: string | null;
+	profile_image?: string | null;
+	first_flight?: string | null;
 }
 
 /** Trimmed per-astronaut detail we persist (full responses are ~90 KB; we keep ~1 KB).
@@ -275,6 +289,7 @@ const LM_CRAFT_RE = /^LM\b|Lunar Module/i;
 function reconstructFlights(slim: SlimDetail, deceased: boolean): { flights: Flight[]; status: Status; days: number } | null {
 	const launches = slim.launches
 		.filter((f) => !LM_LAUNCH_RE.test(f.name ?? ''))
+		.filter((f) => !isSpaceShipTest(f.name))
 		.map((f) => ({
 			t: Date.parse(f.net),
 			// flight.name is "Rocket | Spacecraft" — its suffix is the real vehicle (e.g. "Soyuz TMA-17M"),
@@ -321,6 +336,114 @@ function reconstructFlights(slim: SlimDetail, deceased: boolean): { flights: Fli
 	}
 	const status: Status = slim.in_space ? 'in-space' : deceased ? 'deceased' : 'living';
 	return { flights, status, days };
+}
+
+// ---------------------------------------------------------------- Layer 3: backfill (people Wikidata missed)
+// Wikidata is the base list, but it lacks items (or crew-links) for most recent suborbital tourists —
+// so build-data never sees them. LL2 catalogs ~800 people who have flown; this adds the flown ones no
+// existing person matched. They reached space under the broad US 50-mile/80 km definition the dataset
+// already uses (it includes Virgin Galactic, whose SpaceShipTwo tops out ~85 km, below the Kármán line).
+//
+// Three things are deliberately NOT added:
+//   • non-human test articles LL2 lists as "astronauts" (mannequins, mascots, zero-g indicators);
+//   • people already present under a name variant the surname+initial matcher missed (exact-DOB guard);
+//   • "flights" that never reached space — the Apollo 1 pad fire and SpaceShipTwo atmospheric test
+//     pilots whose only flights were glide/powered runs (the VSS Enterprise era never crossed 80 km).
+const NON_HUMAN = new Set(
+	['Mannequin Skywalker', 'Starman', 'Little Earth', 'Ripley', 'Rosie the Astronaut',
+	 'Commander Moonikin Campos', 'Helga', 'Zohar', 'Shaun the Sheep', 'Snoopy'].map(normName)
+);
+const NEVER_REACHED_SPACE = new Set(
+	['Roger B. Chaffee', 'Peter Siebold', 'Michael Alsbury', 'Clint Nichols', 'Doug Shane',
+	 'William Brian Binnie', 'Keith Colmer'].map(normName)
+);
+// LL2 mislabels a handful of affiliations; correct the clear factual errors we'd otherwise import.
+const AGENCY_FIX: Record<string, string> = {
+	// Tuva Atasever is Türkiye's 2nd astronaut (Galactic 07) — LL2 tags him to Turkmenistan in error.
+	'Turkmenistan National Space Agency': 'Turkish Space Agency'
+};
+
+// LL2 has no gender field; infer from the bio's pronouns (best-effort — else 'unknown').
+function genderFromBio(bio?: string | null): Gender {
+	const b = ` ${(bio ?? '').toLowerCase()} `;
+	const f = (b.match(/\b(?:she|her|hers)\b/g) ?? []).length;
+	const m = (b.match(/\b(?:he|his|him)\b/g) ?? []).length;
+	if (f > m) return 'female';
+	if (m > f) return 'male';
+	return 'unknown';
+}
+
+/** Already in the dataset under a name variant? True when the candidate shares an exact birth date and
+ *  a ≥3-char name token with an existing person — catches Evgeny/Yevgeny Tarelkin, Wang Haozhe/Haoze,
+ *  Uznański/Uznański-Wiśniewski, Robert S./Shane Kimbrough, Gregory R./Reid Wiseman (the surname+initial
+ *  matcher misses these). Exact-DOB keeps it tight: same-surname-same-year collisions don't trip it. */
+function isVariantDuplicate(r: LL2Astro, tokensByDob: Map<string, Set<string>>): boolean {
+	const dob = r.date_of_birth?.slice(0, 10);
+	const have = dob ? tokensByDob.get(dob) : undefined;
+	if (!have) return false;
+	for (const tok of normName(r.name).replace(/-/g, ' ').split(' ')) if (tok.length >= 3 && have.has(tok)) return true;
+	return false;
+}
+
+/** Build new Person records for flown LL2 people no existing person matched. Pure cache work — no
+ *  network. Returns the additions and a skip tally for the report. */
+function backfillFromLL2(records: LL2Astro[], people: Person[], matchedIds: Set<number>, usedSlugs: Set<string>) {
+	const tokensByDob = new Map<string, Set<string>>();
+	for (const p of people) {
+		if (!p.dob) continue;
+		const s = tokensByDob.get(p.dob) ?? new Set<string>();
+		for (const tok of normName(p.name).replace(/-/g, ' ').split(' ')) if (tok.length >= 3) s.add(tok);
+		tokensByDob.set(p.dob, s);
+	}
+	const added: Person[] = [];
+	const skipped = { nonHuman: 0, neverSpace: 0, variantDup: 0, noFlights: 0 };
+	const byAgency: Record<string, number> = {};
+	for (const r of records) {
+		if (matchedIds.has(r.id)) continue;
+		if ((r.flights_count ?? 0) < 1 && !r.first_flight) continue; // not flown
+		const key = normName(r.name);
+		if (NON_HUMAN.has(key)) { skipped.nonHuman++; continue; }
+		if (NEVER_REACHED_SPACE.has(key)) { skipped.neverSpace++; continue; }
+		if (isVariantDuplicate(r, tokensByDob)) { skipped.variantDup++; continue; }
+
+		const dod = r.date_of_death ? r.date_of_death.slice(0, 10) : null;
+		const rebuilt = reconstructFlights(slimDetail(r), !!dod); // SS2 atmospheric tests dropped inside
+		if (!rebuilt || rebuilt.flights.length === 0) { skipped.noFlights++; continue; }
+
+		const nat = resolveNationality(r.nationality, '');
+		const llAgency = matchAgency([r.agency?.abbrev, r.agency?.name]) ?? r.agency?.name?.trim() ?? 'Unknown';
+		const agency = AGENCY_FIX[llAgency] ?? llAgency;
+		const tisDays = durationToDays(r.time_in_space);
+		const days = Math.round(tisDays != null && tisDays > 0 ? tisDays : rebuilt.days);
+		let slug = slugify(r.name) || `ll2-${r.id}`;
+		if (usedSlugs.has(slug)) slug = `${slug}-ll2-${r.id}`;
+		usedSlugs.add(slug);
+		const landed = rebuilt.flights.filter((f) => !f.ongoing && f.landing);
+
+		added.push({
+			id: `ll2-${r.id}`,
+			qid: null,
+			name: r.name,
+			slug,
+			nationality: nat?.nationality ?? 'Unknown',
+			countryCode: nat?.countryCode ?? null,
+			gender: genderFromBio(r.bio),
+			agency,
+			status: rebuilt.status,
+			dob: r.date_of_birth ? r.date_of_birth.slice(0, 10) : null,
+			dod,
+			wiki: r.wiki ?? null,
+			image: r.profile_image ?? r.profile_image_thumbnail ?? null,
+			totalDaysInSpace: days,
+			firstLaunch: rebuilt.flights[0].launch,
+			lastLanding: rebuilt.status === 'in-space' ? null : landed.length ? landed[landed.length - 1].landing : null,
+			flights: rebuilt.flights,
+			spacewalks: r.spacewalks_count ?? 0,
+			agencyType: r.agency?.type
+		});
+		byAgency[agency] = (byAgency[agency] ?? 0) + 1;
+	}
+	return { added, skipped, byAgency };
 }
 
 // ---------------------------------------------------------------- matching
@@ -410,6 +533,7 @@ async function main() {
 	const topCorrections: { name: string; from: number; to: number }[] = [];
 	const natChanges: { name: string; from: string; to: string }[] = [];
 	const agencyBlanked: { name: string; from: string }[] = [];
+	const matchedIds = new Set<number>(); // LL2 records claimed by a person — the rest feed the backfill
 
 	for (const p of people) {
 		const r = findLL2(p);
@@ -417,6 +541,7 @@ async function main() {
 			unmatched++;
 			continue;
 		}
+		matchedIds.add(r.id);
 
 		// ----- Name recovery: Wikidata had no label, so build-data fell back to the bare QID -----
 		// (e.g. Q957368 → Franco Malerba). Take LL2's name and rebuild a real, unique slug.
@@ -503,6 +628,11 @@ async function main() {
 		}
 	}
 
+	// ----- Layer 3: backfill people Wikidata missed (mostly recent suborbital tourists) -----
+	const before = people.length;
+	const { added, skipped, byAgency } = backfillFromLL2(records, people, matchedIds, usedSlugs);
+	people.push(...added);
+
 	// firstLaunch may have shifted for detailed people — keep the canonical ordering.
 	people.sort((a, b) => a.firstLaunch.localeCompare(b.firstLaunch) || a.name.localeCompare(b.name));
 	await Bun.write(DATA, JSON.stringify(people));
@@ -511,7 +641,12 @@ async function main() {
 	topCorrections.sort((a, b) => Math.abs(b.to - b.from) - Math.abs(a.to - a.from));
 	natChanges.sort((a, b) => a.name.localeCompare(b.name));
 	console.log('\n──────── LL2 enrichment report ────────');
-	console.log(`matched:           ${people.length - unmatched}/${people.length}  (unmatched ${unmatched})`);
+	console.log(`matched:           ${before - unmatched}/${before}  (unmatched ${unmatched})`);
+	console.log(
+		`backfilled:        +${added.length}  (${before} → ${people.length})  ` +
+			`skipped ${skipped.nonHuman} non-human, ${skipped.variantDup} name-variant dupes, ${skipped.neverSpace} never-reached-space`
+	);
+	if (added.length) console.log(`   by agency: ${Object.entries(byAgency).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', ')}`);
 	console.log(`days corrected:    ${daysFixed}  (${daysBig} by ≥30 days)`);
 	console.log(`flight bars rebuilt:${barsFixed}  (kept Wikidata for ${barsSkipped} with inconsistent LL2 data; detail used: ${detailFetched})`);
 	console.log(`names recovered:   ${namesRecovered}  (Wikidata had only a QID)`);

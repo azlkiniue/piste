@@ -19,19 +19,19 @@
     }
   ],
   "counts": {
-    "people": 697,
-    "flights": 1546,
+    "people": 785,
+    "flights": 1636,
     "inSpace": 10,
     "orbital": 1437,
-    "suborbital": 109,
-    "countries": 45,
-    "agencies": 22
+    "suborbital": 199,
+    "countries": 53,
+    "agencies": 26
   },
   "coverage": {
-    "genderKnown": 697,
-    "withImage": 696,
-    "withAgency": 689,
-    "realLandingFlights": 1543,
+    "genderKnown": 740,
+    "withImage": 765,
+    "withAgency": 776,
+    "realLandingFlights": 1633,
     "approxFlights": 3
   },
   "inSpaceUnmatched": [
