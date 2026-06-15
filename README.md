@@ -31,7 +31,9 @@ Two committed files drive the app: `src/lib/data/astronauts.json` and `meta.json
 with:
 
 ```bash
-bun run update-data      # Wikidata + open-notify — no rate limits, ~1 min
+bun run update-data            # 1. Wikidata + open-notify base — no rate limits, ~1 min
+bun run enrich-ll2             # 2. Launch Library 2 — authoritative; rate-limited, resumable
+bun run enrich-supercluster    # 3. Supercluster — gap-fills gender & tourist agencies
 ```
 
 `update-data` builds a complete, self-sufficient dataset from Wikidata. **Launch Library 2** enrichment
@@ -79,9 +81,28 @@ LL2_DELAY_MS=4000 bun run enrich-ll2   # gentler pacing (default 2000ms)
 LL2_API_KEY=…     bun run enrich-ll2   # authenticated tier — higher throttle ceiling
 ```
 
+**Supercluster** runs last as a light, gap-filling pass — it never overrides LL2's nationality or
+agency wholesale. From [Supercluster's astronaut database](https://www.supercluster.com/astronauts)
+(793 humans who have reached space, fetched from its public Sanity API — no key, no rate limit) it does
+four things: fills **gender** for the recent suborbital tourists LL2 leaves blank (it lists nearly
+everyone); sets **Space Adventures** as the agency for the orbital tourists it brokered (Tito, Simonyi,
+Shuttleworth, Olsen, Ansari, R. Garriott, Laliberté) plus the dearMoon pair Maezawa & Hirano (whom
+Wikidata mis-tagged as JAXA); fills a still-**Unknown** agency only when Supercluster names a
+*commercial* provider (so Akiyama, the TBS journalist it files under "CCCP", stays agency-less rather
+than becoming "Roscosmos"); and applies five hand-reviewed agency corrections. It also **backfills the
+two SpaceShipOne pilots** (Melvill & Binnie — the first commercial astronauts, 2004) that LL2's filters
+drop. Where Supercluster credits a launch *operator* but LL2 credits the flier's *nation* (e.g. a Saudi
+national on an Axiom seat), the national agency is kept by design.
+
+```bash
+bun run enrich-supercluster                  # run AFTER enrich-ll2
+SC_MAX_CALLS=0 bun run enrich-supercluster    # apply cached data only, no network
+```
+
 Sources: **Wikidata** (CC0, base dataset), **Open Notify** (in-space cross-check), **Launch Library 2**
 (CC BY-NC 4.0 — authoritative for nationality, agency, day counts, timelines & backfilling the people
-Wikidata misses). See the in-app About page for methodology.
+Wikidata misses) and **Supercluster** (editorial — gender, the Space Adventures tourists, and the
+SpaceShipOne pilots). See the in-app About page for methodology.
 
 ## Deploy
 

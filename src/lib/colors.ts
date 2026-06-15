@@ -49,6 +49,8 @@ const AGENCY: Record<string, string> = {
 	'Blue Origin': '#38bdf8',
 	'Virgin Galactic': '#a78bfa',
 	'Axiom Space': '#2dd4bf',
+	'Space Adventures': '#fb923c',
+	'Scaled Composites': '#818cf8',
 	Unknown: '#71717a'
 };
 const GENDER: Record<string, string> = {
