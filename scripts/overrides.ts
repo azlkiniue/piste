@@ -30,4 +30,8 @@ export const overrides: Record<string, Override> = {
 	// 		{ mission: 'Vostok 1', launch: '1961-04-12', landing: '1961-04-12', ongoing: false, orbital: true, approx: false }
 	// 	]
 	// }
+	'tushar-shah': { nationality: 'United States', countryCode: 'us' },
+	'giorgio-manenti': { gender: 'male' },
+	'russel-wilson': { gender: 'male' },
+	'toyohiro-akiyama': { agency: 'Roscosmos' },
 };
