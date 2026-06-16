@@ -34,6 +34,7 @@ with:
 bun run update-data            # 1. Wikidata + open-notify base — no rate limits, ~1 min
 bun run enrich-ll2             # 2. Launch Library 2 — authoritative; rate-limited, resumable
 bun run enrich-supercluster    # 3. Supercluster — gap-fills gender & tourist agencies
+bun run enrich-manual          # 4. Manual overrides — hand-fix anything; empty a field to revert
 ```
 
 `update-data` builds a complete, self-sufficient dataset from Wikidata. **Launch Library 2** enrichment
@@ -97,6 +98,24 @@ national on an Axiom seat), the national agency is kept by design.
 ```bash
 bun run enrich-supercluster                  # run AFTER enrich-ll2
 SC_MAX_CALLS=0 bun run enrich-supercluster    # apply cached data only, no network
+```
+
+**Manual overrides** run last (`scripts/overrides.ts` → `bun run enrich-manual`). Every other layer
+derives values from a source; this one is hand-authored, so it has the final say. List a person by
+`id`, `slug`, or exact `name`, then set any [`Person`](src/lib/types.ts) field to correct it — the
+value wins over everything the pipeline computed. **Empty a field** (`''`, `null`, `[]`, or just
+delete the line) and the override drops, so the field falls back to the pipeline's value — _the last
+value that was there before_. (So this layer can only set values, never blank them; emptying means
+revert. To genuinely clear a field, fix it upstream.) Overriding `flights` replaces the whole array
+and recomputes `firstLaunch` / `lastLanding` / `totalDaysInSpace` / `status` from it.
+
+Reverting works without re-running the whole chain: a gitignored baseline
+(`scripts/cache/manual/baseline.json`) remembers each touched field's pipeline value and the value
+written, so emptying an override restores the former. It only reverts a field still holding exactly
+what it wrote, so a later `update-data`/LL2/SC change is respected.
+
+```bash
+bun run enrich-manual    # apply scripts/overrides.ts as the final layer (idempotent, offline)
 ```
 
 Sources: **Wikidata** (CC0, base dataset), **Open Notify** (in-space cross-check), **Launch Library 2**
