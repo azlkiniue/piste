@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-12T11:30:48.657Z",
-  "asOf": "2026-06-12",
+  "generatedAt": "2026-07-19T02:36:34.077Z",
+  "asOf": "2026-07-19",
   "sources": [
     {
       "name": "Wikidata",
@@ -24,33 +24,22 @@
     }
   ],
   "counts": {
-    "people": 787,
-    "flights": 1639,
-    "inSpace": 10,
-    "orbital": 1437,
-    "suborbital": 202,
+    "people": 788,
+    "flights": 1613,
+    "inSpace": 13,
+    "orbital": 1440,
+    "suborbital": 173,
     "countries": 52,
     "agencies": 27
   },
   "coverage": {
-    "genderKnown": 787,
-    "withImage": 767,
-    "withAgency": 787,
-    "realLandingFlights": 1636,
+    "genderKnown": 788,
+    "withImage": 768,
+    "withAgency": 788,
+    "realLandingFlights": 1610,
     "approxFlights": 3
   },
   "inSpaceUnmatched": [
-    "Oleg Kononenko",
-    "Nikolay Chub",
-    "Tracy Caldwell Dyson",
-    "Matthew Dominick",
-    "Michael Barratt",
-    "Jeanette J. Epps",
-    "Alexander Grebenkin",
-    "Barry E. Wilmore",
-    "Sunita Williams",
-    "Li Guangsu",
-    "Li Cong",
-    "Ye Guangfu"
+    "andrey fedyaev"
   ]
 }
