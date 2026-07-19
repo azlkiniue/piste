@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-19T02:36:34.077Z",
+  "generatedAt": "2026-07-19T13:53:43.320Z",
   "asOf": "2026-07-19",
   "sources": [
     {
@@ -24,20 +24,20 @@
     }
   ],
   "counts": {
-    "people": 788,
-    "flights": 1613,
+    "people": 787,
+    "flights": 1610,
     "inSpace": 13,
-    "orbital": 1440,
+    "orbital": 1437,
     "suborbital": 173,
     "countries": 52,
     "agencies": 27
   },
   "coverage": {
-    "genderKnown": 788,
-    "withImage": 768,
-    "withAgency": 788,
-    "realLandingFlights": 1610,
-    "approxFlights": 3
+    "genderKnown": 787,
+    "withImage": 767,
+    "withAgency": 787,
+    "realLandingFlights": 1608,
+    "approxFlights": 2
   },
   "inSpaceUnmatched": [
     "andrey fedyaev"

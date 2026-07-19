@@ -34,4 +34,5 @@ export const overrides: Record<string, Override> = {
 	'giorgio-manenti': { gender: 'male' },
 	'russel-wilson': { gender: 'male' },
 	'toyohiro-akiyama': { agency: 'Roscosmos' },
+	'alan-shepard': {flights: [{"mission":"Mercury-Redstone 3","launch":"1961-05-05","landing":"1961-05-05","ongoing":false,"orbital":false,"approx":false},{"mission":"Apollo 14","launch":"1971-01-31","landing":"1971-02-09","ongoing":false,"orbital":true,"approx":false}]},
 };
