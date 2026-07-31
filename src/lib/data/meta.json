@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-19T13:53:43.320Z",
-  "asOf": "2026-07-19",
+  "generatedAt": "2026-07-31T04:16:11.676Z",
+  "asOf": "2026-07-31",
   "sources": [
     {
       "name": "Wikidata",
@@ -26,7 +26,7 @@
   "counts": {
     "people": 787,
     "flights": 1610,
-    "inSpace": 13,
+    "inSpace": 10,
     "orbital": 1437,
     "suborbital": 173,
     "countries": 52,
