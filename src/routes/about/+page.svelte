@@ -40,8 +40,8 @@
 			per-mission launch/landing dates via crew links.
 		</li>
 		<li>
-			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="http://open-notify.org" target="_blank" rel="noopener">Open Notify</a>
-			<span class="text-zinc-400">· public</span> — cross-check for who is in space now.
+			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="https://github.com/corquaid/international-space-station-APIs" target="_blank" rel="noopener">International Space Station APIs</a>
+			<span class="text-zinc-400">· MIT</span> — cross-check for who is in space now.
 		</li>
 		<li>
 			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="https://thespacedevs.com/llapi" target="_blank" rel="noopener">Launch Library 2</a>

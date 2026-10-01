@@ -37,7 +37,7 @@ const UA = 'PisteDataPipeline/1.0 (https://github.com/piste; static people-in-sp
 // Supercluster's Sanity project (read from its astronaut page: cdn.sanity.io/images/2vtv415l/production).
 const PROJECT = process.env.SC_PROJECT_ID ?? '2vtv415l';
 const DATASET = process.env.SC_DATASET ?? 'production';
-const API = `https://${PROJECT}.apicdn.sanity.io/v2021-10-21/data/query/${DATASET}`;
+const API = `https://${PROJECT}.apicdn.sanity.io/v2023-10-01/data/query/${DATASET}`;
 // One GROQ query: every human who has reached space, with the few fields we consume.
 const GROQ =
 	'*[_type=="astronaut" && speciesGroup=="human"]{_id,name,gender,birthdate,deathdate,astroNumber,' +

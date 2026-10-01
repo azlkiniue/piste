@@ -31,7 +31,7 @@ Two committed files drive the app: `src/lib/data/astronauts.json` and `meta.json
 with:
 
 ```bash
-bun run update-data            # 1. Wikidata + open-notify base — no rate limits, ~1 min
+bun run update-data            # 1. Wikidata + ISS APIs base — no rate limits, ~1 min
 bun run enrich-ll2             # 2. Launch Library 2 — authoritative; rate-limited, resumable
 bun run enrich-supercluster    # 3. Supercluster — gap-fills gender & tourist agencies
 bun run enrich-manual          # 4. Manual overrides — hand-fix anything; empty a field to revert
@@ -118,10 +118,12 @@ what it wrote, so a later `update-data`/LL2/SC change is respected.
 bun run enrich-manual    # apply scripts/overrides.ts as the final layer (idempotent, offline)
 ```
 
-Sources: **Wikidata** (CC0, base dataset), **Open Notify** (in-space cross-check), **Launch Library 2**
-(CC BY-NC 4.0 — authoritative for nationality, agency, day counts, timelines & backfilling the people
-Wikidata misses) and **Supercluster** (editorial — gender, the Space Adventures tourists, and the
-SpaceShipOne pilots). See the in-app About page for methodology.
+Sources: **Wikidata** (CC0, base dataset),
+**[International Space Station APIs](https://github.com/corquaid/international-space-station-APIs)**
+(MIT, in-space cross-check), **Launch Library 2** (CC BY-NC 4.0 — authoritative for nationality,
+agency, day counts, timelines & backfilling the people Wikidata misses) and **Supercluster**
+(editorial — gender, the Space Adventures tourists, and the SpaceShipOne pilots). See the in-app
+About page for methodology.
 
 ## Deploy
 

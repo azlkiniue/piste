@@ -3,7 +3,7 @@
  *
  *   Wikidata SPARQL (CC0)  → people (gender, citizenship, dob/dod, photo, wiki) + per-mission
  *                            launch/landing dates via crew links.
- *   open-notify (free)     → who is in space *right now* (snapshot, by name).
+ *   ISS APIs (MIT)         → who is in space *right now* (snapshot, by name).
  *
  * Output: src/lib/data/astronauts.json + meta.json. Run with: bun run update-data
  *
@@ -221,7 +221,7 @@ async function fetchInSpace(): Promise<Set<string>> {
 			/* try next */
 		}
 	}
-	console.warn('  ⚠ open-notify unavailable — falling back to recent landing-less flights');
+	console.warn('  ⚠ ISS APIs unavailable — falling back to recent landing-less flights');
 	return new Set();
 }
 
@@ -358,13 +358,13 @@ async function main() {
 		console.log(`  people ${Math.min(i + 200, ids.length)}/${ids.length}`);
 	}
 
-	console.log('▶ Fetching open-notify (cross-check only)…');
-	const openNotify = await fetchInSpace();
+	console.log('▶ Fetching ISS APIs in-space snapshot (cross-check only)…');
+  const inSpaceNow = await fetchInSpace();
 	const now = new Date();
 	const nowISO = now.toISOString().slice(0, 10);
 	// A flight launched within this window with no recorded landing is treated as ongoing.
-	// Status is derived from Wikidata this way (self-consistent with the bars) — open-notify
-	// is only cross-checked in the report, because it can be stale.
+  // Status is derived from Wikidata this way (self-consistent with the bars) — the ISS APIs
+  // snapshot is only cross-checked in the report, because it can be stale.
 	const recentCut = new Date(now.getTime() - 400 * 86400000).toISOString().slice(0, 10);
 
 	console.log('▶ Assembling…');
@@ -463,9 +463,9 @@ async function main() {
 
 	persons.sort((a, b) => a.firstLaunch.localeCompare(b.firstLaunch) || a.name.localeCompare(b.name));
 
-	// open-notify cross-check (can be stale) — names it lists that we do NOT show as in-space
+	// ISS APIs cross-check (can be stale) — names it lists that we do NOT show as in-space
 	const personByQid = new Map(persons.map((p) => [p.qid!, p]));
-	const { qids: onQids, unmatched: onUnmatched } = resolveInSpace(people, openNotify);
+	const { qids: onQids, unmatched: onUnmatched } = resolveInSpace(people, inSpaceNow);
 	const inSpaceUnmatched = [
 		...onUnmatched,
 		...[...onQids].filter((q) => personByQid.get(q)?.status !== 'in-space').map((q) => people.get(q)?.name ?? q)
@@ -481,7 +481,11 @@ async function main() {
 		asOf: nowISO,
 		sources: [
 			{ name: 'Wikidata', url: 'https://www.wikidata.org', license: 'CC0' },
-			{ name: 'Open Notify — People in Space', url: 'http://open-notify.org', license: 'Public' },
+			{
+        name: 'International Space Station APIs — People in Space',
+        url: 'https://github.com/corquaid/international-space-station-APIs',
+        license: 'MIT'
+      },
 			{ name: 'Launch Library 2 (The Space Devs)', url: 'https://thespacedevs.com/llapi', license: 'CC BY-NC 4.0' }
 		],
 		counts: {
@@ -517,7 +521,7 @@ async function main() {
 	console.log(`with agency:       ${meta.coverage.withAgency}  (${pct(meta.coverage.withAgency)})  ← improves via enrich-ll2`);
 	console.log(`flights w/ landing:${meta.coverage.realLandingFlights}  (${meta.counts.flights - meta.coverage.realLandingFlights} approx)`);
 	console.log(`first person:      ${persons[0]?.name} — ${persons[0]?.firstLaunch}`);
-	console.log(`open-notify cross: ${openNotify.size} names; ${inSpaceUnmatched.length} not shown in-space (likely stale)`);
+	console.log(`in-space cross:    ${inSpaceNow.size} names; ${inSpaceUnmatched.length} not shown in-space (likely stale)`);
 	if (inSpaceUnmatched.length) console.log(`   ${inSpaceUnmatched.join(', ')}`);
 	console.log('───────────────────────────────────\n');
 }

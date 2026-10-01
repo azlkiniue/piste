@@ -76,6 +76,6 @@ export interface Meta {
 		realLandingFlights: number;
 		approxFlights: number;
 	};
-	/** "In space now" names from open-notify that didn't match a person. */
+	/** "In space now" names from the ISS APIs snapshot that didn't match a person. */
 	inSpaceUnmatched: string[];
 }
