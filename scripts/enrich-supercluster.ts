@@ -32,6 +32,7 @@
  * replays the cache offline. Re-running is idempotent and safe.
  */
 import type { Flight, Gender, Meta, Person, Status } from '../src/lib/types';
+import { DATA, writeAstronauts } from './dataset';
 
 const UA = 'PisteDataPipeline/1.0 (https://github.com/piste; static people-in-space timeline)';
 // Supercluster's Sanity project (read from its astronaut page: cdn.sanity.io/images/2vtv415l/production).
@@ -47,7 +48,6 @@ const MAX_CALLS = Number(process.env.SC_MAX_CALLS ?? Infinity); // 0 = offline, 
 
 const ROOT = new URL('..', import.meta.url);
 const CACHE = new URL('scripts/cache/supercluster/humans.json', ROOT);
-const DATA = new URL('src/lib/data/astronauts.json', ROOT);
 const META = new URL('src/lib/data/meta.json', ROOT);
 
 // ---------------------------------------------------------------- helpers
@@ -340,7 +340,7 @@ async function main() {
 	people.push(...added);
 
 	people.sort((a, b) => a.firstLaunch.localeCompare(b.firstLaunch) || a.name.localeCompare(b.name));
-	await Bun.write(DATA, JSON.stringify(people));
+	await writeAstronauts(people);
 	await refreshMeta(people);
 
 	const stillUnknownGender = people.filter((p) => p.gender === 'unknown').length;

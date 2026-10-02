@@ -21,10 +21,10 @@
  * three enrichers then this, in order.
  */
 import type { Meta, Person, Status } from '../src/lib/types';
+import { DATA, writeAstronauts } from './dataset';
 import { overrides } from './overrides';
 
 const ROOT = new URL('..', import.meta.url);
-const DATA = new URL('src/lib/data/astronauts.json', ROOT);
 const META = new URL('src/lib/data/meta.json', ROOT);
 const BASELINE = new URL('scripts/cache/manual/baseline.json', ROOT);
 
@@ -156,7 +156,7 @@ async function main() {
 	}
 
 	people.sort((a, b) => a.firstLaunch.localeCompare(b.firstLaunch) || a.name.localeCompare(b.name));
-	await Bun.write(DATA, JSON.stringify(people));
+	await writeAstronauts(people);
 	await Bun.write(BASELINE, JSON.stringify(next, null, 2));
 	await refreshMeta(people);
 

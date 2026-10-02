@@ -27,8 +27,9 @@ bun --bun run check      # type-check
 
 ## Data
 
-Two committed files drive the app: `src/lib/data/astronauts.json` and `meta.json`. Regenerate them
-with:
+Committed files in `src/lib/data/` drive the app: `astronauts.min.json` and `meta.json`. Every script
+also writes `astronauts.json`, a pretty-printed copy of the same data, so each refresh shows up as a
+readable per-field diff. Regenerate them with:
 
 ```bash
 bun run update-data            # 1. Wikidata + ISS APIs base — no rate limits, ~1 min
@@ -72,12 +73,16 @@ from bio pronouns where present, else `unknown`.
 It fetches the astronaut list with `?mode=detailed` (flights & landings inlined), so a full refresh
 is **~9 paginated calls**. LL2's free tier is heavily rate-limited (~15 calls/hour), so the script
 paces calls, honours `Retry-After`, backs off, and caches every page — it **resumes** wherever it
-left off. It also fills spacewalk counts and missing photos.
+left off. Cached pages expire after 6 hours, so the next run picks up launches and landings since
+rather than replaying an old snapshot. And because LL2 can lag Wikidata (e.g. right after a launch), a
+flight Wikidata already has but LL2 hasn't logged is kept rather than rolled back. It also fills
+spacewalk counts and missing photos.
 
 ```bash
 bun run enrich-ll2                     # run AFTER update-data; re-run later to resume
 MAX_LL2_CALLS=100 bun run enrich-ll2   # cap network calls this run (resume later)
 MAX_LL2_CALLS=0   bun run enrich-ll2   # apply cached pages only, no network
+LL2_CACHE_HOURS=0 bun run enrich-ll2   # re-fetch every page now (default: reuse pages < 6h old)
 LL2_DELAY_MS=4000 bun run enrich-ll2   # gentler pacing (default 2000ms)
 LL2_API_KEY=…     bun run enrich-ll2   # authenticated tier — higher throttle ceiling
 ```

@@ -26,11 +26,15 @@
  * record lacks inline flights — e.g. an older cached page — it falls back to the per-astronaut
  * detail endpoint.) LL2's public tier is heavily rate-limited (~15 calls/hour), so this paces calls,
  * honours `Retry-After`, backs off, and caches every page — a cold full run resumes where it left
- * off. The site is fully functional WITHOUT this step.
+ * off. List pages older than LL2_CACHE_HOURS are re-fetched, so a later run picks up launches and
+ * landings since; an old page is reused only when it can't be refreshed. And since LL2 can still lag
+ * Wikidata, a flight Wikidata already has but LL2 hasn't logged is kept, never rolled back. The site
+ * is fully functional WITHOUT this step.
  *
- *   bun run enrich-ll2                       # Layer 1 + 2: fetch what's missing, merge, save
+ *   bun run enrich-ll2                       # Layer 1 + 2: fetch what's missing or stale, merge, save
  *   MAX_LL2_CALLS=50 bun run enrich-ll2      # do 50 network calls then stop (re-run to continue)
  *   MAX_LL2_CALLS=0 bun run enrich-ll2       # apply already-cached pages only (no network)
+ *   LL2_CACHE_HOURS=0 bun run enrich-ll2     # re-fetch every list page now (default: reuse pages < 6h old)
  *   LL2_DELAY_MS=4000 bun run enrich-ll2     # gentler pacing between calls (default 2000ms)
  *   LL2_API_KEY=… bun run enrich-ll2         # authenticated tier (higher throttle ceiling)
  *
@@ -38,6 +42,7 @@
  * is idempotent given the cache.
  */
 import type { Flight, Gender, Meta, Person, Status } from '../src/lib/types';
+import { DATA, writeAstronauts } from './dataset';
 
 const UA = 'PisteDataPipeline/1.0 (https://github.com/piste; static people-in-space timeline)';
 const LL2 = 'https://ll.thespacedevs.com/2.2.0/astronaut/';
@@ -45,13 +50,13 @@ const PAGE = 100;
 const ROOT = new URL('..', import.meta.url);
 const CACHE = new URL('scripts/cache/ll2/', ROOT);
 const DETAIL_CACHE = new URL('scripts/cache/ll2/detail/', ROOT);
-const DATA = new URL('src/lib/data/astronauts.json', ROOT);
 const META = new URL('src/lib/data/meta.json', ROOT);
 
 // ---- throttle / budget knobs ----
 const DELAY_MS = Number(process.env.LL2_DELAY_MS ?? 2000); // pause between successful network calls
 const MAX_CALLS = Number(process.env.MAX_LL2_CALLS ?? Infinity); // network-call budget for this run (0 = offline)
 const MAX_RETRIES = Number(process.env.LL2_MAX_RETRIES ?? 6);
+const CACHE_HOURS = Number(process.env.LL2_CACHE_HOURS ?? 6); // cached list pages older than this are re-fetched
 const API_KEY = process.env.LL2_API_KEY ?? process.env.SPACEDEVS_TOKEN ?? '';
 const HEADERS: Record<string, string> = { 'User-Agent': UA, ...(API_KEY ? { Authorization: `Token ${API_KEY}` } : {}) };
 
@@ -223,25 +228,34 @@ async function fetchJSON(url: string): Promise<any | null | typeof BUDGET> {
 }
 
 // ---------------------------------------------------------------- Layer 1: list pages
+let stalePages = 0; // cached pages past CACHE_HOURS that we fell back to because they couldn't be refreshed
 async function loadList(): Promise<LL2Astro[]> {
 	const records: LL2Astro[] = [];
 	let offset = 0;
 	let total = Infinity;
+	let gaveUp = false; // LL2 down / hard-throttled — don't sit through the retries again for every page
 	while (offset < total) {
-		const cacheFile = new URL(`ll2-${offset}.json`, CACHE);
+		// The cache is for resuming an interrupted run, not for pinning LL2 to an old snapshot — a page
+		// past CACHE_HOURS is re-fetched, and only reused if that fails (budget spent, offline, gave up).
+		const cacheFile = Bun.file(new URL(`ll2-${offset}.json`, CACHE));
+		const cached = await cacheFile.exists();
 		let data: { count?: number; results?: LL2Astro[] };
-		if (await Bun.file(cacheFile).exists()) {
-			data = await Bun.file(cacheFile).json();
+		if (cached && Date.now() - cacheFile.lastModified < CACHE_HOURS * 3600_000) {
+			data = await cacheFile.json();
 		} else {
-			const r = await fetchJSON(`${LL2}?mode=detailed&limit=${PAGE}&offset=${offset}`);
-			if (r === BUDGET) {
-				console.log(`  list: call budget reached at offset ${offset} — re-run to continue.`);
+			const r = gaveUp ? null : await fetchJSON(`${LL2}?mode=detailed&limit=${PAGE}&offset=${offset}`);
+			if (r && r !== BUDGET) {
+				data = r;
+				await Bun.write(cacheFile, JSON.stringify(data));
+				console.log(`  list: fetched offset ${offset} (${calls} calls)`);
+			} else if (cached) {
+				gaveUp ||= r === null;
+				data = await cacheFile.json();
+				stalePages++;
+			} else {
+				if (r === BUDGET) console.log(`  list: call budget reached at offset ${offset} — re-run to continue.`);
 				break;
 			}
-			if (!r) break;
-			data = r;
-			await Bun.write(cacheFile, JSON.stringify(data));
-			console.log(`  list: fetched offset ${offset} (${calls} calls)`);
 		}
 		total = data.count ?? total;
 		records.push(...(data.results ?? []));
@@ -336,6 +350,21 @@ function reconstructFlights(slim: SlimDetail, deceased: boolean): { flights: Fli
 	}
 	const status: Status = slim.in_space ? 'in-space' : deceased ? 'deceased' : 'living';
 	return { flights, status, days };
+}
+
+/** True when Wikidata already has the person on a flight that launched after their last LL2 return —
+ *  LL2's record predates it (a page cached before the launch, or a launch LL2 hasn't logged yet), so a
+ *  rebuild would drop that flight and mark someone in orbit as landed (e.g. Watkins on Crew-13 while
+ *  LL2 still listed only Crew-4). Two days' slack absorbs the sources' differing date conventions;
+ *  future-dated (planned) Wikidata flights don't count. */
+function wikidataAhead(wikidata: Flight[], ll2: Flight[]): boolean {
+	const last = ll2.at(-1);
+	if (!last || last.ongoing) return false; // LL2 already has them in space
+	const returned = Date.parse(last.landing ?? last.launch) + 2 * 86400000;
+	return wikidata.some((f) => {
+		const t = Date.parse(f.launch);
+		return t > returned && t <= Date.now();
+	});
 }
 
 // ---------------------------------------------------------------- Layer 3: backfill (people Wikidata missed)
@@ -533,6 +562,7 @@ async function main() {
 	const topCorrections: { name: string; from: number; to: number }[] = [];
 	const natChanges: { name: string; from: string; to: string }[] = [];
 	const agencyBlanked: { name: string; from: string }[] = [];
+	const lagging: string[] = []; // LL2 hasn't caught up with a flight Wikidata already has
 	const matchedIds = new Set<number>(); // LL2 records claimed by a person — the rest feed the backfill
 
 	for (const p of people) {
@@ -605,7 +635,9 @@ async function main() {
 			const tisDays = durationToDays(slim.time_in_space);
 			const healthy =
 				!!rebuilt && rebuilt.flights.length > 0 && rebuilt.days > 0 && tisDays != null && tisDays > 0 && Math.abs(rebuilt.days - tisDays) <= 2;
-			if (rebuilt && healthy) {
+			const behind = !!rebuilt && wikidataAhead(p.flights, rebuilt.flights);
+			if (behind) lagging.push(p.name);
+			if (rebuilt && healthy && !behind) {
 				const v = Math.floor(tisDays!);
 				const delta = Math.abs(v - p.totalDaysInSpace);
 				if (delta >= 1) {
@@ -635,7 +667,7 @@ async function main() {
 
 	// firstLaunch may have shifted for detailed people — keep the canonical ordering.
 	people.sort((a, b) => a.firstLaunch.localeCompare(b.firstLaunch) || a.name.localeCompare(b.name));
-	await Bun.write(DATA, JSON.stringify(people));
+	await writeAstronauts(people);
 	await refreshMeta(people);
 
 	topCorrections.sort((a, b) => Math.abs(b.to - b.from) - Math.abs(a.to - a.from));
@@ -649,12 +681,14 @@ async function main() {
 	if (added.length) console.log(`   by agency: ${Object.entries(byAgency).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', ')}`);
 	console.log(`days corrected:    ${daysFixed}  (${daysBig} by ≥30 days)`);
 	console.log(`flight bars rebuilt:${barsFixed}  (kept Wikidata for ${barsSkipped} with inconsistent LL2 data; detail used: ${detailFetched})`);
+	if (lagging.length) console.log(`   LL2 behind Wikidata (newer flight kept): ${lagging.join(', ')}`);
 	console.log(`names recovered:   ${namesRecovered}  (Wikidata had only a QID)`);
 	console.log(`nationalities set:  ${natFixed}  (changed ${natChanges.length})`);
 	console.log(`agencies refined:  ${agencyFixed}  (incl. ${agencyBlanked.length} agency-less tourists blanked)`);
 	console.log(`spacewalk counts:  ${spacewalks}`);
 	console.log(`photos filled:     ${photos}`);
 	console.log(`network calls:     ${calls}`);
+	if (stalePages) console.log(`stale list pages:  ${stalePages}  ← older than ${CACHE_HOURS}h and couldn't be refreshed; re-run \`bun run enrich-ll2\``);
 	if (detailRemaining) console.log(`detail remaining:  ${detailRemaining}  ← re-run \`bun run enrich-ll2\` to fetch more`);
 	if (natChanges.length) {
 		console.log('nationality changes:');

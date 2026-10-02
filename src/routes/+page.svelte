@@ -7,7 +7,7 @@
 	import Legend from '$lib/components/Legend.svelte';
 	import DetailPanel from '$lib/components/DetailPanel.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
-	import astronautsData from '$lib/data/astronauts.json';
+	import astronautsData from '$lib/data/astronauts.min.json';
 	import metaData from '$lib/data/meta.json';
 	import type { Person, Meta } from '$lib/types';
 	import { COLOR_BY_OPTIONS } from '$lib/colors';

@@ -5,12 +5,14 @@
  *                            launch/landing dates via crew links.
  *   ISS APIs (MIT)         → who is in space *right now* (snapshot, by name).
  *
- * Output: src/lib/data/astronauts.json + meta.json. Run with: bun run update-data
+ * Output: src/lib/data/astronauts.json (pretty) + astronauts.min.json + meta.json.
+ * Run with: bun run update-data
  *
  * LL2 enrichment (agency, spacewalks, active/retired) is a separate, optional, rate-limited
  * step — see scripts/enrich-ll2.ts. The site is fully functional on this build alone.
  */
 import type { Flight, Gender, Meta, Person, Status } from '../src/lib/types';
+import { writeAstronauts } from './dataset';
 
 const UA = 'PisteDataPipeline/1.0 (https://github.com/piste; static people-in-space timeline)';
 const WDQS = 'https://query.wikidata.org/sparql';
@@ -202,11 +204,7 @@ async function sparql(query: string, attempt = 0): Promise<Record<string, { valu
 
 /** Returns a set of normalized names of people currently in space (best-effort, snapshot). */
 async function fetchInSpace(): Promise<Set<string>> {
-	const endpoints = [
-		'https://api.open-notify.org/astros.json',
-		'http://api.open-notify.org/astros.json',
-		'https://corquaid.github.io/international-space-station-APIs/JSON/people-in-space.json'
-	];
+	const endpoints = ['https://corquaid.github.io/international-space-station-APIs/JSON/people-in-space.json'];
 	for (const url of endpoints) {
 		try {
 			const res = await fetch(url, { headers: { 'User-Agent': UA } });
@@ -507,7 +505,7 @@ async function main() {
 		inSpaceUnmatched
 	};
 
-	await Bun.write(new URL('astronauts.json', OUT_DIR), JSON.stringify(persons));
+	await writeAstronauts(persons);
 	await Bun.write(new URL('meta.json', OUT_DIR), JSON.stringify(meta, null, 2));
 
 	const pct = (n: number) => `${Math.round((100 * n) / persons.length)}%`;
