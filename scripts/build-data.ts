@@ -23,6 +23,25 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const val = (b: Record<string, { value: string }>, k: string): string | undefined => b[k]?.value;
 const qid = (uri?: string): string | undefined => uri?.match(/(Q\d+)$/)?.[1];
 const dateOnly = (iso?: string): string | undefined => (iso ? iso.slice(0, 10) : undefined);
+// SPARQL returns rows in no guaranteed order, so wherever rows disagree (e.g. a person with two
+// normal-rank P18 images) the pick must not be "first row wins" — keep the smallest value instead.
+const least = (cur?: string, next?: string): string | undefined =>
+	next !== undefined && (cur === undefined || next < cur) ? next : cur;
+const cmp = (a = '', b = '') => (a < b ? -1 : a > b ? 1 : 0);
+
+/** A Wikidata time value: the date plus its precision (9 = year, 10 = month, 11 = day). */
+interface WdDate {
+	iso: string;
+	precision: number;
+}
+/** Several best-rank dates (e.g. a year-only "1956" beside a full 1954-12-28): keep the most
+ *  precise, then the earliest. */
+function pickDate(cur: WdDate | undefined, value?: string, precision?: string): WdDate | undefined {
+	const iso = dateOnly(value);
+	if (!iso) return cur;
+	const next = { iso, precision: Number(precision ?? 0) };
+	return !cur || next.precision > cur.precision || (next.precision === cur.precision && next.iso < cur.iso) ? next : cur;
+}
 
 function normalizeName(s: string): string {
 	return s
@@ -92,7 +111,8 @@ const AGENCY_RULES: [RegExp, string][] = [
 	[/Axiom/i, 'Axiom Space']
 ];
 function matchAgency(labels: string[]): string | undefined {
-	for (const l of labels) for (const [re, name] of AGENCY_RULES) if (re.test(l)) return name;
+	// Labels arrive in SPARQL row order; sort them so several matching labels resolve the same way every run.
+	for (const l of [...labels].sort()) for (const [re, name] of AGENCY_RULES) if (re.test(l)) return name;
 	return undefined;
 }
 
@@ -263,13 +283,14 @@ SELECT ?flight ?flightLabel ?launch ?landing ?crew ?operatorLabel WHERE {
 }`;
 
 const peopleQuery = (values: string) => `
-SELECT ?p ?pLabel ?genderLabel ?countryLabel ?iso2 ?dob ?dod ?image ?article ?employerLabel WHERE {
+SELECT ?p ?pLabel ?genderLabel ?countryLabel ?iso2 ?dob ?dobPrec ?dod ?dodPrec ?image ?article ?employerLabel WHERE {
   VALUES ?p { ${values} }
   FILTER EXISTS { ?p wdt:P31 wd:Q5 }
   OPTIONAL { ?p wdt:P21 ?gender }
   OPTIONAL { ?p wdt:P27 ?country . OPTIONAL { ?country wdt:P297 ?iso2 } }
-  OPTIONAL { ?p wdt:P569 ?dob }
-  OPTIONAL { ?p wdt:P570 ?dod }
+  # Best-rank statements (the same set wdt: gives) plus their precision, so a full date beats a year-only one.
+  OPTIONAL { ?p p:P569 [ a wikibase:BestRank ; psv:P569 [ wikibase:timeValue ?dob ; wikibase:timePrecision ?dobPrec ] ] }
+  OPTIONAL { ?p p:P570 [ a wikibase:BestRank ; psv:P570 [ wikibase:timeValue ?dod ; wikibase:timePrecision ?dodPrec ] ] }
   OPTIONAL { ?p wdt:P18 ?image }
   OPTIONAL { ?p wdt:P108 ?employer }
   OPTIONAL { ?article schema:about ?p ; schema:isPartOf <https://en.wikipedia.org/> }
@@ -288,8 +309,8 @@ interface PersonAgg {
 	name: string;
 	gender?: string;
 	countries: { label: string; iso2?: string }[];
-	dob?: string;
-	dod?: string;
+	dob?: WdDate;
+	dod?: WdDate;
 	image?: string;
 	article?: string;
 	employers: Set<string>;
@@ -343,13 +364,19 @@ async function main() {
 				p = { name: val(b, 'pLabel') || pq, countries: [], employers: new Set() };
 				people.set(pq, p);
 			}
-			p.gender ??= val(b, 'genderLabel');
+			// wdt:/BestRank already prefer a preferred-rank statement and drop deprecated ones; these
+			// break the remaining ties between same-rank values.
+			p.gender = least(p.gender, val(b, 'genderLabel'));
 			const cl = val(b, 'countryLabel');
-			if (cl && !p.countries.some((c) => c.label === cl)) p.countries.push({ label: cl, iso2: val(b, 'iso2') });
-			p.dob ??= dateOnly(val(b, 'dob'));
-			p.dod ??= dateOnly(val(b, 'dod'));
-			p.image ??= val(b, 'image');
-			p.article ??= val(b, 'article');
+			if (cl) {
+				const c = p.countries.find((c) => c.label === cl);
+				if (c) c.iso2 = least(c.iso2, val(b, 'iso2'));
+				else p.countries.push({ label: cl, iso2: val(b, 'iso2') });
+			}
+			p.dob = pickDate(p.dob, val(b, 'dob'), val(b, 'dobPrec'));
+			p.dod = pickDate(p.dod, val(b, 'dod'), val(b, 'dodPrec'));
+			p.image = least(p.image, val(b, 'image'));
+			p.article ??= val(b, 'article'); // an item has at most one enwiki sitelink, so every row agrees
 			const emp = val(b, 'employerLabel');
 			if (emp) p.employers.add(emp);
 		}
@@ -383,8 +410,17 @@ async function main() {
 				orbital: isOrbital(f.label, [...f.operators]),
 				exp: isExpedition(f.label)
 			};
+			// Of same-day duplicates keep the one with a landing, then the longer (more specific) label, then
+			// the alphabetically first — equal-length labels ("Soyuz TM-15" / "Mir-Antares") must not fall to row order.
 			const ex = byLaunch.get(fl.launch);
-			if (!ex || (!ex.landing && fl.landing) || (fl.mission.length > ex.mission.length && !!fl.landing === !!ex.landing))
+			if (
+				!ex ||
+				(!!fl.landing !== !!ex.landing
+					? !!fl.landing
+					: fl.mission.length !== ex.mission.length
+						? fl.mission.length > ex.mission.length
+						: fl.mission < ex.mission)
+			)
 				byLaunch.set(fl.launch, fl);
 		}
 		if (byLaunch.size === 0) continue;
@@ -415,7 +451,11 @@ async function main() {
 			if (e > s) days += (e - s) / 86400000;
 		}
 
-		const cs = agg.countries.map((c) => ({ label: COUNTRY_RENAME[c.label] ?? c.label, iso2: c.iso2 }));
+		// Sorted, so a person with several present-day citizenships gets the alphabetically first, not
+		// whichever SPARQL row came first (LL2 enrichment later sets the flown-under nation anyway).
+		const cs = agg.countries
+			.map((c) => ({ label: COUNTRY_RENAME[c.label] ?? c.label, iso2: c.iso2 }))
+			.sort((a, b) => cmp(a.label, b.label) || cmp(a.iso2, b.iso2));
 		const pick = cs.find((c) => !HISTORIC_STATES.has(c.label)) ?? cs[0];
 		const nationality = pick?.label ?? 'Unknown';
 		const countryCode = CANONICAL_ISO[nationality] ?? (pick?.iso2 ? pick.iso2.toLowerCase() : null);
@@ -448,8 +488,8 @@ async function main() {
 			gender: toGender(agg.gender),
 			agency,
 			status,
-			dob: agg.dob ?? null,
-			dod: agg.dod ?? null,
+			dob: agg.dob?.iso ?? null,
+			dod: agg.dod?.iso ?? null,
 			wiki: agg.article ?? null,
 			image,
 			totalDaysInSpace: Math.round(days),

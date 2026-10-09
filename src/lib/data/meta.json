@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-02T09:47:30.876Z",
+  "generatedAt": "2026-10-02T10:45:02.393Z",
   "asOf": "2026-10-02",
   "sources": [
     {
@@ -29,7 +29,7 @@
     "inSpace": 14,
     "orbital": 1441,
     "suborbital": 173,
-    "countries": 52,
+    "countries": 53,
     "agencies": 27
   },
   "coverage": {
