@@ -23660,7 +23660,7 @@
     "gender": "male",
     "agency": "Roscosmos",
     "status": "living",
-    "dob": "1975-02-22",
+    "dob": "1975-02-19",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Sergey_Prokopyev_(cosmonaut)",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Sergey%20Prokopyev%20at%20the%20Gagarin%20Cosmonaut%20Training%20Center%20in%20Star%20City.jpg?width=320",
@@ -24017,14 +24017,14 @@
     "countryCode": "us",
     "gender": "female",
     "agency": "NASA",
-    "status": "in-space",
+    "status": "living",
     "dob": "1977-07-01",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Jessica_Meir",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/NASA%20Candidate%20Jessica%20U%20Meir.jpg?width=320",
-    "totalDaysInSpace": 435,
+    "totalDaysInSpace": 441,
     "firstLaunch": "2019-09-25",
-    "lastLanding": null,
+    "lastLanding": "2026-10-08",
     "flights": [
       {
         "mission": "Soyuz MS-15",
@@ -24037,8 +24037,8 @@
       {
         "mission": "Crew-12",
         "launch": "2026-02-13",
-        "landing": null,
-        "ongoing": true,
+        "landing": "2026-10-08",
+        "ongoing": false,
         "orbital": true,
         "approx": false
       }
@@ -24174,7 +24174,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Pyotr_Dubrov",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Pyotr%20Dubrov%20in%202021.jpg?width=320",
-    "totalDaysInSpace": 434,
+    "totalDaysInSpace": 441,
     "firstLaunch": "2021-04-09",
     "lastLanding": null,
     "flights": [
@@ -25594,7 +25594,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Jessica_Watkins",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Jessica%20Watkins%20official%20portrait.jpg?width=320",
-    "totalDaysInSpace": 170,
+    "totalDaysInSpace": 177,
     "firstLaunch": "2022-04-27",
     "lastLanding": null,
     "flights": [
@@ -26106,7 +26106,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Anna_Kikina",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Anna%20Kikina%20Official%20Portrait.jpg?width=320",
-    "totalDaysInSpace": 236,
+    "totalDaysInSpace": 243,
     "firstLaunch": "2022-10-05",
     "lastLanding": null,
     "flights": [
@@ -26267,14 +26267,14 @@
     "countryCode": "ru",
     "gender": "male",
     "agency": "Roscosmos",
-    "status": "in-space",
+    "status": "living",
     "dob": "1981-02-26",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Andrey_Fedyaev",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/SpaceX%20crew%206%20image%205.png?width=320",
-    "totalDaysInSpace": 416,
+    "totalDaysInSpace": 423,
     "firstLaunch": "2023-03-02",
-    "lastLanding": null,
+    "lastLanding": "2026-10-08",
     "flights": [
       {
         "mission": "Crew-6",
@@ -26287,8 +26287,8 @@
       {
         "mission": "Crew-12",
         "launch": "2026-02-13",
-        "landing": null,
-        "ongoing": true,
+        "landing": "2026-10-08",
+        "ongoing": false,
         "orbital": true,
         "approx": false
       }
@@ -26642,7 +26642,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Zhu_Yangzhu",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Zhu%20Yangzhu%20%2820260523%29.jpg?width=320",
-    "totalDaysInSpace": 284,
+    "totalDaysInSpace": 291,
     "firstLaunch": "2023-05-30",
     "lastLanding": null,
     "flights": [
@@ -28844,7 +28844,7 @@
     "gender": "female",
     "agency": "SpaceX",
     "status": "living",
-    "dob": "1995-01-01",
+    "dob": "1996-01-28",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Rabea_Rogge",
     "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/rabea_rogge_image_thumbnail_20250329173100.jpeg",
@@ -30461,20 +30461,20 @@
     "countryCode": "us",
     "gender": "male",
     "agency": "NASA",
-    "status": "in-space",
+    "status": "living",
     "dob": "1982-10-05",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Jack_Hathaway",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Jack%20Hathaway.jpg?width=320",
-    "totalDaysInSpace": 230,
+    "totalDaysInSpace": 237,
     "firstLaunch": "2026-02-13",
-    "lastLanding": null,
+    "lastLanding": "2026-10-08",
     "flights": [
       {
         "mission": "Crew-12",
         "launch": "2026-02-13",
-        "landing": null,
-        "ongoing": true,
+        "landing": "2026-10-08",
+        "ongoing": false,
         "orbital": true,
         "approx": false
       }
@@ -30491,20 +30491,20 @@
     "countryCode": "fr",
     "gender": "female",
     "agency": "ESA",
-    "status": "in-space",
+    "status": "living",
     "dob": "1982-07-05",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Sophie_Adenot",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Official%20portrait%20of%20ESA%20astronaut%20Sophie%20Adenot%20%28jsc2025e058846%20alt%29.jpg?width=320",
-    "totalDaysInSpace": 230,
+    "totalDaysInSpace": 237,
     "firstLaunch": "2026-02-13",
-    "lastLanding": null,
+    "lastLanding": "2026-10-08",
     "flights": [
       {
         "mission": "Crew-12",
         "launch": "2026-02-13",
-        "landing": null,
-        "ongoing": true,
+        "landing": "2026-10-08",
+        "ongoing": false,
         "orbital": true,
         "approx": false
       }
@@ -30556,7 +30556,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Lai_Ka-ying",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Lai%20Ka-ying%20%2820260523%29.jpg?width=320",
-    "totalDaysInSpace": 130,
+    "totalDaysInSpace": 137,
     "firstLaunch": "2026-05-24",
     "lastLanding": null,
     "flights": [
@@ -30586,7 +30586,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Zhang_Zhiyuan_(astronaut)",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Zhang%20Zhiyuan%20%2820260523%29.jpg?width=320",
-    "totalDaysInSpace": 130,
+    "totalDaysInSpace": 137,
     "firstLaunch": "2026-05-24",
     "lastLanding": null,
     "flights": [
@@ -30616,7 +30616,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Anil_Menon",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Anil%20Menon%20portrait.jpg?width=320",
-    "totalDaysInSpace": 79,
+    "totalDaysInSpace": 86,
     "firstLaunch": "2026-07-14",
     "lastLanding": null,
     "flights": [
@@ -30646,7 +30646,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Joshua_Kutryk",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Josh%20Kutryk%20official%20portrait.jpg?width=320",
-    "totalDaysInSpace": 0,
+    "totalDaysInSpace": 7,
     "firstLaunch": "2026-10-01",
     "lastLanding": null,
     "flights": [
@@ -30676,7 +30676,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Luke_Delaney_(astronaut)",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Luke%20Delaney.jpg?width=320",
-    "totalDaysInSpace": 0,
+    "totalDaysInSpace": 7,
     "firstLaunch": "2026-10-01",
     "lastLanding": null,
     "flights": [
@@ -30706,7 +30706,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Sergey_Teteryatnikov",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Sergey%20Teteryatnikov%20%28cropped%29.jpg?width=320",
-    "totalDaysInSpace": 0,
+    "totalDaysInSpace": 7,
     "firstLaunch": "2026-10-01",
     "lastLanding": null,
     "flights": [
