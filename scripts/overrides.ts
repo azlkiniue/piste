@@ -19,9 +19,9 @@ export type Override = { [K in keyof Person]?: Person[K] | '' | null };
 
 export const overrides: Record<string, Override> = {
 	// ───────── examples — delete or replace ─────────
-	// 'yuri-gagarin': { agency: 'Roscosmos', image: 'https://example.com/gagarin.jpg' },
+	// 'yuri-gagarin': { agencies: ['CCCP'], image: 'https://example.com/gagarin.jpg' }, // keys from src/lib/agencies.ts
 	// 'Q7327':        { nationalities: ['Soviet Union'] }, // names from src/lib/countries.ts, primary first
-	// 'll2-690':      { agency: '' }, // emptied → agency reverts to whatever the pipeline set
+	// 'll2-690':      { agencies: [] }, // emptied → agencies revert to whatever the pipeline set
 	//
 	// Overriding `flights` replaces the whole array; firstLaunch / lastLanding / totalDaysInSpace /
 	// status are then recomputed from it automatically (unless you set those explicitly too):
@@ -33,7 +33,7 @@ export const overrides: Record<string, Override> = {
 	'tushar-shah': { nationalities: ['United States'] },
 	'giorgio-manenti': { gender: 'male' },
 	'russel-wilson': { gender: 'male' },
-	'toyohiro-akiyama': { agency: 'Roscosmos' },
+	'toyohiro-akiyama': { agencies: ['CCCP'] }, // was Roscosmos — in 1990 that was the Soviet programme
 	'alan-shepard': {flights: [{"mission":"Mercury-Redstone 3","launch":"1961-05-05","landing":"1961-05-05","ongoing":false,"orbital":false,"approx":false},{"mission":"Apollo 14","launch":"1971-01-31","landing":"1971-02-09","ongoing":false,"orbital":true,"approx":false}]},
 	'Q3030934': {name: 'Mike Hopkins', slug: 'mike-hopkins'},
 };

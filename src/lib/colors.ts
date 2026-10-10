@@ -1,3 +1,4 @@
+import { AGENCIES } from './agencies';
 import type { Person } from './types';
 
 export type ColorBy = 'nationality' | 'agency' | 'gender' | 'status';
@@ -37,13 +38,22 @@ const NATIONALITY: Record<string, string> = {
 	'United Kingdom': '#8b5cf6',
 	Unknown: '#71717a'
 };
+// A predecessor takes a darker shade of its successor's colour (CCCP → Roscosmos, NASDA → JAXA).
 const AGENCY: Record<string, string> = {
 	NASA: '#3b82f6',
+	USAF: '#1e40af',
 	Roscosmos: '#ef4444',
+	CCCP: '#b91c1c',
+	Interkosmos: '#c026d3',
 	ESA: '#f59e0b',
-	CNSA: '#eab308',
+	CNES: '#6366f1',
+	DLR: '#64748b',
+	ASI: '#10b981',
+	CMSA: '#eab308',
 	JAXA: '#ec4899',
+	NASDA: '#be185d',
 	CSA: '#f43f5e',
+	NRC: '#be123c',
 	ISRO: '#22c55e',
 	SpaceX: '#9ca3af',
 	'Blue Origin': '#38bdf8',
@@ -65,9 +75,15 @@ const STATUS: Record<string, string> = {
 	deceased: '#94a3b8'
 };
 
-/** The value a person is coloured by — for nationality, their primary one. */
+/** Every value a person has under a dimension: all their nationalities or agencies, else the one value. */
+export function valuesOf(p: Person, by: ColorBy): string[] {
+	const list = by === 'nationality' ? p.nationalities : by === 'agency' ? p.agencies : [by === 'gender' ? p.gender : p.status];
+	return list.length ? list : ['Unknown'];
+}
+
+/** The value a person is coloured by — for nationality their primary one, for agency the first they flew for. */
 export function valueOf(p: Person, by: ColorBy): string {
-	return by === 'nationality' ? (p.nationalities[0] ?? 'Unknown') : by === 'agency' ? p.agency : by === 'gender' ? p.gender : p.status;
+	return valuesOf(p, by)[0];
 }
 
 export function colorFor(by: ColorBy, value: string): string {
@@ -87,9 +103,14 @@ export const GENDER_LABEL: Record<string, string> = {
 	unknown: 'Unknown'
 };
 
-/** Display label for a raw category value under the active dimension. */
+/** Display label for a raw category value under the active dimension — an agency's short name. */
 export function labelFor(by: ColorBy, value: string): string {
 	if (by === 'status') return STATUS_LABEL[value] ?? value;
 	if (by === 'gender') return GENDER_LABEL[value] ?? value;
 	return value;
+}
+
+/** The longer name behind a label, when there is one — an agency's full name. */
+export function fullLabelFor(by: ColorBy, value: string): string | undefined {
+	return by === 'agency' ? AGENCIES[value]?.name : undefined;
 }

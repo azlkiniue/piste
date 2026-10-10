@@ -19,7 +19,8 @@
  * LL2 also corrects two descriptive attributes Wikidata gets wrong: NATIONALITY (Wikidata often stores a
  * birthplace — Kononenko → Turkmenistan — or a stale/secondary citizenship; LL2's demonym is closer to
  * the flown-under nation, though Supercluster later supplies the full list, see scripts/nationality.ts)
- * and AGENCY (LL2's affiliation fills the gaps Wikidata leaves blank, e.g. Korea/Yi So-yeon). Also
+ * and AGENCY (LL2's affiliation fills the gaps Wikidata leaves blank, e.g. Korea/Yi So-yeon; it's the
+ * present-day one, so scripts/agency.ts then dates it flight by flight — NASDA before JAXA). Also
  * fills spacewalk counts and photos.
  *
  * Data comes from the astronaut LIST fetched with `?mode=detailed`, which inlines each person's
@@ -43,6 +44,7 @@
  * is idempotent given the cache.
  */
 import type { Flight, Gender, Meta, Person, Status } from '../src/lib/types';
+import { agencyOf, settleAgencies } from './agency';
 import { DATA, writeAstronauts } from './dataset';
 import { settleNationalities } from './nationality';
 
@@ -81,23 +83,28 @@ function durationToDays(s?: string | null): number | null {
 	return y * 365 + mo * 30 + d + h / 24 + mi / 1440 + se / 86400;
 }
 
-const AGENCY_RULES: [RegExp, string][] = [
-	[/\bNASA\b|National Aeronautics and Space/i, 'NASA'],
-	[/Roscosmos|Soviet space program|Russian Federal Space|\bRKA\b/i, 'Roscosmos'],
-	[/European Space Agency|\bESA\b/i, 'ESA'],
-	[/Japan Aerospace|\bJAXA\b|NASDA/i, 'JAXA'],
-	[/Canadian Space Agency|\bCSA\b/i, 'CSA'],
-	[/China National Space|China Manned Space|\bCNSA\b/i, 'CNSA'],
-	[/Indian Space Research|\bISRO\b/i, 'ISRO'],
-	[/SpaceX/i, 'SpaceX'],
-	[/Blue Origin/i, 'Blue Origin'],
-	[/Virgin Galactic/i, 'Virgin Galactic'],
-	[/Axiom/i, 'Axiom Space']
-];
-const matchAgency = (labels: (string | undefined)[]) => {
-	for (const l of labels) if (l) for (const [re, name] of AGENCY_RULES) if (re.test(l)) return name;
-	return undefined;
-};
+// LL2 affiliations that name no agency in src/lib/agencies.ts, deliberately: the person keeps the agency
+// they had. Any other label that maps to none is reported, to be added to scripts/agency.ts.
+const LL2_NOT_AGENCIES = new Set([
+	'Boeing', // Christopher Ferguson's employer after NASA; he never flew Starliner
+	'Lockheed Martin', // payload specialists on NASA science missions fly for NASA (Acton, Spacelab 2)
+	'Hughes Aircraft', // … likewise Jarvis
+	'US Navy', // … likewise Bartoe, a Naval Research Laboratory scientist
+	'International Institute for Aeronautical Sciences', // a nonprofit that bought Kellie Gerardi's Virgin Galactic seat
+	'National Research Council', // ambiguous (Canada's NRC or Italy's CNR) — Carlucci is in scripts/agency.ts
+	'Space Research Institute of Saudi Arabia', // Sultan bin Salman flew for ARABSAT — scripts/agency.ts
+	'Bulgarian Space Agency', // Aleksandrov flew under Interkosmos — scripts/agency.ts
+	'Turkish Air Force' // Gezeravcı flew for the Turkish Space Agency — scripts/agency.ts
+]);
+const unmappedAgencies = new Set<string>();
+/** LL2's affiliation as an agency key: undefined when LL2 lists none, null when it maps to none. */
+function ll2Agency(agency: LL2Astro['agency']): string | null | undefined {
+	const label = agency?.name?.trim();
+	if (!label) return undefined;
+	const key = agencyOf(label) ?? agencyOf(agency?.abbrev);
+	if (!key && !LL2_NOT_AGENCIES.has(label)) unmappedAgencies.add(label);
+	return key ?? null;
+}
 
 // LL2 reports nationality as a demonym ("Russian"), occasionally compound ("Vietnamese American").
 // It beats Wikidata, which frequently stores a *birthplace* (Kononenko → Turkmenistan) or a
@@ -386,11 +393,6 @@ const NEVER_REACHED_SPACE = new Set(
 	['Roger B. Chaffee', 'Peter Siebold', 'Michael Alsbury', 'Clint Nichols', 'Doug Shane',
 	 'William Brian Binnie', 'Keith Colmer'].map(normName)
 );
-// LL2 mislabels a handful of affiliations; correct the clear factual errors we'd otherwise import.
-const AGENCY_FIX: Record<string, string> = {
-	// Tuva Atasever is Türkiye's 2nd astronaut (Galactic 07) — LL2 tags him to Turkmenistan in error.
-	'Turkmenistan National Space Agency': 'Turkish Space Agency'
-};
 
 // LL2 has no gender field; infer from the bio's pronouns (best-effort — else 'unknown').
 function genderFromBio(bio?: string | null): Gender {
@@ -440,8 +442,7 @@ function backfillFromLL2(records: LL2Astro[], people: Person[], matchedIds: Set<
 		if (!rebuilt || rebuilt.flights.length === 0) { skipped.noFlights++; continue; }
 
 		const nat = resolveNationality(r.nationality, []);
-		const llAgency = matchAgency([r.agency?.abbrev, r.agency?.name]) ?? r.agency?.name?.trim() ?? 'Unknown';
-		const agency = AGENCY_FIX[llAgency] ?? llAgency;
+		const agency = ll2Agency(r.agency);
 		const tisDays = durationToDays(r.time_in_space);
 		const days = Math.round(tisDays != null && tisDays > 0 ? tisDays : rebuilt.days);
 		let slug = slugify(r.name) || `ll2-${r.id}`;
@@ -456,7 +457,7 @@ function backfillFromLL2(records: LL2Astro[], people: Person[], matchedIds: Set<
 			slug,
 			nationalities: nat ? [nat] : [], // settled with everyone else's once the backfill is in
 			gender: genderFromBio(r.bio),
-			agency,
+			agencies: agency ? [agency] : [], // likewise
 			status: rebuilt.status,
 			dob: r.date_of_birth ? r.date_of_birth.slice(0, 10) : null,
 			dod,
@@ -466,10 +467,10 @@ function backfillFromLL2(records: LL2Astro[], people: Person[], matchedIds: Set<
 			firstLaunch: rebuilt.flights[0].launch,
 			lastLanding: rebuilt.status === 'in-space' ? null : landed.length ? landed[landed.length - 1].landing : null,
 			flights: rebuilt.flights,
-			spacewalks: r.spacewalks_count ?? 0,
-			agencyType: r.agency?.type
+			spacewalks: r.spacewalks_count ?? 0
 		});
-		byAgency[agency] = (byAgency[agency] ?? 0) + 1;
+		const label = agency ?? r.agency?.name?.trim() ?? 'none';
+		byAgency[label] = (byAgency[label] ?? 0) + 1;
 	}
 	return { added, skipped, byAgency };
 }
@@ -521,12 +522,12 @@ async function refreshMeta(people: Person[]) {
 		orbital,
 		suborbital: flights - orbital,
 		countries: new Set(people.flatMap((p) => p.nationalities)).size,
-		agencies: new Set(people.map((p) => p.agency)).size
+		agencies: new Set(people.flatMap((p) => p.agencies)).size
 	};
 	meta.coverage = {
 		genderKnown: people.filter((p) => p.gender !== 'unknown').length,
 		withImage: people.filter((p) => p.image).length,
-		withAgency: people.filter((p) => p.agency !== 'Unknown').length,
+		withAgency: people.filter((p) => p.agencies.length).length,
 		realLandingFlights: flights - approx,
 		approxFlights: approx
 	};
@@ -546,8 +547,7 @@ async function main() {
 	const people: Person[] = await Bun.file(DATA).json();
 	const usedSlugs = new Set(people.map((p) => p.slug));
 
-	let agencyFixed = 0,
-		namesRecovered = 0,
+	let namesRecovered = 0,
 		spacewalks = 0,
 		photos = 0,
 		daysFixed = 0,
@@ -559,10 +559,12 @@ async function main() {
 		unmatched = 0;
 	const topCorrections: { name: string; from: number; to: number }[] = [];
 	const natChanges: { name: string; from: string; to: string }[] = [];
+	const agencyChanges: { name: string; from: string; to: string }[] = [];
 	const agencyBlanked: { name: string; from: string }[] = [];
 	const lagging: string[] = []; // LL2 hasn't caught up with a flight Wikidata already has
 	const matchedIds = new Set<number>(); // LL2 records claimed by a person — the rest feed the backfill
 	const natBefore = new Map(people.map((p) => [p.id, p.nationalities.join(' + ')]));
+	const agencyBefore = new Map(people.map((p) => [p.id, p.agencies.join(' + ')]));
 
 	for (const p of people) {
 		const r = findLL2(p);
@@ -589,21 +591,16 @@ async function main() {
 		const nat = resolveNationality(r.nationality, p.nationalities);
 		if (nat && !p.nationalities.includes(nat)) p.nationalities = [nat];
 
-		// ----- Agency (LL2 authoritative) -----
-		// Canonical short name when LL2's label maps to one; otherwise LL2's own label fills a blank.
+		// ----- Agency (LL2 authoritative): its present-day affiliation, dated flight by flight below -----
 		// When LL2 has the person but lists NO agency, trust that and blank ours — these are private
 		// space tourists (Tito, Simonyi, Laliberté, Akiyama…) that build-data wrongly tagged with a
-		// nation-default like NASA. (ESA grouping is preserved: a non-canonical LL2 label only fills an
-		// Unknown, it never re-labels someone already grouped.)
-		const llAgency = r.agency?.name?.trim();
-		const canonical = matchAgency([r.agency?.abbrev, r.agency?.name]);
-		const newAgency = canonical ?? (llAgency ? (p.agency === 'Unknown' ? llAgency : undefined) : 'Unknown');
-		if (newAgency && newAgency !== p.agency) {
-			if (newAgency === 'Unknown') agencyBlanked.push({ name: p.name, from: p.agency });
-			p.agency = newAgency;
-			agencyFixed++;
-		}
-		if (r.agency?.type) p.agencyType = r.agency.type;
+		// nation-default like NASA. An affiliation that names no agency (a payload specialist's
+		// employer) leaves ours alone.
+		const agency = ll2Agency(r.agency);
+		if (agency === undefined) {
+			if (p.agencies.length) agencyBlanked.push({ name: p.name, from: p.agencies.join(' + ') });
+			p.agencies = [];
+		} else if (agency) p.agencies = [agency];
 		if (typeof r.spacewalks_count === 'number') {
 			p.spacewalks = r.spacewalks_count;
 			spacewalks++;
@@ -659,12 +656,17 @@ async function main() {
 	const { added, skipped, byAgency } = backfillFromLL2(records, people, matchedIds, usedSlugs);
 	people.push(...added);
 
-	// Settle nationalities against the rebuilt flights (a flight before 26 Dec 1991 is a Soviet one).
+	// Settle nationalities and agencies against the rebuilt flights (a flight before 26 Dec 1991 is a
+	// Soviet one, a Japanese flight before October 2003 NASDA's).
 	for (const p of people) {
 		p.nationalities = settleNationalities(p);
+		p.agencies = settleAgencies(p);
 		const from = natBefore.get(p.id);
 		const to = p.nationalities.join(' + ');
 		if (from !== undefined && from !== to) natChanges.push({ name: p.name, from, to });
+		const agencyFrom = agencyBefore.get(p.id);
+		const agencyTo = p.agencies.join(' + ');
+		if (agencyFrom !== undefined && agencyFrom !== agencyTo) agencyChanges.push({ name: p.name, from: agencyFrom, to: agencyTo });
 	}
 
 	// firstLaunch may have shifted for detailed people — keep the canonical ordering.
@@ -686,7 +688,8 @@ async function main() {
 	if (lagging.length) console.log(`   LL2 behind Wikidata (newer flight kept): ${lagging.join(', ')}`);
 	console.log(`names recovered:   ${namesRecovered}  (Wikidata had only a QID)`);
 	console.log(`nationalities:     ${natChanges.length} changed`);
-	console.log(`agencies refined:  ${agencyFixed}  (incl. ${agencyBlanked.length} agency-less tourists blanked)`);
+	console.log(`agencies:          ${agencyChanges.length} changed  (incl. ${agencyBlanked.length} agency-less tourists blanked)`);
+	if (unmappedAgencies.size) console.log(`   ⚠ unmapped LL2 agencies (add to scripts/agency.ts): ${[...unmappedAgencies].join(', ')}`);
 	console.log(`spacewalk counts:  ${spacewalks}`);
 	console.log(`photos filled:     ${photos}`);
 	console.log(`network calls:     ${calls}`);
@@ -696,9 +699,13 @@ async function main() {
 		console.log('nationality changes:');
 		for (const c of natChanges) console.log(`   ${c.name}: ${c.from} → ${c.to}`);
 	}
+	if (agencyChanges.length) {
+		console.log('agency changes:');
+		for (const c of agencyChanges.sort((a, b) => a.name.localeCompare(b.name))) console.log(`   ${c.name}: ${c.from || '—'} → ${c.to || '—'}`);
+	}
 	if (agencyBlanked.length) {
 		console.log('agency blanked (LL2 lists no agency):');
-		for (const c of agencyBlanked.sort((a, b) => a.name.localeCompare(b.name))) console.log(`   ${c.name}: ${c.from} → Unknown`);
+		for (const c of agencyBlanked.sort((a, b) => a.name.localeCompare(b.name))) console.log(`   ${c.name}: ${c.from} → —`);
 	}
 	if (topCorrections.length) {
 		console.log('largest day fixes:');

@@ -78,12 +78,12 @@ async function refreshMeta(people: Person[]) {
 		orbital,
 		suborbital: flights - orbital,
 		countries: new Set(people.flatMap((p) => p.nationalities)).size,
-		agencies: new Set(people.map((p) => p.agency)).size
+		agencies: new Set(people.flatMap((p) => p.agencies)).size
 	};
 	meta.coverage = {
 		genderKnown: people.filter((p) => p.gender !== 'unknown').length,
 		withImage: people.filter((p) => p.image).length,
-		withAgency: people.filter((p) => p.agency !== 'Unknown').length,
+		withAgency: people.filter((p) => p.agencies.length).length,
 		realLandingFlights: flights - approx,
 		approxFlights: approx
 	};

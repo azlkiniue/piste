@@ -34,7 +34,7 @@ readable per-field diff. Regenerate them with:
 ```bash
 bun run update-data            # 1. Wikidata + ISS APIs base — no rate limits, ~1 min
 bun run enrich-ll2             # 2. Launch Library 2 — authoritative; rate-limited, resumable
-bun run enrich-supercluster    # 3. Supercluster — nationalities; gap-fills gender & tourist agencies
+bun run enrich-supercluster    # 3. Supercluster — nationalities; gap-fills gender & tourist agencies; cross-checks agencies
 bun run enrich-manual          # 4. Manual overrides — hand-fix anything; empty a field to revert
 ```
 
@@ -47,7 +47,8 @@ the people Wikidata never had:
   was tagged Turkmenistan, not Russia) or a stale/secondary citizenship. (Supercluster then supplies
   the full list — see [Nationalities](#nationalities).)
 - **Agency** — LL2's affiliation fills the gaps Wikidata leaves blank (e.g. Yi So-yeon → Korean
-  Astronaut Program) and sharpens the rest. Where LL2 has a person but lists *no* agency, that's
+  Astronaut Program) and sharpens the rest. It's the person's *present-day* agency, so it's then dated
+  flight by flight (see [Agencies](#agencies)). Where LL2 has a person but lists *no* agency, that's
   trusted too: early space tourists (Tito, Simonyi…) are left agency-less rather than inheriting a
   nation-default like NASA.
 - **Flight timelines** — each person's flights are rebuilt by zipping their LL2 launches with their
@@ -91,15 +92,13 @@ LL2_API_KEY=…     bun run enrich-ll2   # authenticated tier — higher throttl
 **Supercluster** runs next. From [Supercluster's astronaut database](https://www.supercluster.com/astronauts)
 (~800 humans who have reached space, fetched from its public Sanity API — no key, no rate limit) it
 supplies everyone's **nationalities** (see below), and otherwise fills gaps — it never overrides LL2's
-agency wholesale. Four gap-filling jobs: it fills **gender** for the recent suborbital tourists LL2
+agency wholesale. Three gap-filling jobs: it fills **gender** for the recent suborbital tourists LL2
 leaves blank (it lists nearly everyone); sets **Space Adventures** as the agency for the orbital tourists it brokered (Tito, Simonyi,
 Shuttleworth, Olsen, Ansari, R. Garriott, Laliberté) plus the dearMoon pair Maezawa & Hirano (whom
-Wikidata mis-tagged as JAXA); fills a still-**Unknown** agency only when Supercluster names a
-*commercial* provider (so Akiyama, the TBS journalist it files under "CCCP", stays agency-less rather
-than becoming "Roscosmos"); and applies five hand-reviewed agency corrections. It also **backfills the
-two SpaceShipOne pilots** (Melvill & Binnie — the first commercial astronauts, 2004) that LL2's filters
-drop. Where Supercluster credits a launch *operator* but LL2 credits the flier's *nation* (e.g. a Saudi
-national on an Axiom seat), the national agency is kept by design.
+Wikidata mis-tagged as JAXA); and fills a still-empty agency only when Supercluster names a
+*commercial* provider. It also **backfills the two SpaceShipOne pilots** (Melvill & Binnie — the first
+commercial astronauts, 2004) that LL2's filters drop. Supercluster lists several agencies per person,
+but it isn't copied — it **cross-checks** ours instead (see [Agencies](#agencies)).
 
 ```bash
 bun run enrich-supercluster                  # run AFTER enrich-ll2
@@ -149,6 +148,46 @@ plus a drawing there if circle-flags has no flag for it.
 bun run flags    # sync src/lib/assets/flags with the data by hand (e.g. after adding to scripts/flags/)
 ```
 
+### Agencies
+
+A person can have several agencies too — `agencies` lists every one they flew for, oldest first, **as it
+was when they flew**. Wakata flew for NASDA in 1996 and 2000, then for JAXA; Krikalev for the Soviet
+programme (CCCP), then Roscosmos; Garneau for Canada's National Research Council in 1984, before the
+Canadian Space Agency existed; Engle flew the X-15 for the US Air Force and the Shuttle for NASA; Whitson
+flew for NASA, then Axiom Space. [`scripts/agency.ts`](scripts/agency.ts) settles them:
+
+- **Who counts** — a government astronaut flies for the agency (or armed force) that employed them then;
+  a guest on another country's spacecraft for their own agency or programme, not the host's (a JAXA
+  astronaut on the Shuttle is JAXA; the Soviet bloc's guests flew under Interkosmos); a paying customer
+  for the company that ran or sold the flight (Space Adventures for the Soyuz tourists). Payload
+  specialists on NASA's science missions flew for NASA whoever employed them; those on Defense Department
+  missions, for their armed service.
+- **Succession by flight date** — the sources only know someone's present-day agency, so each flight is
+  dated: before 26 Dec 1991 it was the Soviet programme's (Roscosmos began in Feb 1992; a flight aloft
+  across both counts for both), before Oct 2003 NASDA's rather than JAXA's, before 1989 the NRC's rather
+  than the CSA's.
+- **Commercial missions** — a flight a company ran counts for it (Axiom Space, Virgin Galactic, Blue
+  Origin, SpaceX's private flights), beside the agency that bought the seat: Shukla flew Ax-4 for ISRO and
+  Axiom Space. A company that only provides the ride to an agency's own mission doesn't count — NASA's
+  Crew Dragon and Starliner crews flew for NASA, not SpaceX or Boeing.
+- **A researched list** settles about fifty people the rules and sources get wrong or incomplete,
+  checked against their Wikipedia articles, ESA's history of its astronaut corps (France and Germany
+  merged theirs into ESA's from 1998, so Eyharts flew for CNES in 1998 and for ESA in 2008) and mission
+  records.
+
+One organization is one entry: an agency that merged into or was replaced by another is its own (NASDA,
+the NRC, CCCP), while a mere rename stays under today's name with its earlier names noted (Roscosmos was
+the Russian Space Agency in 1994). Each is keyed by its short name in
+[`src/lib/agencies.ts`](src/lib/agencies.ts), with its full name and a line of history. The app shows the
+short name first; the full name is in the detail panel, on hover, and under each filter entry with
+**Full names**.
+
+**Supercluster** lists several agencies per person too, but it mixes in who *selected* someone (NASDA
+for Hoshide, who first flew in 2008; CNES for Pesquet) and the launch provider (SpaceX for every Crew
+Dragon flier), so it's a cross-check rather than a source: each run reports anyone it gives an agency we
+don't — after dating its list by flight and dropping launch providers — for review in `scripts/agency.ts`.
+Every write also warns about anyone with no agency, or one missing from `agencies.ts`.
+
 **Manual overrides** run last (`scripts/overrides.ts` → `bun run enrich-manual`). Every other layer
 derives values from a source; this one is hand-authored, so it has the final say. List a person by
 `id`, `slug`, or exact `name`, then set any [`Person`](src/lib/types.ts) field to correct it — the
@@ -171,8 +210,8 @@ Sources: **Wikidata** (CC0, base dataset),
 **[International Space Station APIs](https://github.com/corquaid/international-space-station-APIs)**
 (MIT, in-space cross-check), **Launch Library 2** (CC BY-NC 4.0 — authoritative for agency, day
 counts, timelines & backfilling the people Wikidata misses) and **Supercluster** (editorial —
-nationalities, gender, the Space Adventures tourists, and the SpaceShipOne pilots). See the in-app
-About page for methodology.
+nationalities, gender, the Space Adventures tourists, the SpaceShipOne pilots, and an agency
+cross-check). See the in-app About page for methodology.
 
 ## Deploy
 

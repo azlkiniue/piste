@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Person } from '$lib/types';
 	import type { Filters } from '$lib/filters.svelte';
-	import { colorFor, labelFor, valueOf } from '$lib/colors';
+	import { colorFor, fullLabelFor, labelFor, valueOf } from '$lib/colors';
 
 	let { people, filters }: { people: Person[]; filters: Filters } = $props();
 
@@ -24,7 +24,7 @@
 				? 'opacity-100'
 				: 'opacity-40'}"
 			onclick={() => filters.toggle(filters.colorBy, value)}
-			title="Filter by {labelFor(filters.colorBy, value)}"
+			title="Filter by {fullLabelFor(filters.colorBy, value) ?? labelFor(filters.colorBy, value)}"
 		>
 			<span class="h-2.5 w-2.5 rounded-sm" style="background:{colorFor(filters.colorBy, value)}"></span>
 			<span class="text-zinc-600 dark:text-zinc-300">{labelFor(filters.colorBy, value)}</span>

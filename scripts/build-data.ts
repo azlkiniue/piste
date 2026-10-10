@@ -13,6 +13,7 @@
  */
 import { COUNTRY_CODE } from '../src/lib/countries';
 import type { Flight, Gender, Meta, Person, Status } from '../src/lib/types';
+import { agencyOf, ARMED_FORCES, settleAgencies } from './agency';
 import { writeAstronauts } from './dataset';
 import { settleNationalities } from './nationality';
 
@@ -93,44 +94,35 @@ const COUNTRY_RENAME: Record<string, string> = {
 // state back for whoever flew before it gave way.
 const HISTORIC_STATES = new Set(['Soviet Union', 'East Germany', 'West Germany', 'Czechoslovakia', 'Yugoslavia', 'Serbia and Montenegro']);
 
-// Employer/operator label → canonical agency. Order matters (first match wins).
-const AGENCY_RULES: [RegExp, string][] = [
-	[/\bNASA\b|National Aeronautics and Space/i, 'NASA'],
-	[/Roscosmos|Soviet space program|Russian Federal Space|\bRKA\b|Gagarin Cosmonaut|Soviet Air Forces/i, 'Roscosmos'],
-	[/European Space Agency|\bESA\b/i, 'ESA'],
-	[/Japan Aerospace|\bJAXA\b|National Space Development Agency of Japan|\bNASDA\b/i, 'JAXA'],
-	[/Canadian Space Agency|\bCSA\b|Agence spatiale canadienne/i, 'CSA'],
-	[/China National Space|China Manned Space|\bCNSA\b|People's Liberation Army/i, 'CNSA'],
-	[/Indian Space Research|\bISRO\b/i, 'ISRO'],
-	[/SpaceX/i, 'SpaceX'],
-	[/Blue Origin/i, 'Blue Origin'],
-	[/Virgin Galactic/i, 'Virgin Galactic'],
-	[/Axiom/i, 'Axiom Space']
-];
+// Employer/operator labels → an agency key (scripts/agency.ts). An armed force is skipped: plenty of NASA
+// and ESA astronauts list one as an employer.
 function matchAgency(labels: string[]): string | undefined {
 	// Labels arrive in SPARQL row order; sort them so several matching labels resolve the same way every run.
-	for (const l of [...labels].sort()) for (const [re, name] of AGENCY_RULES) if (re.test(l)) return name;
+	for (const l of [...labels].sort()) {
+		const key = agencyOf(l);
+		if (key && !ARMED_FORCES.has(key)) return key;
+	}
 	return undefined;
 }
 
 // Most astronauts represent their own nation's agency — an accurate inference for the ~90% who
-// are government crew. Europeans are grouped under ESA.
+// are government crew. Europeans are grouped under ESA. settleAgencies then names each flight's agency
+// as it was (a Soviet-era flight is CCCP's, a Japanese one before 2003 NASDA's).
 const NATION_AGENCY: Record<string, string> = {
-	us: 'NASA', ru: 'Roscosmos', su: 'Roscosmos', cn: 'CNSA', jp: 'JAXA', ca: 'CSA', in: 'ISRO',
-	dd: 'Roscosmos', cs: 'Roscosmos', // their only fliers were Intercosmos guests on Soviet missions
+	us: 'NASA', ru: 'Roscosmos', su: 'CCCP', cn: 'CMSA', jp: 'JAXA', ca: 'CSA', in: 'ISRO',
+	dd: 'Interkosmos', cs: 'Interkosmos', // their only fliers were Interkosmos guests on Soviet missions
 	de: 'ESA', fr: 'ESA', it: 'ESA', gb: 'ESA', es: 'ESA', nl: 'ESA', be: 'ESA', se: 'ESA',
 	ch: 'ESA', dk: 'ESA', no: 'ESA', at: 'ESA', pl: 'ESA', ie: 'ESA', fi: 'ESA', pt: 'ESA',
 	gr: 'ESA', lu: 'ESA', cz: 'ESA', hu: 'ESA', ro: 'ESA'
 };
 // Resolution: explicit employer → (suborbital tourists) commercial provider → nation's agency →
-// Unknown. Government mission *operators* are not used (a JAXA astronaut on a NASA vehicle isn't
+// none. Government mission *operators* are not used (a JAXA astronaut on a NASA vehicle isn't
 // "NASA"). LL2 enrichment later replaces this with exact employer data.
-function resolveAgency(employers: string[], operators: string[], suborbitalOnly: boolean, cc: string | null): string {
+function resolveAgency(employers: string[], operators: string[], suborbitalOnly: boolean, cc: string | null): string | undefined {
 	return (
 		matchAgency(employers) ??
 		(suborbitalOnly ? matchAgency(operators) : undefined) ??
-		(cc ? NATION_AGENCY[cc] : undefined) ??
-		'Unknown'
+		(cc ? NATION_AGENCY[cc] : undefined)
 	);
 }
 
@@ -471,7 +463,8 @@ async function main() {
 		const countryCode = COUNTRY_CODE[nationalities[0]] ?? null;
 		// Soviet-republic cosmonauts (e.g. Ukrainian/Belarusian SSR) flew the Soviet programme.
 		let agency = resolveAgency([...agg.employers], [...opLabels], pf.every((t) => !t.orbital), countryCode);
-		if (agency === 'Unknown' && cs.includes('Soviet Union')) agency = 'Roscosmos';
+		if (!agency && cs.includes('Soviet Union')) agency = 'CCCP';
+		const agencies = settleAgencies({ name, agencies: agency ? [agency] : [], flights: pf });
 
 		persons.push({
 			id: pq,
@@ -480,7 +473,7 @@ async function main() {
 			slug,
 			nationalities,
 			gender: toGender(agg.gender),
-			agency,
+			agencies,
 			status,
 			dob: agg.dob?.iso ?? null,
 			dod: agg.dod?.iso ?? null,
@@ -527,12 +520,12 @@ async function main() {
 			orbital,
 			suborbital: flightCount - orbital,
 			countries: new Set(persons.flatMap((p) => p.nationalities)).size,
-			agencies: new Set(persons.map((p) => p.agency)).size
+			agencies: new Set(persons.flatMap((p) => p.agencies)).size
 		},
 		coverage: {
 			genderKnown: persons.filter((p) => p.gender !== 'unknown').length,
 			withImage: persons.filter((p) => p.image).length,
-			withAgency: persons.filter((p) => p.agency !== 'Unknown').length,
+			withAgency: persons.filter((p) => p.agencies.length).length,
 			realLandingFlights: flightCount - approx,
 			approxFlights: approx
 		},

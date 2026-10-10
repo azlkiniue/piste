@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Person } from '$lib/types';
 	import { formatDate, formatDuration } from '$lib/time-scale';
-	import { colorFor, valueOf, STATUS_LABEL, GENDER_LABEL } from '$lib/colors';
+	import { colorFor, valueOf, valuesOf, STATUS_LABEL, GENDER_LABEL } from '$lib/colors';
+	import { AGENCIES } from '$lib/agencies';
 	import Flags from './Flags.svelte';
 
 	let { person, onclose }: { person: Person; onclose: () => void } = $props();
@@ -11,6 +12,8 @@
 		person.slug;
 		imgError = false;
 	});
+
+	const agencies = $derived(valuesOf(person, 'agency'));
 
 	const initials = $derived(
 		person.name
@@ -62,12 +65,21 @@
 		{/if}
 		<div class="min-w-0 flex-1">
 			<h2 class="text-lg font-bold leading-tight">{person.name}</h2>
+			<!-- nationalities, then agencies by short name (full name on hover). A separator stays with the item
+			     before it, so a wrapped line never starts with one. -->
 			<p class="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-zinc-500 dark:text-zinc-400">
-				{#each person.nationalities as country (country)}
-					<span class="inline-flex items-center gap-1"><Flags countries={[country]} />{country}</span>
-					<span aria-hidden="true">·</span>
+				{#each person.nationalities as country, i (country)}
+					<span class="inline-flex items-center gap-1 whitespace-nowrap">
+						<Flags countries={[country]} />{country}{#if i < person.nationalities.length - 1}<span aria-hidden="true">·</span>{/if}
+					</span>
 				{/each}
-				<span>{person.agency}</span>
+			</p>
+			<p class="flex flex-wrap gap-x-1.5 text-sm text-zinc-500 dark:text-zinc-400">
+				{#each agencies as agency, i (agency)}
+					<span class="whitespace-nowrap" title={AGENCIES[agency]?.name}>
+						{agency}{#if i < agencies.length - 1}<span aria-hidden="true">{' ·'}</span>{/if}
+					</span>
+				{/each}
 			</p>
 			<span class="mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium {statusClass[person.status]}">
 				{STATUS_LABEL[person.status]}
@@ -99,12 +111,30 @@
 	</dl>
 
 	<div class="px-4 py-2 text-xs text-zinc-500 dark:text-zinc-400">
-		{#if person.dob}Born {formatDate(person.dob)}{#if person.dod} · Died {formatDate(person.dod)} (aged {age(person.dob, person.dod)}){:else} · {age(person.dob, null)} years old{/if}{/if}
+		{#if person.dob}Born {formatDate(person.dob)}{#if person.dod}{' · '}Died {formatDate(person.dod)} (aged {age(person.dob, person.dod)}){:else}{' · '}{age(person.dob, null)} years old{/if}{/if}
 	</div>
 
-	<!-- flights -->
+	<!-- agencies + flights -->
 	<div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4 scrollbar-thin">
-		<h3 class="sticky top-0 bg-white py-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400 dark:bg-zinc-950">
+		<!-- short name first, then the full name and a line of history -->
+		<h3 class="pt-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+			{agencies.length === 1 ? 'Agency' : 'Agencies'}
+		</h3>
+		<ul class="mt-1.5 space-y-2">
+			{#each agencies as agency (agency)}
+				{@const about = AGENCIES[agency]}
+				<li class="flex gap-2.5">
+					<span class="mt-1.5 h-2 w-2 shrink-0 rounded-sm" style="background:{colorFor('agency', agency)}"></span>
+					<div class="min-w-0 leading-snug">
+						<div class="text-sm font-medium text-zinc-800 dark:text-zinc-100">{agency}</div>
+						{#if about?.name}<div class="text-xs text-zinc-500 dark:text-zinc-400">{about.name}</div>{/if}
+						{#if about?.note}<div class="mt-0.5 text-[11px] text-zinc-400 dark:text-zinc-500">{about.note}</div>{/if}
+					</div>
+				</li>
+			{/each}
+		</ul>
+
+		<h3 class="sticky top-0 mt-2 bg-white py-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400 dark:bg-zinc-950">
 			{person.flights.length} {person.flights.length === 1 ? 'flight' : 'flights'}
 		</h3>
 		<ol class="space-y-2.5">

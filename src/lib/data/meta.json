@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-09T21:27:12.961Z",
-  "asOf": "2026-10-09",
+  "generatedAt": "2026-10-10T04:56:17.701Z",
+  "asOf": "2026-10-10",
   "sources": [
     {
       "name": "Wikidata",
@@ -30,7 +30,7 @@
     "orbital": 1441,
     "suborbital": 173,
     "countries": 56,
-    "agencies": 27
+    "agencies": 38
   },
   "coverage": {
     "genderKnown": 790,

@@ -32,8 +32,10 @@ export interface Person {
 	 *  citizenship they held at the time. e.g. ["Soviet Union", "Russia"], ["United States", "United Kingdom"]. */
 	nationalities: string[];
 	gender: Gender;
-	/** Space agency / provider, e.g. "NASA". "Unknown" until LL2 enrichment fills gaps. */
-	agency: string;
+	/** Agencies the person flew for, oldest first — keys of src/lib/agencies.ts, each as it was when they
+	 *  flew (NASDA before JAXA; the Soviet programme, CCCP, before Roscosmos), plus the company that ran a
+	 *  commercial flight. e.g. ["NASDA", "JAXA"], ["ISRO", "Axiom Space"]. Empty when unknown. */
+	agencies: string[];
 	status: Status;
 	/** Date of birth / death, ISO YYYY-MM-DD or null. */
 	dob: string | null;
@@ -51,8 +53,6 @@ export interface Person {
 	flights: Flight[];
 	/** LL2 enrichment (optional): total spacewalks. */
 	spacewalks?: number;
-	/** LL2 enrichment (optional): agency type, e.g. "Government" or "Private". */
-	agencyType?: string;
 }
 
 export interface Meta {

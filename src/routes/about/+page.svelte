@@ -52,14 +52,14 @@
 			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="https://www.supercluster.com/astronauts" target="_blank" rel="noopener">Supercluster</a>
 			<span class="text-zinc-400">· editorial</span> — nationalities, including defunct states and second
 			citizenships, plus gaps the others leave: gender for recent suborbital fliers, the space-tourism
-			brokers (Space Adventures), and the two SpaceShipOne pilots.
+			brokers (Space Adventures), and the two SpaceShipOne pilots. It also cross-checks agencies.
 		</li>
 	</ul>
 
 	<h2 class="mt-8 text-lg font-semibold">Caveats</h2>
 	<ul class="mt-2 list-disc space-y-1.5 pl-5 text-sm text-zinc-600 dark:text-zinc-300">
 		<li><strong>Nationality</strong> is every state a person flew for — including ones that no longer exist — plus any other citizenship they held at the time, so some people have two. Gagarin flew for the Soviet Union; Krikalev, in orbit as it dissolved and flying again in 1994, for the Soviet Union and Russia; Ulf Merbold for West Germany and then reunified Germany; Michael Foale is American and British. It comes from Supercluster, with flight dates deciding Soviet versus Russian and a hand-checked list of corrections; heritage alone doesn't count, and territories count as their country (Puerto Rico → United States).</li>
-		<li><strong>Agency</strong> comes from Launch Library 2 where it has a record, falling back to Wikidata. Europeans are grouped under ESA, and the space tourists show the company that flew them (e.g. Space Adventures) — with only a couple of early self-funded fliers left agency-less.</li>
+		<li><strong>Agency</strong> is every agency a person flew for, as it was at the time, so some people have two or three. Koichi Wakata flew for NASDA, then for JAXA, which it merged into; Sergei Krikalev for the Soviet space programme (CCCP), then Roscosmos; Joe Engle flew the X-15 for the US Air Force, then the Shuttle for NASA; Peggy Whitson flew for NASA, then Axiom Space. A guest on another country's spacecraft counts for their own agency, a paying customer for the company that flew them (Space Adventures, Axiom Space…), and a seat a government bought on a commercial flight for both. It starts from Launch Library 2, with flight dates deciding the era and a hand-checked list of corrections; Supercluster is a cross-check. Agencies show by their short name — open a person, or switch the filter to <em>Full names</em>, for the full one.</li>
 		<li><strong>Status</strong> is <em>In space / Living / Deceased</em>; "in space now" is a snapshot taken when the data was built.</li>
 		<li><strong>"In space"</strong> here means past the US 50-mile / 80 km astronaut boundary, so Virgin Galactic counts even though SpaceShipTwo falls below the 100 km Kármán line — the total therefore sits a little above Kármán-only tallies quoted elsewhere.</li>
 		<li>Recent suborbital tourists are filled in from Launch Library 2, which carries no gender; Supercluster supplies most of the rest, so only a couple still read <em>Unknown</em>. A few obscure early flights may still be missing.</li>

@@ -1,5 +1,5 @@
 import type { Person } from './types';
-import { valueOf, type ColorBy } from './colors';
+import { valuesOf, type ColorBy } from './colors';
 
 export type SortKey = 'firstLaunch' | 'lastFlight' | 'name' | 'days' | 'flights';
 export type FlightType = 'all' | 'orbital' | 'suborbital';
@@ -68,8 +68,8 @@ export class Filters {
 export function matches(p: Person, f: Filters, skip?: Dim | 'flightType'): boolean {
 	const q = f.search.trim().toLowerCase();
 	if (q && !p.name.toLowerCase().includes(q)) return false;
-	if (skip !== 'nationality' && f.nationalities.size && !p.nationalities.some((n) => f.nationalities.has(n))) return false;
-	if (skip !== 'agency' && f.agencies.size && !f.agencies.has(p.agency)) return false;
+	if (skip !== 'nationality' && f.nationalities.size && !valuesOf(p, 'nationality').some((n) => f.nationalities.has(n))) return false;
+	if (skip !== 'agency' && f.agencies.size && !valuesOf(p, 'agency').some((a) => f.agencies.has(a))) return false;
 	if (skip !== 'gender' && f.genders.size && !f.genders.has(p.gender)) return false;
 	if (skip !== 'status' && f.statuses.size && !f.statuses.has(p.status)) return false;
 	if (skip !== 'flightType') {
@@ -96,12 +96,12 @@ export function applyFilters(people: Person[], f: Filters): Person[] {
 }
 
 /** Count people per value of `dim`, honouring all other active filters. A person counts once under each
- *  of their nationalities. */
+ *  of their nationalities, and each of their agencies. */
 export function facetCounts(people: Person[], f: Filters, dim: Dim): Map<string, number> {
 	const m = new Map<string, number>();
 	for (const p of people) {
 		if (!matches(p, f, dim)) continue;
-		for (const v of dim === 'nationality' ? p.nationalities : [valueOf(p, dim)]) m.set(v, (m.get(v) ?? 0) + 1);
+		for (const v of valuesOf(p, dim)) m.set(v, (m.get(v) ?? 0) + 1);
 	}
 	return m;
 }
