@@ -77,7 +77,7 @@ async function refreshMeta(people: Person[]) {
 		inSpace: people.filter((p) => p.status === 'in-space').length,
 		orbital,
 		suborbital: flights - orbital,
-		countries: new Set(people.map((p) => p.nationality)).size,
+		countries: new Set(people.flatMap((p) => p.nationalities)).size,
 		agencies: new Set(people.map((p) => p.agency)).size
 	};
 	meta.coverage = {

@@ -65,8 +65,9 @@ const STATUS: Record<string, string> = {
 	deceased: '#94a3b8'
 };
 
+/** The value a person is coloured by — for nationality, their primary one. */
 export function valueOf(p: Person, by: ColorBy): string {
-	return by === 'nationality' ? p.nationality : by === 'agency' ? p.agency : by === 'gender' ? p.gender : p.status;
+	return by === 'nationality' ? (p.nationalities[0] ?? 'Unknown') : by === 'agency' ? p.agency : by === 'gender' ? p.gender : p.status;
 }
 
 export function colorFor(by: ColorBy, value: string): string {
@@ -91,11 +92,4 @@ export function labelFor(by: ColorBy, value: string): string {
 	if (by === 'status') return STATUS_LABEL[value] ?? value;
 	if (by === 'gender') return GENDER_LABEL[value] ?? value;
 	return value;
-}
-
-/** Flag emoji from an ISO 3166-1 alpha-2 code (lowercase), or '' if not derivable. */
-export function flagEmoji(cc: string | null): string {
-	if (!cc || cc.length !== 2) return '';
-	const A = 0x1f1e6;
-	return String.fromCodePoint(A + (cc.charCodeAt(0) - 97), A + (cc.charCodeAt(1) - 97));
 }

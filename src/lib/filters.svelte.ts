@@ -68,7 +68,7 @@ export class Filters {
 export function matches(p: Person, f: Filters, skip?: Dim | 'flightType'): boolean {
 	const q = f.search.trim().toLowerCase();
 	if (q && !p.name.toLowerCase().includes(q)) return false;
-	if (skip !== 'nationality' && f.nationalities.size && !f.nationalities.has(p.nationality)) return false;
+	if (skip !== 'nationality' && f.nationalities.size && !p.nationalities.some((n) => f.nationalities.has(n))) return false;
 	if (skip !== 'agency' && f.agencies.size && !f.agencies.has(p.agency)) return false;
 	if (skip !== 'gender' && f.genders.size && !f.genders.has(p.gender)) return false;
 	if (skip !== 'status' && f.statuses.size && !f.statuses.has(p.status)) return false;
@@ -95,13 +95,13 @@ export function applyFilters(people: Person[], f: Filters): Person[] {
 	return people.filter((p) => matches(p, f)).sort(SORTERS[f.sort]);
 }
 
-/** Count people per value of `dim`, honouring all other active filters. */
+/** Count people per value of `dim`, honouring all other active filters. A person counts once under each
+ *  of their nationalities. */
 export function facetCounts(people: Person[], f: Filters, dim: Dim): Map<string, number> {
 	const m = new Map<string, number>();
 	for (const p of people) {
 		if (!matches(p, f, dim)) continue;
-		const v = valueOf(p, dim);
-		m.set(v, (m.get(v) ?? 0) + 1);
+		for (const v of dim === 'nationality' ? p.nationalities : [valueOf(p, dim)]) m.set(v, (m.get(v) ?? 0) + 1);
 	}
 	return m;
 }

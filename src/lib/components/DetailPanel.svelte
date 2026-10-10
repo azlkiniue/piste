@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Person } from '$lib/types';
 	import { formatDate, formatDuration } from '$lib/time-scale';
-	import { colorFor, flagEmoji, STATUS_LABEL, GENDER_LABEL } from '$lib/colors';
+	import { colorFor, valueOf, STATUS_LABEL, GENDER_LABEL } from '$lib/colors';
+	import Flags from './Flags.svelte';
 
 	let { person, onclose }: { person: Person; onclose: () => void } = $props();
 
@@ -54,16 +55,19 @@
 		{:else}
 			<div
 				class="grid h-16 w-16 shrink-0 place-items-center rounded-lg text-lg font-semibold text-white"
-				style="background:{colorFor('nationality', person.nationality)}"
+				style="background:{colorFor('nationality', valueOf(person, 'nationality'))}"
 			>
 				{initials}
 			</div>
 		{/if}
 		<div class="min-w-0 flex-1">
 			<h2 class="text-lg font-bold leading-tight">{person.name}</h2>
-			<p class="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
-				{flagEmoji(person.countryCode)}
-				{person.nationality} · {person.agency}
+			<p class="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-sm text-zinc-500 dark:text-zinc-400">
+				{#each person.nationalities as country (country)}
+					<span class="inline-flex items-center gap-1"><Flags countries={[country]} />{country}</span>
+					<span aria-hidden="true">·</span>
+				{/each}
+				<span>{person.agency}</span>
 			</p>
 			<span class="mt-1.5 inline-block rounded-full px-2 py-0.5 text-xs font-medium {statusClass[person.status]}">
 				{STATUS_LABEL[person.status]}

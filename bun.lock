@@ -10,6 +10,7 @@
         "@sveltejs/vite-plugin-svelte": "^7.1.2",
         "@tailwindcss/vite": "^4.3.0",
         "@types/node": "^25.9.3",
+        "circle-flags": "^2.8.3",
         "svelte": "^5.56.1",
         "svelte-check": "^4.6.0",
         "tailwindcss": "^4.3.0",
@@ -132,6 +133,8 @@
     "axobject-query": ["axobject-query@4.1.0", "", {}, "sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ=="],
 
     "chokidar": ["chokidar@4.0.3", "", { "dependencies": { "readdirp": "^4.0.1" } }, "sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA=="],
+
+    "circle-flags": ["circle-flags@2.8.3", "", {}, "sha512-62gm4tY7evXzNdLP+nFOzxEtCagbY4nSnrPNn/yOWFAvApvOWCAvyqL+NeLN+nfhGOGc4L+oSgEheqM3XE5w7g=="],
 
     "clsx": ["clsx@2.1.1", "", {}, "sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA=="],
 

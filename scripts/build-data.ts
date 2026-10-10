@@ -11,8 +11,10 @@
  * LL2 enrichment (agency, spacewalks, active/retired) is a separate, optional, rate-limited
  * step — see scripts/enrich-ll2.ts. The site is fully functional on this build alone.
  */
+import { COUNTRY_CODE } from '../src/lib/countries';
 import type { Flight, Gender, Meta, Person, Status } from '../src/lib/types';
 import { writeAstronauts } from './dataset';
+import { settleNationalities } from './nationality';
 
 const UA = 'PisteDataPipeline/1.0 (https://github.com/piste; static people-in-space timeline)';
 const WDQS = 'https://query.wikidata.org/sparql';
@@ -70,31 +72,26 @@ function nameFromArticle(url?: string): string | undefined {
 }
 
 // ---------------------------------------------------------------- normalization tables
+// Wikidata country labels → the names in src/lib/countries.ts.
 const COUNTRY_RENAME: Record<string, string> = {
 	'United States of America': 'United States',
 	"People's Republic of China": 'China',
 	'Russian Federation': 'Russia',
-	'West Germany': 'Germany',
-	'East Germany': 'Germany',
 	'Federal Republic of Germany': 'Germany',
-	'German Democratic Republic': 'Germany',
+	'German Democratic Republic': 'East Germany',
 	'Kingdom of the Netherlands': 'Netherlands',
-	'United Kingdom of Great Britain and Northern Ireland': 'United Kingdom'
+	'Kingdom of Denmark': 'Denmark',
+	'Czech Republic': 'Czechia',
+	'Democratic Republic of Afghanistan': 'Afghanistan',
+	'United Kingdom of Great Britain and Northern Ireland': 'United Kingdom',
+	'Russian Soviet Federative Socialist Republic': 'Soviet Union',
+	'Ukrainian Soviet Socialist Republic': 'Soviet Union',
+	'Byelorussian Soviet Socialist Republic': 'Soviet Union'
 };
-// Flag code for renamed / historic states (P297 of the underlying item may be missing/odd).
-const CANONICAL_ISO: Record<string, string> = {
-	'United States': 'us',
-	China: 'cn',
-	Russia: 'ru',
-	'Soviet Union': 'su', // 🇸🇺 renders on most platforms
-	Germany: 'de',
-	'United Kingdom': 'gb',
-	Netherlands: 'nl',
-	Czechoslovakia: 'cz'
-};
-// When a person has several citizenships, prefer a present-day state over a historic one
-// (e.g. a cosmonaut born in the USSR but flying for Russia today).
-const HISTORIC_STATES = new Set(['Soviet Union', 'Czechoslovakia', 'Yugoslavia', 'Serbia and Montenegro']);
+// When a person has several citizenships, prefer a present-day state over a historic one (e.g. a
+// cosmonaut born in the USSR but flying for Russia today) — settleNationalities then puts the former
+// state back for whoever flew before it gave way.
+const HISTORIC_STATES = new Set(['Soviet Union', 'East Germany', 'West Germany', 'Czechoslovakia', 'Yugoslavia', 'Serbia and Montenegro']);
 
 // Employer/operator label → canonical agency. Order matters (first match wins).
 const AGENCY_RULES: [RegExp, string][] = [
@@ -120,6 +117,7 @@ function matchAgency(labels: string[]): string | undefined {
 // are government crew. Europeans are grouped under ESA.
 const NATION_AGENCY: Record<string, string> = {
 	us: 'NASA', ru: 'Roscosmos', su: 'Roscosmos', cn: 'CNSA', jp: 'JAXA', ca: 'CSA', in: 'ISRO',
+	dd: 'Roscosmos', cs: 'Roscosmos', // their only fliers were Intercosmos guests on Soviet missions
 	de: 'ESA', fr: 'ESA', it: 'ESA', gb: 'ESA', es: 'ESA', nl: 'ESA', be: 'ESA', se: 'ESA',
 	ch: 'ESA', dk: 'ESA', no: 'ESA', at: 'ESA', pl: 'ESA', ie: 'ESA', fi: 'ESA', pt: 'ESA',
 	gr: 'ESA', lu: 'ESA', cz: 'ESA', hu: 'ESA', ro: 'ESA'
@@ -283,11 +281,11 @@ SELECT ?flight ?flightLabel ?launch ?landing ?crew ?operatorLabel WHERE {
 }`;
 
 const peopleQuery = (values: string) => `
-SELECT ?p ?pLabel ?genderLabel ?countryLabel ?iso2 ?dob ?dobPrec ?dod ?dodPrec ?image ?article ?employerLabel WHERE {
+SELECT ?p ?pLabel ?genderLabel ?countryLabel ?dob ?dobPrec ?dod ?dodPrec ?image ?article ?employerLabel WHERE {
   VALUES ?p { ${values} }
   FILTER EXISTS { ?p wdt:P31 wd:Q5 }
   OPTIONAL { ?p wdt:P21 ?gender }
-  OPTIONAL { ?p wdt:P27 ?country . OPTIONAL { ?country wdt:P297 ?iso2 } }
+  OPTIONAL { ?p wdt:P27 ?country }
   # Best-rank statements (the same set wdt: gives) plus their precision, so a full date beats a year-only one.
   OPTIONAL { ?p p:P569 [ a wikibase:BestRank ; psv:P569 [ wikibase:timeValue ?dob ; wikibase:timePrecision ?dobPrec ] ] }
   OPTIONAL { ?p p:P570 [ a wikibase:BestRank ; psv:P570 [ wikibase:timeValue ?dod ; wikibase:timePrecision ?dodPrec ] ] }
@@ -308,7 +306,7 @@ interface FlightAgg {
 interface PersonAgg {
 	name: string;
 	gender?: string;
-	countries: { label: string; iso2?: string }[];
+	countries: Set<string>;
 	dob?: WdDate;
 	dod?: WdDate;
 	image?: string;
@@ -361,18 +359,14 @@ async function main() {
 			if (!pq) continue;
 			let p = people.get(pq);
 			if (!p) {
-				p = { name: val(b, 'pLabel') || pq, countries: [], employers: new Set() };
+				p = { name: val(b, 'pLabel') || pq, countries: new Set(), employers: new Set() };
 				people.set(pq, p);
 			}
 			// wdt:/BestRank already prefer a preferred-rank statement and drop deprecated ones; these
 			// break the remaining ties between same-rank values.
 			p.gender = least(p.gender, val(b, 'genderLabel'));
 			const cl = val(b, 'countryLabel');
-			if (cl) {
-				const c = p.countries.find((c) => c.label === cl);
-				if (c) c.iso2 = least(c.iso2, val(b, 'iso2'));
-				else p.countries.push({ label: cl, iso2: val(b, 'iso2') });
-			}
+			if (cl) p.countries.add(COUNTRY_RENAME[cl] ?? cl);
 			p.dob = pickDate(p.dob, val(b, 'dob'), val(b, 'dobPrec'));
 			p.dod = pickDate(p.dod, val(b, 'dod'), val(b, 'dodPrec'));
 			p.image = least(p.image, val(b, 'image'));
@@ -451,15 +445,6 @@ async function main() {
 			if (e > s) days += (e - s) / 86400000;
 		}
 
-		// Sorted, so a person with several present-day citizenships gets the alphabetically first, not
-		// whichever SPARQL row came first (LL2 enrichment later sets the flown-under nation anyway).
-		const cs = agg.countries
-			.map((c) => ({ label: COUNTRY_RENAME[c.label] ?? c.label, iso2: c.iso2 }))
-			.sort((a, b) => cmp(a.label, b.label) || cmp(a.iso2, b.iso2));
-		const pick = cs.find((c) => !HISTORIC_STATES.has(c.label)) ?? cs[0];
-		const nationality = pick?.label ?? 'Unknown';
-		const countryCode = CANONICAL_ISO[nationality] ?? (pick?.iso2 ? pick.iso2.toLowerCase() : null);
-
 		let image = agg.image ? agg.image.replace(/^http:/, 'https:') : null;
 		if (image) image += (image.includes('?') ? '&' : '?') + 'width=320';
 
@@ -471,20 +456,29 @@ async function main() {
 		if (usedSlugs.has(slug)) slug = `${slug}-${pq.toLowerCase()}`;
 		usedSlugs.add(slug);
 
+		// One base nationality — Wikidata also lists ancestry and birth states, so its extras aren't
+		// trusted; LL2 and Supercluster refine this later. Prefer a present-day country the app knows
+		// (Chang-Díaz: United States over his native Costa Rica), and sort so ties go to the
+		// alphabetically first, not whichever SPARQL row came first.
+		const cs = [...agg.countries].sort(cmp);
+		const current = cs.filter((c) => !HISTORIC_STATES.has(c));
+		const pick = current.find((c) => COUNTRY_CODE[c]) ?? current[0] ?? cs[0];
+		const nationalities = settleNationalities({ name, nationalities: pick ? [pick] : [], flights: pf });
+
 		const status: Status = isInSpace ? 'in-space' : agg.dod ? 'deceased' : 'living';
 		const lastLanded = [...pf].reverse().find((f) => !f.ongoing && f.landing);
 
+		const countryCode = COUNTRY_CODE[nationalities[0]] ?? null;
 		// Soviet-republic cosmonauts (e.g. Ukrainian/Belarusian SSR) flew the Soviet programme.
 		let agency = resolveAgency([...agg.employers], [...opLabels], pf.every((t) => !t.orbital), countryCode);
-		if (agency === 'Unknown' && cs.some((c) => c.label === 'Soviet Union')) agency = 'Roscosmos';
+		if (agency === 'Unknown' && cs.includes('Soviet Union')) agency = 'Roscosmos';
 
 		persons.push({
 			id: pq,
 			qid: pq,
 			name,
 			slug,
-			nationality,
-			countryCode,
+			nationalities,
 			gender: toGender(agg.gender),
 			agency,
 			status,
@@ -532,7 +526,7 @@ async function main() {
 			inSpace: persons.filter((p) => p.status === 'in-space').length,
 			orbital,
 			suborbital: flightCount - orbital,
-			countries: new Set(persons.map((p) => p.nationality)).size,
+			countries: new Set(persons.flatMap((p) => p.nationalities)).size,
 			agencies: new Set(persons.map((p) => p.agency)).size
 		},
 		coverage: {

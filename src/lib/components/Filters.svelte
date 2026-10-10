@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Person } from '$lib/types';
 	import { facetCounts, type Filters, type Dim, type FlightType } from '$lib/filters.svelte';
-	import { colorFor, labelFor, flagEmoji } from '$lib/colors';
+	import { colorFor, labelFor } from '$lib/colors';
+	import Flags from './Flags.svelte';
 
 	let { people, filters }: { people: Person[]; filters: Filters } = $props();
 
@@ -43,7 +44,7 @@
 					>
 						{#if on}<svg viewBox="0 0 10 10" class="h-2.5 w-2.5 text-white"><path d="M1 5l2.5 2.5L9 2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>{/if}
 					</span>
-					{#if dim === 'nationality'}<span class="text-xs leading-none">{flagEmoji(people.find((p) => p.nationality === value)?.countryCode ?? null) || ''}</span>{/if}
+					{#if dim === 'nationality'}<Flags countries={[value]} />{/if}
 					<span class="truncate">{labelFor(dim, value)}</span>
 					<span class="ml-auto shrink-0 tabular-nums text-xs text-zinc-400">{count}</span>
 				</button>

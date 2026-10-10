@@ -34,7 +34,7 @@ readable per-field diff. Regenerate them with:
 ```bash
 bun run update-data            # 1. Wikidata + ISS APIs base — no rate limits, ~1 min
 bun run enrich-ll2             # 2. Launch Library 2 — authoritative; rate-limited, resumable
-bun run enrich-supercluster    # 3. Supercluster — gap-fills gender & tourist agencies
+bun run enrich-supercluster    # 3. Supercluster — nationalities; gap-fills gender & tourist agencies
 bun run enrich-manual          # 4. Manual overrides — hand-fix anything; empty a field to revert
 ```
 
@@ -43,8 +43,9 @@ then runs as the **authoritative source** wherever it and Wikidata disagree — 
 (the crew list, dates, photos, gender, dob/dod) and LL2 corrects four things on top of it, then backfills
 the people Wikidata never had:
 
-- **Nationality** — LL2's flown-under nation overrides Wikidata, which often stores a *birthplace*
-  (Kononenko was tagged Turkmenistan, not Russia) or a stale/secondary citizenship.
+- **Nationality** — LL2's demonym overrides Wikidata, which often stores a *birthplace* (Kononenko
+  was tagged Turkmenistan, not Russia) or a stale/secondary citizenship. (Supercluster then supplies
+  the full list — see [Nationalities](#nationalities).)
 - **Agency** — LL2's affiliation fills the gaps Wikidata leaves blank (e.g. Yi So-yeon → Korean
   Astronaut Program) and sharpens the rest. Where LL2 has a person but lists *no* agency, that's
   trusted too: early space tourists (Tito, Simonyi…) are left agency-less rather than inheriting a
@@ -87,11 +88,11 @@ LL2_DELAY_MS=4000 bun run enrich-ll2   # gentler pacing (default 2000ms)
 LL2_API_KEY=…     bun run enrich-ll2   # authenticated tier — higher throttle ceiling
 ```
 
-**Supercluster** runs last as a light, gap-filling pass — it never overrides LL2's nationality or
-agency wholesale. From [Supercluster's astronaut database](https://www.supercluster.com/astronauts)
-(793 humans who have reached space, fetched from its public Sanity API — no key, no rate limit) it does
-four things: fills **gender** for the recent suborbital tourists LL2 leaves blank (it lists nearly
-everyone); sets **Space Adventures** as the agency for the orbital tourists it brokered (Tito, Simonyi,
+**Supercluster** runs next. From [Supercluster's astronaut database](https://www.supercluster.com/astronauts)
+(~800 humans who have reached space, fetched from its public Sanity API — no key, no rate limit) it
+supplies everyone's **nationalities** (see below), and otherwise fills gaps — it never overrides LL2's
+agency wholesale. Four gap-filling jobs: it fills **gender** for the recent suborbital tourists LL2
+leaves blank (it lists nearly everyone); sets **Space Adventures** as the agency for the orbital tourists it brokered (Tito, Simonyi,
 Shuttleworth, Olsen, Ansari, R. Garriott, Laliberté) plus the dearMoon pair Maezawa & Hirano (whom
 Wikidata mis-tagged as JAXA); fills a still-**Unknown** agency only when Supercluster names a
 *commercial* provider (so Akiyama, the TBS journalist it files under "CCCP", stays agency-less rather
@@ -103,6 +104,49 @@ national on an Axiom seat), the national agency is kept by design.
 ```bash
 bun run enrich-supercluster                  # run AFTER enrich-ll2
 SC_MAX_CALLS=0 bun run enrich-supercluster    # apply cached data only, no network
+```
+
+### Nationalities
+
+A person can have several — `nationalities` lists them primary first: every state they **flew for**,
+named as it was then, plus any other citizenship they **held when they flew**. So Gagarin is Soviet
+Union; Krikalev, in orbit as the USSR dissolved and flying again in 1994, is Soviet Union + Russia;
+Merbold flew for West Germany in 1983, then for reunified Germany; Jähn flew for East Germany and
+Remek for Czechoslovakia; Foale is United States + United Kingdom. Heritage alone doesn't count
+("Italian-American", or Aisha Bowe's Bahamian roots), nor does a citizenship gained after flying
+(Mohmand became German in 2003). Only sovereign states are used — Puerto Rico counts as the United
+States, and the EU is dropped.
+
+Each source layer maps its own vocabulary onto the names in
+[`src/lib/countries.ts`](src/lib/countries.ts), then [`scripts/nationality.ts`](scripts/nationality.ts)
+settles the result:
+
+- **Supercluster's list wins** where it has one — it alone lists defunct states and second
+  citizenships. LL2's single demonym (often a birthplace: Popovich → Ukrainian) and Wikidata's guess
+  are fallbacks.
+- **Former states go by flight date**: a flight before 26 Dec 1991 counts for the Soviet Union and
+  one ending after it for Russia (or whichever successor the sources name); likewise Czechoslovakia
+  before 1993, and West Germany before reunification on 3 Oct 1990. This also catches what
+  Supercluster misses (Titov's 1995/97 Russian flights).
+- **A researched list** corrects the two dozen people every source gets wrong or incomplete — checked
+  against Wikipedia's time-of-flight
+  [List of space travelers by nationality](https://en.wikipedia.org/wiki/List_of_space_travelers_by_nationality),
+  mission crew records and each person's article (e.g. Owolabi Salis → Nigeria, Chun Wang → Malta +
+  Saint Kitts and Nevis, Jessica Meir → United States + Sweden).
+
+Every write warns about anyone left without a nationality, or with a country missing from
+`countries.ts`.
+
+**Flags** are round SVGs from [circle-flags](https://github.com/HatScripts/circle-flags) (MIT, a
+devDependency), named by ISO code — defunct states keep their retired codes (`su`, `dd`, `cs`; West
+Germany shares Germany's `de`). `src/lib/assets/flags/` holds copies of only the flags the data uses,
+so the build ships no others: every dataset write syncs it ([`scripts/flags.ts`](scripts/flags.ts)),
+copying in a newly needed flag and dropping unused ones. The few flags circle-flags lacks are drawn to
+match in `scripts/flags/` (East Germany). So a new country needs only its line in `countries.ts` —
+plus a drawing there if circle-flags has no flag for it.
+
+```bash
+bun run flags    # sync src/lib/assets/flags with the data by hand (e.g. after adding to scripts/flags/)
 ```
 
 **Manual overrides** run last (`scripts/overrides.ts` → `bun run enrich-manual`). Every other layer
@@ -125,9 +169,9 @@ bun run enrich-manual    # apply scripts/overrides.ts as the final layer (idempo
 
 Sources: **Wikidata** (CC0, base dataset),
 **[International Space Station APIs](https://github.com/corquaid/international-space-station-APIs)**
-(MIT, in-space cross-check), **Launch Library 2** (CC BY-NC 4.0 — authoritative for nationality,
-agency, day counts, timelines & backfilling the people Wikidata misses) and **Supercluster**
-(editorial — gender, the Space Adventures tourists, and the SpaceShipOne pilots). See the in-app
+(MIT, in-space cross-check), **Launch Library 2** (CC BY-NC 4.0 — authoritative for agency, day
+counts, timelines & backfilling the people Wikidata misses) and **Supercluster** (editorial —
+nationalities, gender, the Space Adventures tourists, and the SpaceShipOne pilots). See the in-app
 About page for methodology.
 
 ## Deploy

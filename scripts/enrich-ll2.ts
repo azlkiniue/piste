@@ -16,10 +16,11 @@
  * veterans whose LL2 `time_in_space` is buggy (e.g. Conrad 49→21) or whose landing dates are broken
  * — there Wikidata is correct (those crews didn't seat-swap), so its number and bars are kept.
  *
- * LL2 is also authoritative for two descriptive attributes Wikidata gets wrong, applied as always-safe
- * list-field overrides: NATIONALITY (Wikidata often stores a birthplace — Kononenko → Turkmenistan — or
- * a stale/secondary citizenship; LL2's demonym is the flown-under nation) and AGENCY (LL2's affiliation
- * fills the gaps Wikidata leaves blank, e.g. Korea/Yi So-yeon). Also fills spacewalk counts and photos.
+ * LL2 also corrects two descriptive attributes Wikidata gets wrong: NATIONALITY (Wikidata often stores a
+ * birthplace — Kononenko → Turkmenistan — or a stale/secondary citizenship; LL2's demonym is closer to
+ * the flown-under nation, though Supercluster later supplies the full list, see scripts/nationality.ts)
+ * and AGENCY (LL2's affiliation fills the gaps Wikidata leaves blank, e.g. Korea/Yi So-yeon). Also
+ * fills spacewalk counts and photos.
  *
  * Data comes from the astronaut LIST fetched with `?mode=detailed`, which inlines each person's
  * flights & landings — so the whole dataset is ~9 paginated calls, not one per astronaut. (If a
@@ -43,6 +44,7 @@
  */
 import type { Flight, Gender, Meta, Person, Status } from '../src/lib/types';
 import { DATA, writeAstronauts } from './dataset';
+import { settleNationalities } from './nationality';
 
 const UA = 'PisteDataPipeline/1.0 (https://github.com/piste; static people-in-space timeline)';
 const LL2 = 'https://ll.thespacedevs.com/2.2.0/astronaut/';
@@ -98,46 +100,44 @@ const matchAgency = (labels: (string | undefined)[]) => {
 };
 
 // LL2 reports nationality as a demonym ("Russian"), occasionally compound ("Vietnamese American").
-// It's authoritative here — Wikidata frequently stores a *birthplace* (Kononenko → Turkmenistan) or a
-// historic/secondary citizenship. Map each demonym to the app's country name + ISO 3166-1 alpha-2.
-const DEMONYM: Record<string, [country: string, iso2: string]> = {
-	American: ['United States', 'us'], Russian: ['Russia', 'ru'], Chinese: ['China', 'cn'], Canadian: ['Canada', 'ca'],
-	French: ['France', 'fr'], German: ['Germany', 'de'], Japanese: ['Japan', 'jp'], British: ['United Kingdom', 'gb'],
-	Italian: ['Italy', 'it'], Ukrainian: ['Ukraine', 'ua'], Kazakh: ['Kazakhstan', 'kz'], Spanish: ['Spain', 'es'],
-	Indian: ['India', 'in'], Belgian: ['Belgium', 'be'], Hungarian: ['Hungary', 'hu'], Polish: ['Poland', 'pl'],
-	Dutch: ['Netherlands', 'nl'], Saudi: ['Saudi Arabia', 'sa'], Australian: ['Australia', 'au'], Turkish: ['Turkey', 'tr'],
-	Swiss: ['Switzerland', 'ch'], Bulgarian: ['Bulgaria', 'bg'], Swedish: ['Sweden', 'se'], Belarusian: ['Belarus', 'by'],
-	Mexican: ['Mexico', 'mx'], Brazilian: ['Brazil', 'br'], Israeli: ['Israel', 'il'], Czech: ['Czechia', 'cz'],
-	Austrian: ['Austria', 'at'], Emirati: ['United Arab Emirates', 'ae'], Antiguan: ['Antigua and Barbuda', 'ag'],
-	Slovak: ['Slovakia', 'sk'], Syrian: ['Syria', 'sy'], Mongolian: ['Mongolia', 'mn'], Danish: ['Denmark', 'dk'],
-	Afghan: ['Afghanistan', 'af'], Vietnamese: ['Vietnam', 'vn'], Romanian: ['Romania', 'ro'], Kyrgyz: ['Kyrgyzstan', 'kg'],
-	Malaysian: ['Malaysia', 'my'], Cuban: ['Cuba', 'cu'], Iranian: ['Iran', 'ir'], Portuguese: ['Portugal', 'pt'],
-	Egyptian: ['Egypt', 'eg'], Pakistani: ['Pakistan', 'pk'], Singaporean: ['Singapore', 'sg'], Maltese: ['Malta', 'mt'],
-	Panamanian: ['Panama', 'pa'], Norwegian: ['Norway', 'no'], Bahamian: ['Bahamas', 'bs'], Kittitian: ['Saint Kitts and Nevis', 'kn'],
-	Kiwi: ['New Zealand', 'nz'], 'Puerto Rican': ['United States', 'us'], 'South Korean': ['South Korea', 'kr'],
-	'South African': ['South Africa', 'za']
+// It beats Wikidata, which frequently stores a *birthplace* (Kononenko → Turkmenistan) or a
+// historic/secondary citizenship. Map each demonym to its name in src/lib/countries.ts.
+const DEMONYM: Record<string, string> = {
+	American: 'United States', Russian: 'Russia', Chinese: 'China', Canadian: 'Canada',
+	French: 'France', German: 'Germany', Japanese: 'Japan', British: 'United Kingdom',
+	Italian: 'Italy', Ukrainian: 'Ukraine', Kazakh: 'Kazakhstan', Spanish: 'Spain',
+	Indian: 'India', Belgian: 'Belgium', Hungarian: 'Hungary', Polish: 'Poland',
+	Dutch: 'Netherlands', Saudi: 'Saudi Arabia', Australian: 'Australia', Turkish: 'Turkey',
+	Swiss: 'Switzerland', Bulgarian: 'Bulgaria', Swedish: 'Sweden', Belarusian: 'Belarus',
+	Mexican: 'Mexico', Brazilian: 'Brazil', Israeli: 'Israel', Czech: 'Czechia',
+	Austrian: 'Austria', Emirati: 'United Arab Emirates', Antiguan: 'Antigua and Barbuda',
+	Slovak: 'Slovakia', Syrian: 'Syria', Mongolian: 'Mongolia', Danish: 'Denmark',
+	Afghan: 'Afghanistan', Vietnamese: 'Vietnam', Romanian: 'Romania', Kyrgyz: 'Kyrgyzstan',
+	Malaysian: 'Malaysia', Cuban: 'Cuba', Iranian: 'Iran', Portuguese: 'Portugal',
+	Egyptian: 'Egypt', Pakistani: 'Pakistan', Singaporean: 'Singapore', Maltese: 'Malta',
+	Panamanian: 'Panama', Norwegian: 'Norway', Bahamian: 'Bahamas', Kittitian: 'Saint Kitts and Nevis',
+	Kiwi: 'New Zealand', Greek: 'Greece', Nigerian: 'Nigeria', 'Puerto Rican': 'United States',
+	'South Korean': 'South Korea', 'South African': 'South Africa'
 };
 
-/** Resolve an LL2 demonym to { nationality, countryCode }. Multi-word demonyms ("South Korean") are
- *  matched whole; compound ones ("Vietnamese American", "American Australian") are split into their
- *  parts — if one part is the person's current country we keep it (LL2 confirms that citizenship),
- *  otherwise the first listed nationality wins. Returns null when unmappable (e.g. "Earthling" test
- *  dummies) so the caller leaves the existing value untouched. */
-function resolveNationality(demonym: string | null | undefined, current: string): { nationality: string; countryCode: string } | null {
+/** Resolve an LL2 demonym to one country. Multi-word demonyms ("South Korean") are matched whole;
+ *  compound ones ("Vietnamese American", "American Australian") are split into their parts — if one
+ *  part is already among the person's nationalities we keep it (LL2 confirms that citizenship),
+ *  otherwise the first listed wins. Only one: LL2's compounds mix heritage in ("Vietnamese American"
+ *  is a US-born American), so the multi-nationality list is left to Supercluster. Returns null when
+ *  unmappable (e.g. "Earthling" test dummies) so the caller leaves the existing value untouched. */
+function resolveNationality(demonym: string | null | undefined, current: string[]): string | null {
 	if (!demonym) return null;
-	const whole = DEMONYM[demonym];
-	if (whole) return { nationality: whole[0], countryCode: whole[1] };
+	if (DEMONYM[demonym]) return DEMONYM[demonym];
 	const tokens = demonym.split(' ');
-	const parts: [string, string][] = [];
+	const parts: string[] = [];
 	for (let i = 0; i < tokens.length; ) {
 		const two = tokens.slice(i, i + 2).join(' ');
 		if (DEMONYM[two]) { parts.push(DEMONYM[two]); i += 2; }
 		else if (DEMONYM[tokens[i]]) { parts.push(DEMONYM[tokens[i]]); i += 1; }
 		else i += 1;
 	}
-	if (!parts.length) return null;
-	const pick = parts.find((p) => p[0] === current) ?? parts[0];
-	return { nationality: pick[0], countryCode: pick[1] };
+	return parts.find((p) => current.includes(p)) ?? parts[0] ?? null;
 }
 
 // Crewed *suborbital* programs — their "flights" are same-day, with no orbital re-entry / landing record.
@@ -439,7 +439,7 @@ function backfillFromLL2(records: LL2Astro[], people: Person[], matchedIds: Set<
 		const rebuilt = reconstructFlights(slimDetail(r), !!dod); // SS2 atmospheric tests dropped inside
 		if (!rebuilt || rebuilt.flights.length === 0) { skipped.noFlights++; continue; }
 
-		const nat = resolveNationality(r.nationality, '');
+		const nat = resolveNationality(r.nationality, []);
 		const llAgency = matchAgency([r.agency?.abbrev, r.agency?.name]) ?? r.agency?.name?.trim() ?? 'Unknown';
 		const agency = AGENCY_FIX[llAgency] ?? llAgency;
 		const tisDays = durationToDays(r.time_in_space);
@@ -454,8 +454,7 @@ function backfillFromLL2(records: LL2Astro[], people: Person[], matchedIds: Set<
 			qid: null,
 			name: r.name,
 			slug,
-			nationality: nat?.nationality ?? 'Unknown',
-			countryCode: nat?.countryCode ?? null,
+			nationalities: nat ? [nat] : [], // settled with everyone else's once the backfill is in
 			gender: genderFromBio(r.bio),
 			agency,
 			status: rebuilt.status,
@@ -521,7 +520,7 @@ async function refreshMeta(people: Person[]) {
 		inSpace: people.filter((p) => p.status === 'in-space').length,
 		orbital,
 		suborbital: flights - orbital,
-		countries: new Set(people.map((p) => p.nationality)).size,
+		countries: new Set(people.flatMap((p) => p.nationalities)).size,
 		agencies: new Set(people.map((p) => p.agency)).size
 	};
 	meta.coverage = {
@@ -548,7 +547,6 @@ async function main() {
 	const usedSlugs = new Set(people.map((p) => p.slug));
 
 	let agencyFixed = 0,
-		natFixed = 0,
 		namesRecovered = 0,
 		spacewalks = 0,
 		photos = 0,
@@ -564,6 +562,7 @@ async function main() {
 	const agencyBlanked: { name: string; from: string }[] = [];
 	const lagging: string[] = []; // LL2 hasn't caught up with a flight Wikidata already has
 	const matchedIds = new Set<number>(); // LL2 records claimed by a person — the rest feed the backfill
+	const natBefore = new Map(people.map((p) => [p.id, p.nationalities.join(' + ')]));
 
 	for (const p of people) {
 		const r = findLL2(p);
@@ -586,14 +585,9 @@ async function main() {
 			namesRecovered++;
 		}
 
-		// ----- Nationality (LL2 authoritative): demonym → country + ISO code -----
-		const nat = resolveNationality(r.nationality, p.nationality);
-		if (nat && (nat.nationality !== p.nationality || nat.countryCode !== p.countryCode)) {
-			if (nat.nationality !== p.nationality) natChanges.push({ name: p.name, from: p.nationality, to: nat.nationality });
-			p.nationality = nat.nationality;
-			p.countryCode = nat.countryCode;
-			natFixed++;
-		}
+		// ----- Nationality: LL2's demonym, unless it's already one of ours (settled below, once flights are rebuilt) -----
+		const nat = resolveNationality(r.nationality, p.nationalities);
+		if (nat && !p.nationalities.includes(nat)) p.nationalities = [nat];
 
 		// ----- Agency (LL2 authoritative) -----
 		// Canonical short name when LL2's label maps to one; otherwise LL2's own label fills a blank.
@@ -665,6 +659,14 @@ async function main() {
 	const { added, skipped, byAgency } = backfillFromLL2(records, people, matchedIds, usedSlugs);
 	people.push(...added);
 
+	// Settle nationalities against the rebuilt flights (a flight before 26 Dec 1991 is a Soviet one).
+	for (const p of people) {
+		p.nationalities = settleNationalities(p);
+		const from = natBefore.get(p.id);
+		const to = p.nationalities.join(' + ');
+		if (from !== undefined && from !== to) natChanges.push({ name: p.name, from, to });
+	}
+
 	// firstLaunch may have shifted for detailed people — keep the canonical ordering.
 	people.sort((a, b) => a.firstLaunch.localeCompare(b.firstLaunch) || a.name.localeCompare(b.name));
 	await writeAstronauts(people);
@@ -683,7 +685,7 @@ async function main() {
 	console.log(`flight bars rebuilt:${barsFixed}  (kept Wikidata for ${barsSkipped} with inconsistent LL2 data; detail used: ${detailFetched})`);
 	if (lagging.length) console.log(`   LL2 behind Wikidata (newer flight kept): ${lagging.join(', ')}`);
 	console.log(`names recovered:   ${namesRecovered}  (Wikidata had only a QID)`);
-	console.log(`nationalities set:  ${natFixed}  (changed ${natChanges.length})`);
+	console.log(`nationalities:     ${natChanges.length} changed`);
 	console.log(`agencies refined:  ${agencyFixed}  (incl. ${agencyBlanked.length} agency-less tourists blanked)`);
 	console.log(`spacewalk counts:  ${spacewalks}`);
 	console.log(`photos filled:     ${photos}`);

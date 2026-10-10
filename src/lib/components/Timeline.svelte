@@ -2,7 +2,7 @@
 	import type { Person, Flight } from '$lib/types';
 	import { makeScale, timeTicks, formatDate, formatDuration, DAY, YEAR } from '$lib/time-scale';
 	import { colorFor, valueOf, type ColorBy } from '$lib/colors';
-	import { flagEmoji } from '$lib/colors';
+	import Flags from './Flags.svelte';
 
 	interface Props {
 		people: Person[];
@@ -12,7 +12,7 @@
 	}
 	let { people, colorBy = 'nationality', selectedSlug = null, onselect }: Props = $props();
 
-	const LABEL_W = 188;
+	const LABEL_W = 196;
 	const ROW_H = 26;
 	const HEADER_H = 30;
 	const MIN_BAR = 4;
@@ -154,7 +154,8 @@
 								: 'bg-zinc-50 group-hover:bg-zinc-100 dark:bg-zinc-950 dark:group-hover:bg-zinc-900'}"
 							style="width:{LABEL_W}px"
 						>
-							<span class="text-xs leading-none">{flagEmoji(p.countryCode) || '·'}</span>
+							<!-- every row reserves room for two flags, so names line up however many a person has -->
+							<Flags countries={p.nationalities} reserve={2} />
 							<span class="truncate text-[13px] text-zinc-700 dark:text-zinc-200">{p.name}</span>
 							{#if p.status === 'in-space'}
 								<span class="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" title="In space now"></span>

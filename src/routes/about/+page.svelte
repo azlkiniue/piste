@@ -45,19 +45,21 @@
 		</li>
 		<li>
 			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="https://thespacedevs.com/llapi" target="_blank" rel="noopener">Launch Library 2</a>
-			<span class="text-zinc-400">· CC BY-NC 4.0</span> — the authoritative source for nationality, agency,
-			flight timelines, day counts, spacewalks and photos, and the backfill for recent fliers Wikidata is missing.
+			<span class="text-zinc-400">· CC BY-NC 4.0</span> — the authoritative source for agency, flight
+			timelines, day counts, spacewalks and photos, and the backfill for recent fliers Wikidata is missing.
 		</li>
 		<li>
 			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="https://www.supercluster.com/astronauts" target="_blank" rel="noopener">Supercluster</a>
-			<span class="text-zinc-400">· editorial</span> — a gap-filling pass: gender for recent suborbital
-			fliers, the space-tourism brokers (Space Adventures), and the two SpaceShipOne pilots.
+			<span class="text-zinc-400">· editorial</span> — nationalities, including defunct states and second
+			citizenships, plus gaps the others leave: gender for recent suborbital fliers, the space-tourism
+			brokers (Space Adventures), and the two SpaceShipOne pilots.
 		</li>
 	</ul>
 
 	<h2 class="mt-8 text-lg font-semibold">Caveats</h2>
 	<ul class="mt-2 list-disc space-y-1.5 pl-5 text-sm text-zinc-600 dark:text-zinc-300">
-		<li><strong>Nationality</strong> and <strong>agency</strong> come from Launch Library 2 where it has a record, falling back to Wikidata. Nationality is the nation a person flew under (so Soviet-era cosmonauts show their present-day country, e.g. Gagarin → Russia), Europeans are grouped under ESA, and the space tourists show the company that flew them (e.g. Space Adventures) — with only a couple of early self-funded fliers left agency-less.</li>
+		<li><strong>Nationality</strong> is every state a person flew for — including ones that no longer exist — plus any other citizenship they held at the time, so some people have two. Gagarin flew for the Soviet Union; Krikalev, in orbit as it dissolved and flying again in 1994, for the Soviet Union and Russia; Ulf Merbold for West Germany and then reunified Germany; Michael Foale is American and British. It comes from Supercluster, with flight dates deciding Soviet versus Russian and a hand-checked list of corrections; heritage alone doesn't count, and territories count as their country (Puerto Rico → United States).</li>
+		<li><strong>Agency</strong> comes from Launch Library 2 where it has a record, falling back to Wikidata. Europeans are grouped under ESA, and the space tourists show the company that flew them (e.g. Space Adventures) — with only a couple of early self-funded fliers left agency-less.</li>
 		<li><strong>Status</strong> is <em>In space / Living / Deceased</em>; "in space now" is a snapshot taken when the data was built.</li>
 		<li><strong>"In space"</strong> here means past the US 50-mile / 80 km astronaut boundary, so Virgin Galactic counts even though SpaceShipTwo falls below the 100 km Kármán line — the total therefore sits a little above Kármán-only tallies quoted elsewhere.</li>
 		<li>Recent suborbital tourists are filled in from Launch Library 2, which carries no gender; Supercluster supplies most of the rest, so only a couple still read <em>Unknown</em>. A few obscure early flights may still be missing.</li>
@@ -66,6 +68,7 @@
 	<div class="mt-10 border-t border-zinc-200 pt-4 text-xs text-zinc-400 dark:border-zinc-800">
 		{meta.counts.people.toLocaleString()} people · {meta.counts.flights.toLocaleString()} flights ·
 		{meta.counts.countries} countries · data built {generated}.
-		Built with SvelteKit, Tailwind and Bun.
+		Built with SvelteKit, Tailwind and Bun; flags from
+		<a class="underline-offset-2 hover:underline" href="https://github.com/HatScripts/circle-flags" target="_blank" rel="noopener">circle-flags</a> (MIT).
 	</div>
 </div>

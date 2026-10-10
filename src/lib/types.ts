@@ -27,10 +27,10 @@ export interface Person {
 	name: string;
 	/** URL-safe unique id used for ?person= deep links. */
 	slug: string;
-	/** Country of citizenship (normalized), e.g. "United States". */
-	nationality: string;
-	/** ISO 3166-1 alpha-2 (lowercase) for flag rendering, or null. */
-	countryCode: string | null;
+	/** Nationalities, primary first — names from src/lib/countries.ts. The state(s) the person flew for,
+	 *  defunct ones included (the Soviet Union for flights before it dissolved), plus any other
+	 *  citizenship they held at the time. e.g. ["Soviet Union", "Russia"], ["United States", "United Kingdom"]. */
+	nationalities: string[];
 	gender: Gender;
 	/** Space agency / provider, e.g. "NASA". "Unknown" until LL2 enrichment fills gaps. */
 	agency: string;
