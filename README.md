@@ -38,7 +38,9 @@ bun run enrich-supercluster    # 3. Supercluster — nationalities; gap-fills ge
 bun run enrich-manual          # 4. Manual overrides — hand-fix anything; empty a field to revert
 ```
 
-`update-data` builds a complete, self-sufficient dataset from Wikidata. **Launch Library 2** enrichment
+`update-data` builds a complete, self-sufficient dataset from Wikidata. Dates keep the precision Wikidata
+gives them: a birth date known only to the year or month is stored as `1988` or `1975-10` and shown as
+"1988" or "Oct 1975" — never padded to the 1st, which would invent a birthday. **Launch Library 2** enrichment
 then runs as the **authoritative source** wherever it and Wikidata disagree — Wikidata supplies the base
 (the crew list, dates, photos, gender, dob/dod) and LL2 corrects four things on top of it, then backfills
 the people Wikidata never had:
@@ -68,15 +70,23 @@ SpaceShipTwo tops out ~85 km, below the 100 km Kármán line (so the total runs 
 Kármán-only tally you'll see quoted elsewhere). Three things are deliberately left out: non-human test
 articles LL2 lists as astronauts (Starman, the Artemis-I manikins, zero-g-indicator plushes…),
 name-variant duplicates already in the set (caught by an exact-DOB guard), and "flights" that never
-reached space — the Apollo 1 pad fire and the SpaceShipTwo glide/powered atmospheric tests (which also
-trims real pilots' logs, e.g. Sturckow 17→12). LL2 carries no gender, so backfilled people take theirs
-from bio pronouns where present, else `unknown`.
+reached space — the SpaceShipTwo glide/powered atmospheric tests, and the crewed launches listed in
+[`scripts/spaceflight.ts`](scripts/spaceflight.ts): the Apollo 1 pad fire, Soyuz T-10-1's pad abort,
+Challenger's breakup on STS-51-L (~15 km up) and VSS Unity VF-02, whose motor never lit. Wikidata logs
+some of those launches too, so `update-data` drops them as well. That trims real astronauts' logs
+(Scobee, Titov; Sturckow 17→11) and leaves out anyone with no other flight — Chaffee, and Challenger's
+McAuliffe, Jarvis and Smith. Two aborts did cross 80 km on a ballistic arc, so they stay, marked
+suborbital: Soyuz 18a (1975, ~190 km) and MS-10 (2018, ~93 km), listed in the same file, since neither
+source marks them so (LL2 gives the orbit they were bound for). LL2 carries no gender, so backfilled
+people take theirs from bio pronouns where present, else `unknown`.
 
 It fetches the astronaut list with `?mode=detailed` (flights & landings inlined), so a full refresh
 is **~9 paginated calls**. LL2's free tier is heavily rate-limited (~15 calls/hour), so the script
 paces calls, honours `Retry-After`, backs off, and caches every page — it **resumes** wherever it
 left off. Cached pages expire after 6 hours, so the next run picks up launches and landings since
-rather than replaying an old snapshot. And because LL2 can lag Wikidata (e.g. right after a launch), a
+rather than replaying an old snapshot. An old snapshot replayed on purpose (`MAX_LL2_CALLS=0`) still
+gives the same result as the run that fetched it: anyone in space is measured up to when their page
+was fetched, not up to today. And because LL2 can lag Wikidata (e.g. right after a launch), a
 flight Wikidata already has but LL2 hasn't logged is kept rather than rolled back. It also fills
 spacewalk counts and missing photos.
 
@@ -200,7 +210,9 @@ and recomputes `firstLaunch` / `lastLanding` / `totalDaysInSpace` / `status` fro
 Reverting works without re-running the whole chain: a gitignored baseline
 (`scripts/cache/manual/baseline.json`) remembers each touched field's pipeline value and the value
 written, so emptying an override restores the former. It only reverts a field still holding exactly
-what it wrote, so a later `update-data`/LL2/SC change is respected.
+what it wrote, so a later LL2/SC change is respected. `update-data` discards the baseline, since its
+fresh base holds no overrides — so after a full re-run, an override the pipeline has made redundant can
+be deleted without the field rolling back to the stale value it once replaced.
 
 ```bash
 bun run enrich-manual    # apply scripts/overrides.ts as the final layer (idempotent, offline)

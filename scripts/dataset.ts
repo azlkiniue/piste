@@ -14,6 +14,11 @@ const ROOT = new URL('..', import.meta.url);
 export const DATA = new URL('src/lib/data/astronauts.json', ROOT);
 export const DATA_MIN = new URL('src/lib/data/astronauts.min.json', ROOT);
 
+/** A dataset date (dob/dod) as LL2 and Supercluster store it, for matching people across them: a date
+ *  known only to the month or year is padded to its 1st there ("1975-10" → "1975-10-01", "1988" →
+ *  "1988-01-01"). Compared for equality, not as a prefix — a year alone mustn't match every date in it. */
+export const paddedDate = (d: string) => (d.length === 4 ? `${d}-01-01` : d.length === 7 ? `${d}-01` : d);
+
 export async function writeAstronauts(people: Person[]) {
 	await Bun.write(DATA, JSON.stringify(people, null, 2) + '\n');
 	await Bun.write(DATA_MIN, JSON.stringify(people));

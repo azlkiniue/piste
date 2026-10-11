@@ -37,7 +37,8 @@ export interface Person {
 	 *  commercial flight. e.g. ["NASDA", "JAXA"], ["ISRO", "Axiom Space"]. Empty when unknown. */
 	agencies: string[];
 	status: Status;
-	/** Date of birth / death, ISO YYYY-MM-DD or null. */
+	/** Date of birth / death, ISO YYYY-MM-DD — or YYYY-MM / YYYY when the sources know only the month or
+	 *  year — or null. */
 	dob: string | null;
 	dod: string | null;
 	/** English Wikipedia article URL, or null. */

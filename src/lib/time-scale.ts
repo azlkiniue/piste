@@ -43,10 +43,12 @@ export function timeTicks(minMs: number, maxMs: number, pxPerYear: number): Tick
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-/** "12 Apr 1961" */
+/** "12 Apr 1961" — or "Oct 1975" / "1988" for a date known only to the month or year ("1975-10", "1988"). */
 export function formatDate(iso: string | null): string {
 	if (!iso) return '—';
 	const d = new Date(iso);
+	if (iso.length === 4) return `${d.getUTCFullYear()}`;
+	if (iso.length === 7) return `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 	return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 

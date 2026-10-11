@@ -29,7 +29,9 @@
  * detail endpoint.) LL2's public tier is heavily rate-limited (~15 calls/hour), so this paces calls,
  * honours `Retry-After`, backs off, and caches every page — a cold full run resumes where it left
  * off. List pages older than LL2_CACHE_HOURS are re-fetched, so a later run picks up launches and
- * landings since; an old page is reused only when it can't be refreshed. And since LL2 can still lag
+ * landings since; an old page is reused only when it can't be refreshed (or MAX_LL2_CALLS=0), and then
+ * measures anyone in space as of when it was fetched, so replaying a cache reproduces the run that
+ * fetched it rather than drifting as the days pass. And since LL2 can still lag
  * Wikidata, a flight Wikidata already has but LL2 hasn't logged is kept, never rolled back. The site
  * is fully functional WITHOUT this step.
  *
@@ -45,8 +47,9 @@
  */
 import type { Flight, Gender, Meta, Person, Status } from '../src/lib/types';
 import { agencyOf, settleAgencies } from './agency';
-import { DATA, writeAstronauts } from './dataset';
+import { DATA, paddedDate, writeAstronauts } from './dataset';
 import { settleNationalities } from './nationality';
+import { neverReachedSpace, suborbitalAbort } from './spaceflight';
 
 const UA = 'PisteDataPipeline/1.0 (https://github.com/piste; static people-in-space timeline)';
 const LL2 = 'https://ll.thespacedevs.com/2.2.0/astronaut/';
@@ -88,7 +91,6 @@ function durationToDays(s?: string | null): number | null {
 const LL2_NOT_AGENCIES = new Set([
 	'Boeing', // Christopher Ferguson's employer after NASA; he never flew Starliner
 	'Lockheed Martin', // payload specialists on NASA science missions fly for NASA (Acton, Spacelab 2)
-	'Hughes Aircraft', // … likewise Jarvis
 	'US Navy', // … likewise Bartoe, a Naval Research Laboratory scientist
 	'International Institute for Aeronautical Sciences', // a nonprofit that bought Kellie Gerardi's Virgin Galactic seat
 	'National Research Council', // ambiguous (Canada's NRC or Italy's CNR) — Carlucci is in scripts/agency.ts
@@ -179,6 +181,8 @@ interface LL2Astro {
 	date_of_death?: string | null;
 	profile_image?: string | null;
 	first_flight?: string | null;
+	// Ours, not LL2's: when the record was fetched (ms) — see reconstructFlights.
+	fetchedAt?: number;
 }
 
 /** Trimmed per-astronaut detail we persist (full responses are ~90 KB; we keep ~1 KB).
@@ -191,6 +195,7 @@ interface SlimDetail {
 	time_in_space?: string | null;
 	launches: { net: string; name: string | null; mission: string | null }[];
 	landings: { end: string; craft: string | null }[];
+	fetchedAt?: number;
 }
 
 // ---------------------------------------------------------------- throttled fetch
@@ -246,13 +251,13 @@ async function loadList(): Promise<LL2Astro[]> {
 		// past CACHE_HOURS is re-fetched, and only reused if that fails (budget spent, offline, gave up).
 		const cacheFile = Bun.file(new URL(`ll2-${offset}.json`, CACHE));
 		const cached = await cacheFile.exists();
-		let data: { count?: number; results?: LL2Astro[] };
+		let data: { count?: number; results?: LL2Astro[]; fetchedAt?: number };
 		if (cached && Date.now() - cacheFile.lastModified < CACHE_HOURS * 3600_000) {
 			data = await cacheFile.json();
 		} else {
 			const r = gaveUp ? null : await fetchJSON(`${LL2}?mode=detailed&limit=${PAGE}&offset=${offset}`);
 			if (r && r !== BUDGET) {
-				data = r;
+				data = { ...r, fetchedAt: Date.now() };
 				await Bun.write(cacheFile, JSON.stringify(data));
 				console.log(`  list: fetched offset ${offset} (${calls} calls)`);
 			} else if (cached) {
@@ -265,7 +270,8 @@ async function loadList(): Promise<LL2Astro[]> {
 			}
 		}
 		total = data.count ?? total;
-		records.push(...(data.results ?? []));
+		const fetchedAt = data.fetchedAt ?? cacheFile.lastModified; // pages cached before fetchedAt: written when fetched
+		records.push(...(data.results ?? []).map((r) => ({ ...r, fetchedAt })));
 		offset += PAGE;
 	}
 	console.log(`  ${records.length} LL2 list records loaded.`);
@@ -284,16 +290,20 @@ function slimDetail(d: any): SlimDetail {
 			.filter((x: any) => x.net),
 		landings: (d.landings ?? [])
 			.map((l: any) => ({ end: l.mission_end, craft: l.spacecraft?.spacecraft?.name ?? l.spacecraft?.name ?? null }))
-			.filter((x: any) => x.end)
+			.filter((x: any) => x.end),
+		fetchedAt: d.fetchedAt
 	};
 }
 
 async function loadDetail(id: number): Promise<SlimDetail | null | typeof BUDGET> {
-	const cacheFile = new URL(`${id}.json`, DETAIL_CACHE);
-	if (await Bun.file(cacheFile).exists()) return Bun.file(cacheFile).json();
+	const cacheFile = Bun.file(new URL(`${id}.json`, DETAIL_CACHE));
+	if (await cacheFile.exists()) {
+		const slim: SlimDetail = await cacheFile.json();
+		return { ...slim, fetchedAt: slim.fetchedAt ?? cacheFile.lastModified };
+	}
 	const r = await fetchJSON(`${LL2}${id}/`);
 	if (r === BUDGET || !r) return r === BUDGET ? BUDGET : null;
-	const slim = slimDetail(r);
+	const slim = { ...slimDetail(r), fetchedAt: Date.now() };
 	await Bun.write(cacheFile, JSON.stringify(slim));
 	return slim;
 }
@@ -302,21 +312,31 @@ async function loadDetail(id: number): Promise<SlimDetail | null | typeof BUDGET
 // already in space — counting it as a separate flight duplicates the mission and desyncs pairing.
 const LM_LAUNCH_RE = /Apollo LM|Lunar Module/i;
 const LM_CRAFT_RE = /^LM\b|Lunar Module/i;
+// What a craft is compared by: a launch can carry aliases its landing record leaves off ("Soyuz 7K-T No.39
+// (Soyuz 18a / Soyuz 18-1)" lands as "Soyuz 7K-T No.39"), so a trailing parenthetical and spacing don't count.
+const craftKey = (name: string) => name.replace(/\s*\([^()]*\)$/, '').replace(/\s+/g, '');
 
 /** Rebuild a person's flights by zipping their launches with their returns in chronological order.
  *  A person flies serially, so the i-th return after the i-th launch (and before the next) is theirs
- *  — robust to seat-swaps (up- and down-craft differ) and to a still-in-space final launch. Returns
- *  the summed bar duration so the caller can sanity-check it against the authoritative time_in_space. */
+ *  — robust to seat-swaps (up- and down-craft differ) and to a still-in-space final launch. Launches
+ *  that never reached space (SpaceShipTwo's atmospheric tests, Apollo 1, Challenger…) are zipped too,
+ *  then dropped, so each return pairs with its own launch: filtered out first, their returns would stall
+ *  the pairing and leave every later flight without one. Returns the summed bar duration so the caller
+ *  can sanity-check it against the authoritative time_in_space (which a stalled pairing fails: Mackay's
+ *  and Masucci's VSS Unity flights would sum to zero days). */
 function reconstructFlights(slim: SlimDetail, deceased: boolean): { flights: Flight[]; status: Status; days: number } | null {
 	const launches = slim.launches
 		.filter((f) => !LM_LAUNCH_RE.test(f.name ?? ''))
-		.filter((f) => !isSpaceShipTest(f.name))
 		.map((f) => ({
 			t: Date.parse(f.net),
 			// flight.name is "Rocket | Spacecraft" — its suffix is the real vehicle (e.g. "Soyuz TMA-17M"),
 			// a better bar label than the expedition (e.g. "ISS 44"); fall back to the mission name.
 			name: cleanMission(f.name) || cleanMission(f.mission) || 'Spaceflight',
-			sub: SUBORBITAL_RE.test(`${f.name ?? ''} ${f.mission ?? ''}`)
+			sub:
+				SUBORBITAL_RE.test(`${f.name ?? ''} ${f.mission ?? ''}`) ||
+				suborbitalAbort(cleanMission(f.name)) ||
+				suborbitalAbort(cleanMission(f.mission)),
+			never: isSpaceShipTest(f.name) || neverReachedSpace(cleanMission(f.name)) || neverReachedSpace(cleanMission(f.mission))
 		}))
 		.filter((x) => !Number.isNaN(x.t))
 		.sort((a, b) => a.t - b.t);
@@ -339,12 +359,16 @@ function reconstructFlights(slim: SlimDetail, deceased: boolean): { flights: Fli
 			craft = lands[ri].craft;
 			ri++;
 		}
+		if (L.never) continue;
 		const ongoing = landMs === null && slim.in_space && i === launches.length - 1;
-		const endMs = ongoing ? Date.now() : (landMs ?? L.t);
+		// A flight still in space runs to when LL2 was asked, not to now: the time_in_space the caller checks
+		// it against is from then too, so replaying an old cache reaches the same verdict as the run that
+		// fetched it.
+		const endMs = ongoing ? (slim.fetchedAt ?? Date.now()) : (landMs ?? L.t);
 		if (endMs > L.t) days += (endMs - L.t) / 86400000;
 		// Seat-swap (returned on a different craft) is only reliably labelled for Soyuz, where both
 		// the launch suffix and the landing craft are capsule names (e.g. up MS-24 / down MS-25).
-		const swap = craft && craft !== L.name && /^Soyuz /i.test(L.name) && /^Soyuz /i.test(craft);
+		const swap = craft && craftKey(craft) !== craftKey(L.name) && /^Soyuz /i.test(L.name) && /^Soyuz /i.test(craft);
 		flights.push({
 			mission: L.name,
 			launch: dayISO(L.t),
@@ -383,15 +407,16 @@ function wikidataAhead(wikidata: Flight[], ll2: Flight[]): boolean {
 // Three things are deliberately NOT added:
 //   • non-human test articles LL2 lists as "astronauts" (mannequins, mascots, zero-g indicators);
 //   • people already present under a name variant the surname+initial matcher missed (exact-DOB guard);
-//   • "flights" that never reached space — the Apollo 1 pad fire and SpaceShipTwo atmospheric test
-//     pilots whose only flights were glide/powered runs (the VSS Enterprise era never crossed 80 km).
+//   • people who never reached space — SpaceShipTwo atmospheric test pilots whose only flights were
+//     glide/powered runs (the VSS Enterprise era never crossed 80 km), and anyone left with no flight once
+//     reconstructFlights drops the launches that never got there (scripts/spaceflight.ts): Chaffee on
+//     Apollo 1; McAuliffe, Jarvis and Smith on Challenger.
 const NON_HUMAN = new Set(
 	['Mannequin Skywalker', 'Starman', 'Little Earth', 'Ripley', 'Rosie the Astronaut',
 	 'Commander Moonikin Campos', 'Helga', 'Zohar', 'Shaun the Sheep', 'Snoopy'].map(normName)
 );
 const NEVER_REACHED_SPACE = new Set(
-	['Roger B. Chaffee', 'Peter Siebold', 'Michael Alsbury', 'Clint Nichols', 'Doug Shane',
-	 'William Brian Binnie', 'Keith Colmer'].map(normName)
+	['Peter Siebold', 'Michael Alsbury', 'Clint Nichols', 'Doug Shane', 'William Brian Binnie', 'Keith Colmer'].map(normName)
 );
 
 // LL2 has no gender field; infer from the bio's pronouns (best-effort — else 'unknown').
@@ -422,9 +447,10 @@ function backfillFromLL2(records: LL2Astro[], people: Person[], matchedIds: Set<
 	const tokensByDob = new Map<string, Set<string>>();
 	for (const p of people) {
 		if (!p.dob) continue;
-		const s = tokensByDob.get(p.dob) ?? new Set<string>();
+		const dob = paddedDate(p.dob); // LL2's form of it, so a month-only "1975-10" still meets its "1975-10-01"
+		const s = tokensByDob.get(dob) ?? new Set<string>();
 		for (const tok of normName(p.name).replace(/-/g, ' ').split(' ')) if (tok.length >= 3) s.add(tok);
-		tokensByDob.set(p.dob, s);
+		tokensByDob.set(dob, s);
 	}
 	const added: Person[] = [];
 	const skipped = { nonHuman: 0, neverSpace: 0, variantDup: 0, noFlights: 0 };
@@ -438,8 +464,12 @@ function backfillFromLL2(records: LL2Astro[], people: Person[], matchedIds: Set<
 		if (isVariantDuplicate(r, tokensByDob)) { skipped.variantDup++; continue; }
 
 		const dod = r.date_of_death ? r.date_of_death.slice(0, 10) : null;
-		const rebuilt = reconstructFlights(slimDetail(r), !!dod); // SS2 atmospheric tests dropped inside
-		if (!rebuilt || rebuilt.flights.length === 0) { skipped.noFlights++; continue; }
+		const slim = slimDetail(r);
+		const rebuilt = reconstructFlights(slim, !!dod); // SS2 atmospheric tests and launches that never reached space dropped inside
+		if (!rebuilt || rebuilt.flights.length === 0) {
+			skipped[slim.launches.length ? 'neverSpace' : 'noFlights']++; // launches, but none reached space
+			continue;
+		}
 
 		const nat = resolveNationality(r.nationality, []);
 		const agency = ll2Agency(r.agency);

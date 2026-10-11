@@ -42,7 +42,7 @@
 import { COUNTRY_CODE } from '../src/lib/countries';
 import type { Flight, Gender, Meta, Person } from '../src/lib/types';
 import { agencyOf, attributeAgencies, isResearched, settleAgencies, unmatchedResearched as unmatchedAgencies } from './agency';
-import { DATA, writeAstronauts } from './dataset';
+import { DATA, paddedDate, writeAstronauts } from './dataset';
 import { settleNationalities, unmatchedResearched } from './nationality';
 
 const UA = 'PisteDataPipeline/1.0 (https://github.com/piste; static people-in-space timeline)';
@@ -210,7 +210,7 @@ function buildFinder(records: ScAstro[]) {
 		const exact = uniq(byName, n);
 		if (exact) return exact;
 		if (p.dob) {
-			const cand = byDob.get(p.dob) ?? [];
+			const cand = byDob.get(paddedDate(p.dob)) ?? []; // Supercluster's form of a month- or year-only date
 			const bySur = cand.filter((r) => surname(normName(r.name)) === surname(n));
 			if (bySur.length === 1) return bySur[0];
 			if (cand.length === 1 && initialKey(normName(cand[0].name)) === initialKey(n)) return cand[0];
@@ -225,7 +225,7 @@ function buildFinder(records: ScAstro[]) {
 
 // ---------------------------------------------------------------- backfill
 function buildBackfill(records: ScAstro[], people: Person[], matched: Set<string>, usedSlugs: Set<string>): Person[] {
-	const have = new Set(people.map((p) => `${normName(p.name)}|${p.dob ?? ''}`));
+	const have = new Set(people.map((p) => `${normName(p.name)}|${p.dob ? paddedDate(p.dob) : ''}`));
 	const added: Person[] = [];
 	for (const r of records) {
 		const flights = SPACESHIPONE[r.name];

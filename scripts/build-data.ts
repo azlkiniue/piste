@@ -16,11 +16,14 @@ import type { Flight, Gender, Meta, Person, Status } from '../src/lib/types';
 import { agencyOf, ARMED_FORCES, settleAgencies } from './agency';
 import { writeAstronauts } from './dataset';
 import { settleNationalities } from './nationality';
+import { neverReachedSpace, suborbitalAbort } from './spaceflight';
 
 const UA = 'PisteDataPipeline/1.0 (https://github.com/piste; static people-in-space timeline)';
 const WDQS = 'https://query.wikidata.org/sparql';
 const ROOT = new URL('..', import.meta.url);
 const OUT_DIR = new URL('src/lib/data/', ROOT);
+// enrich-manual's record of the fields it overrode in the last dataset (scripts/enrich-manual.ts).
+const MANUAL_BASELINE = new URL('scripts/cache/manual/baseline.json', ROOT);
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const val = (b: Record<string, { value: string }>, k: string): string | undefined => b[k]?.value;
@@ -45,6 +48,10 @@ function pickDate(cur: WdDate | undefined, value?: string, precision?: string): 
 	const next = { iso, precision: Number(precision ?? 0) };
 	return !cur || next.precision > cur.precision || (next.precision === cur.precision && next.iso < cur.iso) ? next : cur;
 }
+/** The date at the precision Wikidata has it: "1961-04-12", or "1975-10" / "1988" when it knows only the
+ *  month or year. The query service pads those to the 1st (1988 comes back as 1988-01-01), which would
+ *  invent a birthday (Bandla: 1 Jan 1988). */
+const atPrecision = (d: WdDate) => d.iso.slice(0, d.precision >= 11 ? 10 : d.precision === 10 ? 7 : 4);
 
 function normalizeName(s: string): string {
 	return s
@@ -66,11 +73,16 @@ function slugify(s: string): string {
 }
 
 /** Recover a display name from an English Wikipedia article URL, for the rare item whose Wikidata
- *  label service returns the bare QID (no en label). e.g. …/wiki/Franco_Malerba → "Franco Malerba". */
+ *  label service returns the bare QID (no en or mul label). e.g. …/wiki/Franco_Malerba → "Franco Malerba". */
 function nameFromArticle(url?: string): string | undefined {
 	const slug = url?.match(/\/wiki\/(.+)$/)?.[1];
 	return slug ? decodeURIComponent(slug).replace(/_/g, ' ') : undefined;
 }
+
+/** Drop a Wikipedia-style disambiguator: article titles carry one, and so does the odd label (Wikidata
+ *  calls Mike Hopkins "Mike Hopkins (astronaut)"). It's no part of the name, and it stops enrich-ll2 from
+ *  matching the person, so LL2 never rebuilds their flights. */
+const withoutDisambiguator = (name: string) => name.replace(/\s+\([^()]*\)$/, '');
 
 // ---------------------------------------------------------------- normalization tables
 // Wikidata country labels → the names in src/lib/countries.ts.
@@ -126,11 +138,12 @@ function resolveAgency(employers: string[], operators: string[], suborbitalOnly:
 	);
 }
 
-// Crewed *suborbital* programs — everything else is treated as orbital.
+// Crewed *suborbital* programs, plus the launches that aborted into a suborbital arc (scripts/spaceflight.ts)
+// — everything else is treated as orbital.
 const SUBORBITAL_RE =
 	/New Shepard|Blue Origin|Virgin Galactic|SpaceShip(One|Two)|VSS |\bX-15\b|Mercury-Redstone|Freedom 7|Liberty Bell 7/i;
 function isOrbital(missionLabel: string, operatorLabels: string[]): boolean {
-	return !SUBORBITAL_RE.test([missionLabel, ...operatorLabels].join(' '));
+	return !SUBORBITAL_RE.test([missionLabel, ...operatorLabels].join(' ')) && !suborbitalAbort(missionLabel);
 }
 
 // Station increments — their dates are crew-handover boundaries, not a person's actual stay,
@@ -258,6 +271,9 @@ function resolveInSpace(people: Map<string, PersonAgg>, names: Set<string>) {
 }
 
 // ---------------------------------------------------------------- SPARQL queries
+// Labels fall back from English to "mul", Wikidata's language-independent default, which a growing number
+// of items carry instead of an English label — without it the service hands back the bare QID (SpaceX
+// Crew-1 is "Q56042850").
 const MISSIONS_QUERY = `
 SELECT ?flight ?flightLabel ?launch ?landing ?crew ?operatorLabel WHERE {
   { ?flight wdt:P1029 ?crew . } UNION { ?crew wdt:P450 ?flight . }
@@ -269,7 +285,7 @@ SELECT ?flight ?flightLabel ?launch ?landing ?crew ?operatorLabel WHERE {
   BIND(COALESCE(?ld1, ?ld2) AS ?landing)
   OPTIONAL { ?flight wdt:P137 ?operator }
   FILTER(BOUND(?launch))
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en,mul". }
 }`;
 
 const peopleQuery = (values: string) => `
@@ -284,7 +300,7 @@ SELECT ?p ?pLabel ?genderLabel ?countryLabel ?dob ?dobPrec ?dod ?dodPrec ?image 
   OPTIONAL { ?p wdt:P18 ?image }
   OPTIONAL { ?p wdt:P108 ?employer }
   OPTIONAL { ?article schema:about ?p ; schema:isPartOf <https://en.wikipedia.org/> }
-  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en,mul". }
 }`;
 
 // ---------------------------------------------------------------- pipeline
@@ -335,9 +351,18 @@ async function main() {
 		if (op) f.operators.add(op);
 		f.crew.add(cq);
 	}
+	// Launches that never reached space (scripts/spaceflight.ts) aren't flights — and a crew member they
+	// leave with none isn't fetched, so isn't in the dataset.
+	const dropped: string[] = [];
+	for (const [fq, f] of flights) {
+		if (!neverReachedSpace(f.label)) continue;
+		flights.delete(fq);
+		dropped.push(f.label);
+	}
 	const crewQids = new Set<string>();
 	for (const f of flights.values()) for (const c of f.crew) crewQids.add(c);
 	console.log(`  ${flights.size} flights, ${crewQids.size} unique crew`);
+	if (dropped.length) console.log(`  dropped ${dropped.length} that never reached space: ${dropped.sort().join(', ')}`);
 
 	console.log('▶ Enriching people from Wikidata…');
 	const people = new Map<string, PersonAgg>();
@@ -440,9 +465,9 @@ async function main() {
 		let image = agg.image ? agg.image.replace(/^http:/, 'https:') : null;
 		if (image) image += (image.includes('?') ? '&' : '?') + 'width=320';
 
-		// A handful of Wikidata items have no English label — the service hands back the QID. Fall
+		// A handful of Wikidata items have no English or mul label — the service hands back the QID. Fall
 		// back to the Wikipedia article title so the person shows a real name (and a sane slug).
-		const name = /^Q\d+$/.test(agg.name) ? (nameFromArticle(agg.article) ?? agg.name) : agg.name;
+		const name = withoutDisambiguator(/^Q\d+$/.test(agg.name) ? (nameFromArticle(agg.article) ?? agg.name) : agg.name);
 
 		let slug = slugify(name) || pq.toLowerCase();
 		if (usedSlugs.has(slug)) slug = `${slug}-${pq.toLowerCase()}`;
@@ -475,8 +500,8 @@ async function main() {
 			gender: toGender(agg.gender),
 			agencies,
 			status,
-			dob: agg.dob?.iso ?? null,
-			dod: agg.dod?.iso ?? null,
+			dob: agg.dob ? atPrecision(agg.dob) : null,
+			dod: agg.dod ? atPrecision(agg.dod) : null,
 			wiki: agg.article ?? null,
 			image,
 			totalDaysInSpace: Math.round(days),
@@ -534,6 +559,14 @@ async function main() {
 
 	await writeAstronauts(persons);
 	await Bun.write(new URL('meta.json', OUT_DIR), JSON.stringify(meta, null, 2));
+	// A fresh base holds none of enrich-manual's overrides, so its record of what it wrote over the last
+	// one is void. Kept, it would mistake a field the pipeline now gets right by itself for its own write,
+	// and once that override is deleted, roll the field back to the stale value it replaced.
+	const baseline = Bun.file(MANUAL_BASELINE);
+	if (await baseline.exists()) {
+		await baseline.delete();
+		console.log('  manual baseline discarded — enrich-manual starts afresh on this base');
+	}
 
 	const pct = (n: number) => `${Math.round((100 * n) / persons.length)}%`;
 	console.log('\n──────── Piste data report ────────');

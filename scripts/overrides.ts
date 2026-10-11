@@ -35,5 +35,4 @@ export const overrides: Record<string, Override> = {
 	'russel-wilson': { gender: 'male' },
 	'toyohiro-akiyama': { agencies: ['CCCP'] }, // was Roscosmos — in 1990 that was the Soviet programme
 	'alan-shepard': {flights: [{"mission":"Mercury-Redstone 3","launch":"1961-05-05","landing":"1961-05-05","ongoing":false,"orbital":false,"approx":false},{"mission":"Apollo 14","launch":"1971-01-31","landing":"1971-02-09","ongoing":false,"orbital":true,"approx":false}]},
-	'Q3030934': {name: 'Mike Hopkins', slug: 'mike-hopkins'},
 };

@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-10-10T04:56:17.701Z",
-  "asOf": "2026-10-10",
+  "generatedAt": "2026-10-11T05:51:39.309Z",
+  "asOf": "2026-10-11",
   "sources": [
     {
       "name": "Wikidata",
@@ -24,19 +24,19 @@
     }
   ],
   "counts": {
-    "people": 790,
-    "flights": 1614,
+    "people": 787,
+    "flights": 1609,
     "inSpace": 10,
-    "orbital": 1441,
-    "suborbital": 173,
+    "orbital": 1426,
+    "suborbital": 183,
     "countries": 56,
     "agencies": 38
   },
   "coverage": {
-    "genderKnown": 790,
-    "withImage": 770,
-    "withAgency": 790,
-    "realLandingFlights": 1612,
+    "genderKnown": 787,
+    "withImage": 767,
+    "withAgency": 787,
+    "realLandingFlights": 1607,
     "approxFlights": 2
   },
   "inSpaceUnmatched": []

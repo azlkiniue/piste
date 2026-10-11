@@ -90,7 +90,7 @@
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Virgil%20I.%20%28Gus%29%20Grissom%20portrait.jpg?width=320",
     "totalDaysInSpace": 0,
     "firstLaunch": "1961-07-21",
-    "lastLanding": "1967-01-27",
+    "lastLanding": "1965-03-23",
     "flights": [
       {
         "mission": "Mercury-Redstone 4",
@@ -104,14 +104,6 @@
         "mission": "Gemini III",
         "launch": "1965-03-23",
         "landing": "1965-03-23",
-        "ongoing": false,
-        "orbital": true,
-        "approx": false
-      },
-      {
-        "mission": "Apollo 1 (Failure before launch)",
-        "launch": "1967-01-27",
-        "landing": "1967-01-27",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -854,20 +846,12 @@
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/EdwardWhite.jpeg?width=320",
     "totalDaysInSpace": 3,
     "firstLaunch": "1965-06-03",
-    "lastLanding": "1967-01-27",
+    "lastLanding": "1965-06-07",
     "flights": [
       {
         "mission": "Gemini IV",
         "launch": "1965-06-03",
         "landing": "1965-06-07",
-        "ongoing": false,
-        "orbital": true,
-        "approx": false
-      },
-      {
-        "mission": "Apollo 1 (Failure before launch)",
-        "launch": "1967-01-27",
-        "landing": "1967-01-27",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -2846,12 +2830,8 @@
         "launch": "1975-04-05",
         "landing": "1975-04-05",
         "ongoing": false,
-        "orbital": true,
-        "approx": false,
-        "segments": [
-          "Soyuz 7K-T No.39 (Soyuz 18a / Soyuz 18-1)",
-          "Soyuz 7K-T No.39"
-        ]
+        "orbital": false,
+        "approx": false
       },
       {
         "mission": "Soyuz 27",
@@ -2910,12 +2890,8 @@
         "launch": "1975-04-05",
         "landing": "1975-04-05",
         "ongoing": false,
-        "orbital": true,
-        "approx": false,
-        "segments": [
-          "Soyuz 7K-T No.39 (Soyuz 18a / Soyuz 18-1)",
-          "Soyuz 7K-T No.39"
-        ]
+        "orbital": false,
+        "approx": false
       }
     ],
     "spacewalks": 0
@@ -4274,18 +4250,6 @@
         "approx": false
       },
       {
-        "mission": "Soyuz 7K-ST No.16L (Soyuz T-10a / T-10-1)",
-        "launch": "1983-09-26",
-        "landing": "1983-09-26",
-        "ongoing": false,
-        "orbital": true,
-        "approx": false,
-        "segments": [
-          "Soyuz 7K-ST No.16L (Soyuz T-10a / T-10-1)",
-          "Soyuz 7K-ST No. 16L"
-        ]
-      },
-      {
         "mission": "Soyuz T-11",
         "launch": "1984-04-03",
         "landing": "1984-04-11",
@@ -5162,18 +5126,6 @@
         "approx": false
       },
       {
-        "mission": "Soyuz 7K-ST No.16L (Soyuz T-10a / T-10-1)",
-        "launch": "1983-09-26",
-        "landing": "1983-09-26",
-        "ongoing": false,
-        "orbital": true,
-        "approx": false,
-        "segments": [
-          "Soyuz 7K-ST No.16L (Soyuz T-10a / T-10-1)",
-          "Soyuz 7K-ST No. 16L"
-        ]
-      },
-      {
         "mission": "Soyuz TM-4",
         "launch": "1987-12-21",
         "landing": "1988-12-21",
@@ -5972,20 +5924,12 @@
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Ronald%20mcnair.jpg?width=320",
     "totalDaysInSpace": 7,
     "firstLaunch": "1984-02-03",
-    "lastLanding": "1986-01-28",
+    "lastLanding": "1984-02-11",
     "flights": [
       {
         "mission": "STS-41-B",
         "launch": "1984-02-03",
         "landing": "1984-02-11",
-        "ongoing": false,
-        "orbital": true,
-        "approx": false
-      },
-      {
-        "mission": "STS-51-L",
-        "launch": "1986-01-28",
-        "landing": "1986-01-28",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -6128,20 +6072,12 @@
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Francis%20Richard%20Scobee.jpg?width=320",
     "totalDaysInSpace": 6,
     "firstLaunch": "1984-04-06",
-    "lastLanding": "1986-01-28",
+    "lastLanding": "1984-04-13",
     "flights": [
       {
         "mission": "STS-41-C",
         "launch": "1984-04-06",
         "landing": "1984-04-13",
-        "ongoing": false,
-        "orbital": true,
-        "approx": false
-      },
-      {
-        "mission": "STS-51-L",
-        "launch": "1986-01-28",
-        "landing": "1986-01-28",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -6368,20 +6304,12 @@
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Judith%20A.%20Resnik%2C%20official%20portrait%20%28cropped%29.jpg?width=320",
     "totalDaysInSpace": 6,
     "firstLaunch": "1984-08-30",
-    "lastLanding": "1986-01-28",
+    "lastLanding": "1984-09-05",
     "flights": [
       {
         "mission": "STS-41-D",
         "launch": "1984-08-30",
         "landing": "1984-09-05",
-        "ongoing": false,
-        "orbital": true,
-        "approx": false
-      },
-      {
-        "mission": "STS-51-L",
-        "launch": "1986-01-28",
-        "landing": "1986-01-28",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -6866,20 +6794,12 @@
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Ellison%20Shoji%20Onizuka%20%28NASA%29.jpg?width=320",
     "totalDaysInSpace": 3,
     "firstLaunch": "1985-01-24",
-    "lastLanding": "1986-01-28",
+    "lastLanding": "1985-01-27",
     "flights": [
       {
         "mission": "STS-51-C",
         "launch": "1985-01-24",
         "landing": "1985-01-27",
-        "ongoing": false,
-        "orbital": true,
-        "approx": false
-      },
-      {
-        "mission": "STS-51-L",
-        "launch": "1986-01-28",
-        "landing": "1986-01-28",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -8714,102 +8634,6 @@
         "mission": "STS-61-C",
         "launch": "1986-01-12",
         "landing": "1986-01-18",
-        "ongoing": false,
-        "orbital": true,
-        "approx": false
-      }
-    ],
-    "spacewalks": 0
-  },
-  {
-    "id": "Q229674",
-    "qid": "Q229674",
-    "name": "Christa McAuliffe",
-    "slug": "christa-mcauliffe",
-    "nationalities": [
-      "United States"
-    ],
-    "gender": "female",
-    "agencies": [
-      "NASA"
-    ],
-    "status": "deceased",
-    "dob": "1948-09-02",
-    "dod": "1986-01-28",
-    "wiki": "https://en.wikipedia.org/wiki/Christa_McAuliffe",
-    "image": "https://commons.wikimedia.org/wiki/Special:FilePath/ChristaMcAuliffe%20%28cropped%29.jpg?width=320",
-    "totalDaysInSpace": 0,
-    "firstLaunch": "1986-01-28",
-    "lastLanding": "1986-01-28",
-    "flights": [
-      {
-        "mission": "STS-51-L",
-        "launch": "1986-01-28",
-        "landing": "1986-01-28",
-        "ongoing": false,
-        "orbital": true,
-        "approx": false
-      }
-    ],
-    "spacewalks": 0
-  },
-  {
-    "id": "Q382013",
-    "qid": "Q382013",
-    "name": "Gregory Jarvis",
-    "slug": "gregory-jarvis",
-    "nationalities": [
-      "United States"
-    ],
-    "gender": "male",
-    "agencies": [
-      "NASA"
-    ],
-    "status": "deceased",
-    "dob": "1944-08-24",
-    "dod": "1986-01-28",
-    "wiki": "https://en.wikipedia.org/wiki/Gregory_Jarvis",
-    "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Gregory%20Jarvis%20%28NASA%29%20cropped.jpg?width=320",
-    "totalDaysInSpace": 0,
-    "firstLaunch": "1986-01-28",
-    "lastLanding": "1986-01-28",
-    "flights": [
-      {
-        "mission": "STS-51-L",
-        "launch": "1986-01-28",
-        "landing": "1986-01-28",
-        "ongoing": false,
-        "orbital": true,
-        "approx": false
-      }
-    ],
-    "spacewalks": 0
-  },
-  {
-    "id": "Q25981",
-    "qid": "Q25981",
-    "name": "Michael J. Smith",
-    "slug": "michael-j-smith",
-    "nationalities": [
-      "United States"
-    ],
-    "gender": "male",
-    "agencies": [
-      "NASA"
-    ],
-    "status": "deceased",
-    "dob": "1945-04-30",
-    "dod": "1986-01-28",
-    "wiki": "https://en.wikipedia.org/wiki/Michael_J._Smith",
-    "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Michael%20Smith%20%28NASA%29.jpg?width=320",
-    "totalDaysInSpace": 0,
-    "firstLaunch": "1986-01-28",
-    "lastLanding": "1986-01-28",
-    "flights": [
-      {
-        "mission": "STS-51-L",
-        "launch": "1986-01-28",
-        "landing": "1986-01-28",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -17599,14 +17423,6 @@
         "approx": false
       },
       {
-        "mission": "VSS Unity VF-02",
-        "launch": "2020-12-12",
-        "landing": "2020-12-12",
-        "ongoing": false,
-        "orbital": false,
-        "approx": false
-      },
-      {
         "mission": "VSS Unity VF-03",
         "launch": "2021-05-22",
         "landing": "2021-05-22",
@@ -23892,7 +23708,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1966-05-01",
+    "dob": "1966-05",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Zhang_Xiaoguang",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Shenzhou%2010%20crew%28cropped%29.jpg?width=320",
@@ -23928,7 +23744,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Mike_Hopkins_(astronaut)",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Michael%20S.%20Hopkins.jpg?width=320",
-    "totalDaysInSpace": 334,
+    "totalDaysInSpace": 333,
     "firstLaunch": "2013-09-25",
     "lastLanding": "2021-05-02",
     "flights": [
@@ -23941,14 +23757,15 @@
         "approx": false
       },
       {
-        "mission": "Q56042850",
+        "mission": "Crew-1",
         "launch": "2020-11-16",
         "landing": "2021-05-02",
         "ongoing": false,
         "orbital": true,
         "approx": false
       }
-    ]
+    ],
+    "spacewalks": 5
   },
   {
     "id": "Q3329196",
@@ -24415,7 +24232,7 @@
         "launch": "2018-10-11",
         "landing": "2018-10-11",
         "ongoing": false,
-        "orbital": true,
+        "orbital": false,
         "approx": false
       },
       {
@@ -24903,7 +24720,7 @@
         "launch": "2018-10-11",
         "landing": "2018-10-11",
         "ongoing": false,
-        "orbital": true,
+        "orbital": false,
         "approx": false
       },
       {
@@ -25086,6 +24903,126 @@
         "mission": "Galactic 04",
         "launch": "2023-10-06",
         "landing": "2023-10-06",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      }
+    ],
+    "spacewalks": 0
+  },
+  {
+    "id": "Q5237017",
+    "qid": "Q5237017",
+    "name": "David Mackay",
+    "slug": "david-mackay",
+    "nationalities": [
+      "United Kingdom"
+    ],
+    "gender": "male",
+    "agencies": [
+      "Virgin Galactic"
+    ],
+    "status": "living",
+    "dob": "1957",
+    "dod": null,
+    "wiki": "https://en.wikipedia.org/wiki/David_Mackay_(pilot)",
+    "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/255bauto255d__image_thumbnail_20240305190659.jpeg",
+    "totalDaysInSpace": 0,
+    "firstLaunch": "2019-02-22",
+    "lastLanding": "2021-07-11",
+    "flights": [
+      {
+        "mission": "VSS Unity VF-01",
+        "launch": "2019-02-22",
+        "landing": "2019-02-22",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      },
+      {
+        "mission": "VSS Unity VF-03",
+        "launch": "2021-05-22",
+        "landing": "2021-05-22",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      },
+      {
+        "mission": "VSS Unity 22",
+        "launch": "2021-07-11",
+        "landing": "2021-07-11",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      }
+    ],
+    "spacewalks": 0
+  },
+  {
+    "id": "Q107484917",
+    "qid": "Q107484917",
+    "name": "Michael Masucci",
+    "slug": "michael-masucci",
+    "nationalities": [
+      "United States"
+    ],
+    "gender": "male",
+    "agencies": [
+      "Virgin Galactic"
+    ],
+    "status": "living",
+    "dob": null,
+    "dod": null,
+    "wiki": "https://en.wikipedia.org/wiki/Michael_Masucci",
+    "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/255bauto255d__image_thumbnail_20240305190444.jpeg",
+    "totalDaysInSpace": 0,
+    "firstLaunch": "2019-02-22",
+    "lastLanding": "2023-11-02",
+    "flights": [
+      {
+        "mission": "VSS Unity VF-01",
+        "launch": "2019-02-22",
+        "landing": "2019-02-22",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      },
+      {
+        "mission": "VSS Unity 22",
+        "launch": "2021-07-11",
+        "landing": "2021-07-11",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      },
+      {
+        "mission": "VSS Unity 25",
+        "launch": "2023-05-25",
+        "landing": "2023-05-25",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      },
+      {
+        "mission": "Galactic 01",
+        "launch": "2023-06-29",
+        "landing": "2023-06-29",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      },
+      {
+        "mission": "Galactic 03",
+        "launch": "2023-09-08",
+        "landing": "2023-09-08",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      },
+      {
+        "mission": "Galactic 05",
+        "launch": "2023-11-02",
+        "landing": "2023-11-02",
         "ongoing": false,
         "orbital": false,
         "approx": false
@@ -25427,7 +25364,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1975-10-01",
+    "dob": "1975-10",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Tang_Hongbo",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/%E7%A5%9E%E8%88%9F%E5%8D%81%E4%B8%83%E5%8F%B7%20Shenzhou%2017%20%E6%B1%A4%E6%B4%AA%E6%B3%A2%20Tang%20Hongbo%2020231026.jpg?width=320",
@@ -25511,70 +25448,6 @@
     "spacewalks": 0
   },
   {
-    "id": "Q5237017",
-    "qid": "Q5237017",
-    "name": "David Mackay",
-    "slug": "david-mackay",
-    "nationalities": [
-      "United Kingdom"
-    ],
-    "gender": "male",
-    "agencies": [
-      "Virgin Galactic"
-    ],
-    "status": "living",
-    "dob": "1957-01-01",
-    "dod": null,
-    "wiki": "https://en.wikipedia.org/wiki/David_Mackay_(pilot)",
-    "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/255bauto255d__image_thumbnail_20240305190659.jpeg",
-    "totalDaysInSpace": 0,
-    "firstLaunch": "2021-07-11",
-    "lastLanding": "2021-07-11",
-    "flights": [
-      {
-        "mission": "Unity 22",
-        "launch": "2021-07-11",
-        "landing": "2021-07-11",
-        "ongoing": false,
-        "orbital": false,
-        "approx": false
-      }
-    ],
-    "spacewalks": 0
-  },
-  {
-    "id": "Q107484917",
-    "qid": "Q107484917",
-    "name": "Michael Masucci",
-    "slug": "michael-masucci",
-    "nationalities": [
-      "United States"
-    ],
-    "gender": "male",
-    "agencies": [
-      "Virgin Galactic"
-    ],
-    "status": "living",
-    "dob": null,
-    "dod": null,
-    "wiki": "https://en.wikipedia.org/wiki/Michael_Masucci",
-    "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/255bauto255d__image_thumbnail_20240305190444.jpeg",
-    "totalDaysInSpace": 0,
-    "firstLaunch": "2021-07-11",
-    "lastLanding": "2021-07-11",
-    "flights": [
-      {
-        "mission": "Unity 22",
-        "launch": "2021-07-11",
-        "landing": "2021-07-11",
-        "ongoing": false,
-        "orbital": false,
-        "approx": false
-      }
-    ],
-    "spacewalks": 0
-  },
-  {
     "id": "Q194419",
     "qid": "Q194419",
     "name": "Richard Branson",
@@ -25619,7 +25492,7 @@
       "Virgin Galactic"
     ],
     "status": "living",
-    "dob": null,
+    "dob": "1988",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Sirisha_Bandla",
     "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/255bauto255d__image_thumbnail_20240305190127.jpeg",
@@ -26019,7 +25892,7 @@
       "Blue Origin"
     ],
     "status": "living",
-    "dob": "1977-01-01",
+    "dob": "1977",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Chris_Boshuizen",
     "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/255bauto255d__image_thumbnail_20240305185557.jpeg",
@@ -26419,7 +26292,7 @@
       "Blue Origin"
     ],
     "status": "living",
-    "dob": "1961-01-01",
+    "dob": "1961",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Lane_Bess",
     "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/255bauto255d__image_thumbnail_20240305190718.jpeg",
@@ -26859,7 +26732,7 @@
       "Axiom Space"
     ],
     "status": "living",
-    "dob": "1969-07-01",
+    "dob": "1969-07",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Mark_Pathy",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Mark%20Pathy%20%28cropped%20big%29.jpg?width=320",
@@ -27124,7 +26997,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1976-05-01",
+    "dob": "1976-05",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Cai_Xuzhe",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/%E8%88%AA%E5%A4%A9%E5%91%98%E8%94%A1%E6%97%AD%E5%93%B2%20Cai%20Xuzhe.jpg?width=320",
@@ -27573,7 +27446,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1976-11-01",
+    "dob": "1976-11",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Zhang_Lu_(taikonaut)",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Zhang%20Lu%20%28cropped%29.jpg?width=320",
@@ -27782,7 +27655,7 @@
       "Axiom Space"
     ],
     "status": "living",
-    "dob": "1992-03-01",
+    "dob": "1992-03",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Ali_AlQarni",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Ali%20AlQarni%20%28cropped%29.jpg?width=320",
@@ -27847,7 +27720,7 @@
       "Axiom Space"
     ],
     "status": "living",
-    "dob": "1988-09-01",
+    "dob": "1988-09",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Rayyanah_Barnawi",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Rayyanah%20Barnawi%20%28cropped%29.jpg?width=320",
@@ -27975,7 +27848,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1986-11-01",
+    "dob": "1986-11",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Gui_Haichao",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/GuiHaichao01.jpg?width=320",
@@ -28007,7 +27880,7 @@
       "CMSA"
     ],
     "status": "in-space",
-    "dob": "1986-09-01",
+    "dob": "1986-09",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Zhu_Yangzhu",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Zhu%20Yangzhu%20%2820260523%29.jpg?width=320",
@@ -28624,7 +28497,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1988-02-01",
+    "dob": "1988-02",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Jiang_Xinlin",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/%E7%A5%9E%E8%88%9F%E5%8D%81%E4%B8%83%E5%8F%B7%20Shenzhou%2017%20%E6%B1%9F%E6%96%B0%E6%9E%97%20Jiang%20Xinlin%2020231026.jpg?width=320",
@@ -28656,7 +28529,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1989-12-01",
+    "dob": "1989-12",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Tang_Shengjie",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/%E7%A5%9E%E8%88%9F%E5%8D%81%E4%B8%83%E5%8F%B7%20Shenzhou%2017%20%E5%94%90%E8%83%9C%E6%9D%B0%20Tang%20Shengjie%2020231026.jpg?width=320",
@@ -29112,7 +28985,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1989-10-01",
+    "dob": "1989-10",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Li_Cong_(taikonaut)",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/L%C7%90%20C%C5%8Dng%20videoframe%20143378%28cropped%29.jpg?width=320",
@@ -29144,7 +29017,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1987-07-01",
+    "dob": "1987-07",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Li_Guangsu",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/L%C7%90%20Gu%C7%8Engs%C5%AB%20videoframe%20865646%28cropped%29.png?width=320",
@@ -29854,7 +29727,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1990-08-01",
+    "dob": "1990-08",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Song_Lingdong",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Song%20Lingdong.jpg?width=320",
@@ -29886,7 +29759,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1990-03-01",
+    "dob": "1990-03",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Wang_Haoze",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Wang%20Haoze%20at%20Shenzhou-19%20press%20conference.png?width=320",
@@ -30279,7 +30152,7 @@
       "SpaceX"
     ],
     "status": "living",
-    "dob": "1982-01-01",
+    "dob": "1982",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Chun_Wang",
     "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/chun_wang_image_thumbnail_20250329173006.jpeg",
@@ -30664,7 +30537,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1984-10-01",
+    "dob": "1984-10",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Chen_Zhongrui",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/%E7%A5%9E%E4%BA%8C%E5%8D%81%E8%88%AA%E5%A4%A9%E5%91%98%E9%A6%96%E6%AC%A1%E4%BA%AE%E7%9B%B82.png?width=320",
@@ -30696,7 +30569,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1989-09-01",
+    "dob": "1989-09",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Wang_Jie_(taikonaut)",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/%E7%A5%9E%E4%BA%8C%E5%8D%81%E8%88%AA%E5%A4%A9%E5%91%98%E9%A6%96%E6%AC%A1%E4%BA%AE%E7%9B%B81.png?width=320",
@@ -31594,7 +31467,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1993-01-01",
+    "dob": "1993",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Wu_Fei_(taikonaut)",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/W%C7%94%20F%C4%93i%20videoframe%20497409%28cropped%29.jpg?width=320",
@@ -31626,7 +31499,7 @@
       "CMSA"
     ],
     "status": "living",
-    "dob": "1986-04-01",
+    "dob": "1986-04",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Zhang_Hongzhang",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Zh%C4%81ng%20H%C3%B3ngzh%C4%81ng%20videoframe%20615387%28cropped%29.jpg?width=320",
@@ -31755,7 +31628,7 @@
       "Blue Origin"
     ],
     "status": "living",
-    "dob": "1963-01-01",
+    "dob": "1963",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Hans_Koenigsmann",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Hans-koenigsmann.jpg?width=320",
@@ -31851,7 +31724,7 @@
       "Blue Origin"
     ],
     "status": "living",
-    "dob": "1992-01-01",
+    "dob": "1992",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Michaela_Benthaus",
     "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/michaela_bentha_image_thumbnail_20251205145838.png",
@@ -32011,7 +31884,7 @@
       "Blue Origin"
     ],
     "status": "living",
-    "dob": "1986-01-01",
+    "dob": "1986",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Laura_Stiles",
     "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/laura_stiles_po_image_thumbnail_20260120194708.jpeg",
@@ -32203,7 +32076,7 @@
       "CMSA"
     ],
     "status": "in-space",
-    "dob": "1982-11-01",
+    "dob": "1982-11",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Lai_Ka-ying",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Lai%20Ka-ying%20%2820260523%29.jpg?width=320",
@@ -32235,7 +32108,7 @@
       "CMSA"
     ],
     "status": "in-space",
-    "dob": "1986-06-01",
+    "dob": "1986-06",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Zhang_Zhiyuan_(astronaut)",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Zhang%20Zhiyuan%20%2820260523%29.jpg?width=320",

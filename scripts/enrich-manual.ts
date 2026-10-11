@@ -11,9 +11,13 @@
  * How reverting works without re-running the whole chain: this keeps a gitignored baseline of
  * (pipeline value, value written) for every field it touches, at scripts/cache/manual/baseline.json.
  * On each run it first restores those fields to their pipeline value — but ONLY when the file still
- * holds exactly what it last wrote, so a fresh update-data/LL2/SC run (or a hand edit) that
- * legitimately changed a field is respected — then re-applies the current overrides. Net effect:
- * edit overrides.ts, re-run this alone, and emptying a field brings the pipeline value back.
+ * holds exactly what it last wrote, so an LL2/SC re-run (or a hand edit) that legitimately changed a
+ * field is respected — then re-applies the current overrides. Net effect: edit overrides.ts, re-run
+ * this alone, and emptying a field brings the pipeline value back.
+ *
+ * update-data discards the baseline: its fresh base holds none of our values. Kept, the baseline would
+ * mistake a field the pipeline has since got right by itself for our own write (it holds the same value),
+ * so deleting the now-redundant override would roll the field back to the stale value we once replaced.
  *
  *   bun run enrich-manual    # apply overrides.ts as the final layer (idempotent, offline)
  *
@@ -101,8 +105,9 @@ async function main() {
 	const resolve = (key: string) => byId.get(key) ?? bySlug.get(key) ?? byName.get(normName(key));
 
 	// ----- 1. Revert prior manual edits to their pipeline value -----
-	// Only when the field still holds exactly what we last wrote; if update-data/LL2/SC (or a hand
-	// edit) has since changed it, that newer value IS the pipeline value, so leave it alone.
+	// Only when the field still holds exactly what we last wrote; if LL2/SC (or a hand edit) has since
+	// changed it, that newer value IS the pipeline value, so leave it alone. (After update-data there is
+	// no baseline at all — see the header.)
 	let reverted = 0;
 	for (const [id, fields] of Object.entries(prior)) {
 		const p = byId.get(id);
