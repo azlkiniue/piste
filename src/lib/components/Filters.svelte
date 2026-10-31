@@ -38,6 +38,20 @@
 	];
 </script>
 
+{#snippet segmented(options: { id: string; label: string }[], current: string, pick: (id: string) => void)}
+	<div class="flex rounded-md border border-zinc-200 p-0.5 dark:border-zinc-800">
+		{#each options as opt (opt.id)}
+			<button
+				class="flex-1 rounded px-2 py-1 text-xs transition-colors {current === opt.id
+					? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+					: 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}"
+				onclick={() => pick(opt.id)}
+				aria-pressed={current === opt.id}>{opt.label}</button
+			>
+		{/each}
+	</div>
+{/snippet}
+
 {#snippet facet(dim: Dim, scroll = false)}
 	<ul class="space-y-0.5 {scroll ? `${dim === 'agency' && fullNames ? 'max-h-80' : 'max-h-52'} overflow-y-auto pr-1 scrollbar-thin` : ''}">
 		{#each entries(counts[dim]) as [value, count] (value)}
@@ -81,29 +95,10 @@
 	<section>
 		{#if mode === 'stays'}
 			<h3 class="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">Stay</h3>
-			<div class="flex rounded-md border border-zinc-200 p-0.5 dark:border-zinc-800">
-				{#each STAY_TYPES as st (st.id)}
-					<button
-						class="flex-1 rounded px-2 py-1 text-xs transition-colors {filters.stayType === st.id
-							? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-							: 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}"
-						onclick={() => (filters.stayType = st.id)}
-						aria-pressed={filters.stayType === st.id}>{st.label}</button
-					>
-				{/each}
-			</div>
+			{@render segmented(STAY_TYPES, filters.stayType, (id) => (filters.stayType = id as StayType))}
 		{:else}
 			<h3 class="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">Flight type</h3>
-			<div class="flex rounded-md border border-zinc-200 p-0.5 dark:border-zinc-800">
-				{#each FLIGHT_TYPES as ft (ft.id)}
-					<button
-						class="flex-1 rounded px-2 py-1 text-xs transition-colors {filters.flightType === ft.id
-							? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-							: 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}"
-						onclick={() => (filters.flightType = ft.id)}>{ft.label}</button
-					>
-				{/each}
-			</div>
+			{@render segmented(FLIGHT_TYPES, filters.flightType, (id) => (filters.flightType = id as FlightType))}
 		{/if}
 	</section>
 

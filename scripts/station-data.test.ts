@@ -78,6 +78,11 @@ describe('every record', () => {
 		expect(Object.keys(STATIONS)).toHaveLength(12);
 		expect(stations.map((s) => s.slug)).toEqual(Object.keys(STATIONS));
 	});
+
+	test('the Stations are in launch order, oldest first', () => {
+		const launched = stations.map((s) => s.launched);
+		expect(launched).toEqual([...launched].sort());
+	});
 });
 
 describe('known history', () => {
@@ -166,8 +171,8 @@ describe('known history', () => {
 		expect(stayIn('nicole-mann', 'iss', '2022').expeditions).toEqual(['expedition-68']); // Crew-5
 	});
 
-	test('guest crews and guests are Visitors', () => {
-		const visits: [string, string, string][] = [
+	test('these Stays are Visitors: crews LL2 calls expeditions, and people a resident crew list names', () => {
+		const visitorStays: [string, string, string][] = [
 			['michael-lopez-alegria', 'iss', '2022'], // Ax-1
 			['larry-connor', 'iss', '2022'],
 			['mark-pathy', 'iss', '2022'],
@@ -182,6 +187,6 @@ describe('known history', () => {
 			['marina-vasilevskaya', 'iss', '2024'], // listed in Expedition 70's crew
 			['oleg-novitskiy', 'iss', '2024'] // …as was her Soyuz MS-25 commander, up for 13 days
 		];
-		expect(visits.filter(([slug, station, when]) => !isVisitor(stayIn(slug, station, when))).map(([slug]) => slug)).toEqual([]);
+		expect(visitorStays.filter(([slug, station, when]) => !isVisitor(stayIn(slug, station, when))).map(([slug]) => slug)).toEqual([]);
 	});
 });

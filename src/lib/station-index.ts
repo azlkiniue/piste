@@ -11,6 +11,9 @@ export interface StayRow {
 /** `station/slug` — Expedition slugs are unique only within their Station (EO-1 is Salyut 6's, 7's and Mir's). */
 export const expeditionKey = (station: string, slug: string) => `${station}/${slug}`;
 
+/** A Stay in no Expedition is a Visitor's. */
+export const isVisitor = (stay: Stay) => stay.expeditions.length === 0;
+
 /** Every Stay aboard each Station, in arrival order. */
 export function staysByStation(people: Person[]): Map<string, StayRow[]> {
 	const out = new Map<string, StayRow[]>();
@@ -25,14 +28,17 @@ export function staysByStation(people: Person[]): Map<string, StayRow[]> {
 	return out;
 }
 
-/** Each Expedition's crew — the Stays that name it, in arrival order — keyed by expeditionKey. */
+/** Each Expedition's crew, keyed by expeditionKey: a row per person, in arrival order — once, though two of
+ *  their Stays may name it (both of Kizim's Mir Stays on Soyuz T-15 are EO-1's). */
 export function crewByExpedition(byStation: Map<string, StayRow[]>): Map<string, StayRow[]> {
 	const out = new Map<string, StayRow[]>();
 	for (const [station, rows] of byStation)
 		for (const row of rows)
 			for (const slug of row.stay.expeditions) {
 				const key = expeditionKey(station, slug);
-				out.set(key, [...(out.get(key) ?? []), row]);
+				const crew = out.get(key) ?? [];
+				if (!crew.some((r) => r.person === row.person)) crew.push(row);
+				out.set(key, crew);
 			}
 	return out;
 }

@@ -232,6 +232,10 @@ async function main() {
 		if (Object.keys(entry).length) next[`${EXP}${key}`] = entry;
 	}
 
+	// A crew correction can rewrite the Stays inside a `flights` override: record what was finally written,
+	// so that field still reverts when its override is emptied.
+	for (const [id, entry] of Object.entries(next)) if (entry.flights) entry.flights.applied = clone(byId.get(id)!.flights);
+
 	people.sort((a, b) => a.firstLaunch.localeCompare(b.firstLaunch) || a.name.localeCompare(b.name));
 	if (stationData) await writeStations(stationData);
 	await writeAstronauts(people);

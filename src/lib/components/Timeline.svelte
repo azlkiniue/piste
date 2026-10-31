@@ -165,7 +165,7 @@
 							{#each p.flights as f, i (i)}
 								{@const g = geom(f)}
 								<div
-									class="absolute top-1/2 -translate-y-1/2 rounded-[2px] {f.ongoing ? 'piste-ongoing' : ''}"
+									class="absolute top-1/2 -translate-y-1/2 rounded-[2px] {f.ongoing ? 'piste-ongoing piste-pulse' : ''}"
 									class:opacity-80={!f.orbital}
 									style="left:{g.x}px; width:{g.w}px; height:{f.orbital ? 13 : 9}px; background:{color}; {f.orbital
 										? ''
@@ -206,17 +206,8 @@
 {/if}
 
 <style>
+	/* the pulse itself is app.css's piste-pulse */
 	.piste-ongoing {
 		background-image: linear-gradient(90deg, currentColor 0%, transparent 100%);
-		animation: piste-pulse 2s ease-in-out infinite;
-	}
-	@keyframes piste-pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.55;
-		}
 	}
 </style>

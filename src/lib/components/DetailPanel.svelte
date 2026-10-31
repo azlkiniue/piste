@@ -7,7 +7,7 @@
 	import { base } from '$app/paths';
 	import stationData from '$lib/data/stations.min.json';
 	import type { StationData } from '$lib/types';
-	import { expeditionKey } from '$lib/station-index';
+	import { expeditionKey, isVisitor } from '$lib/station-index';
 	import Flags from './Flags.svelte';
 
 	// Expedition names, for each flight's Station lines: "Expedition 50, 51" rather than the word twice.
@@ -175,11 +175,11 @@
 					<!-- a line per Stay aboard a Station, to its station view (zoomed to its first Expedition) -->
 					{#each f.stays ?? [] as stay, j (j)}
 						<a
-							href="{base}/stations/{stay.station}{stay.expeditions.length ? `?expedition=${stay.expeditions[0]}` : ''}"
+							href="{base}/stations/{stay.station}{isVisitor(stay) ? '' : `?expedition=${stay.expeditions[0]}`}"
 							class="mt-1 flex items-center gap-1.5 text-[11px] text-zinc-500 underline-offset-2 hover:text-zinc-800 hover:underline dark:text-zinc-400 dark:hover:text-zinc-200"
 						>
 							<svg viewBox="0 0 24 24" class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12h4M17 12h4M7 9h10v6H7zM12 5v4M12 15v4" /></svg>
-							<span>{STATIONS[stay.station]?.short ?? stay.station} · {stay.expeditions.length ? expeditionList(stay.station, stay.expeditions) : 'Visitor'}{#if stay.approx}<span class="text-zinc-400"> · approx.</span>{/if}</span>
+							<span>{STATIONS[stay.station]?.short ?? stay.station} · {isVisitor(stay) ? 'Visitor' : expeditionList(stay.station, stay.expeditions)}{#if stay.approx}<span class="text-zinc-400"> · approx.</span>{/if}</span>
 						</a>
 					{/each}
 				</li>

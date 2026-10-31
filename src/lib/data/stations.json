@@ -6,6 +6,11 @@
       "deorbited": "1971-10-11"
     },
     {
+      "slug": "skylab",
+      "launched": "1973-05-14",
+      "deorbited": "1979-07-11"
+    },
+    {
       "slug": "salyut-3",
       "launched": "1974-06-25",
       "deorbited": "1975-01-24"
@@ -29,11 +34,6 @@
       "slug": "salyut-7",
       "launched": "1982-04-19",
       "deorbited": "1991-02-07"
-    },
-    {
-      "slug": "skylab",
-      "launched": "1973-05-14",
-      "deorbited": "1979-07-11"
     },
     {
       "slug": "mir",
@@ -68,6 +68,30 @@
       "name": "Soyuz 11",
       "start": "1971-06-06",
       "end": "1971-06-29",
+      "ongoing": false
+    },
+    {
+      "slug": "skylab-2",
+      "station": "skylab",
+      "name": "Skylab 2",
+      "start": "1973-05-25",
+      "end": "1973-06-22",
+      "ongoing": false
+    },
+    {
+      "slug": "skylab-3",
+      "station": "skylab",
+      "name": "Skylab 3",
+      "start": "1973-07-28",
+      "end": "1973-09-25",
+      "ongoing": false
+    },
+    {
+      "slug": "skylab-4",
+      "station": "skylab",
+      "name": "Skylab 4",
+      "start": "1973-11-16",
+      "end": "1974-02-08",
       "ongoing": false
     },
     {
@@ -212,30 +236,6 @@
       "name": "EO-5",
       "start": "1986-03-13",
       "end": "1986-07-16",
-      "ongoing": false
-    },
-    {
-      "slug": "skylab-2",
-      "station": "skylab",
-      "name": "Skylab 2",
-      "start": "1973-05-25",
-      "end": "1973-06-22",
-      "ongoing": false
-    },
-    {
-      "slug": "skylab-3",
-      "station": "skylab",
-      "name": "Skylab 3",
-      "start": "1973-07-28",
-      "end": "1973-09-25",
-      "ongoing": false
-    },
-    {
-      "slug": "skylab-4",
-      "station": "skylab",
-      "name": "Skylab 4",
-      "start": "1973-11-16",
-      "end": "1974-02-08",
       "ongoing": false
     },
     {

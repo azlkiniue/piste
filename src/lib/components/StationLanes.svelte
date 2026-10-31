@@ -1,26 +1,28 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { STATIONS } from '$lib/stations';
 	import type { Expedition, StationLife } from '$lib/types';
 	import { makeScale, timeTicks, formatDate, formatDuration, DAY, YEAR } from '$lib/time-scale';
 	import { colorFor, valueOf } from '$lib/colors';
-	import { personColour, type ColourChoice } from '$lib/colour.svelte';
+	import { personColor, type ColorChoice } from '$lib/color-choice.svelte';
 	import { endMs, expeditionKey, type StayRow } from '$lib/station-index';
 	import Flags from './Flags.svelte';
 
 	interface Props {
-		lives: StationLife[];
+		/** The Stations' lifetimes, in launch order: one lane each. */
+		stations: StationLife[];
 		expeditions: Expedition[];
 		/** Each Expedition's crew, keyed by expeditionKey. */
 		crew: Map<string, StayRow[]>;
 		/** "expedition" draws each Expedition in neutral shades; a person dimension stripes it, one stripe per crew member. */
-		colourBy: ColourChoice;
-		/** A value of that dimension to pick out: every other stripe fades. */
+		colorBy: ColorChoice;
+		/** A value of that dimension to pick out: Expeditions with no one of it fade. */
 		highlight?: string | null;
 		/** Where a lane's label, and each Expedition, lead — the station view. */
-		stationHref?: (slug: string) => string;
-		expeditionHref?: (x: Expedition) => string;
+		stationHref: (slug: string) => string;
+		expeditionHref: (exp: Expedition) => string;
 	}
-	let { lives, expeditions, crew, colourBy, highlight = null, stationHref, expeditionHref }: Props = $props();
+	let { stations, expeditions, crew, colorBy, highlight = null, stationHref, expeditionHref }: Props = $props();
 
 	const LABEL_W = 150;
 	const LANE_H = 44;
@@ -43,10 +45,10 @@
 
 	const byStation = $derived.by(() => {
 		const m = new Map<string, Expedition[]>();
-		for (const x of expeditions) m.set(x.station, [...(m.get(x.station) ?? []), x]);
+		for (const exp of expeditions) m.set(exp.station, [...(m.get(exp.station) ?? []), exp]);
 		return m;
 	});
-	const stripes = $derived(colourBy === 'expedition' ? null : personColour(colourBy));
+	const stripes = $derived(colorBy === 'expedition' ? null : personColor(colorBy));
 
 	function span(start: string, end: string | null, min = 2) {
 		const x = scale.x(Date.parse(start));
@@ -57,18 +59,14 @@
 
 	// zoom around the horizontal centre of the viewport
 	let scrollEl = $state<HTMLDivElement>();
-	function setZoom(next: number) {
-		const el = scrollEl;
-		const centerMs = el ? scale.invertX(el.scrollLeft + (el.clientWidth - LABEL_W) / 2) : minMs;
+	async function setZoom(next: number) {
+		const centerMs = scrollEl ? scale.invertX(scrollEl.scrollLeft + (scrollEl.clientWidth - LABEL_W) / 2) : minMs;
 		zoom = Math.min(400, Math.max(fitPxPerYear, next));
-		requestAnimationFrame(() => {
-			if (!el) return;
-			const ns = makeScale(minMs, maxMs, Math.max(240, totalYears * (zoom || fitPxPerYear)));
-			el.scrollLeft = ns.x(centerMs) - (el.clientWidth - LABEL_W) / 2;
-		});
+		await tick(); // the plot at its new width, then scroll
+		if (scrollEl) scrollEl.scrollLeft = scale.x(centerMs) - (scrollEl.clientWidth - LABEL_W) / 2;
 	}
 
-	let hover = $state<{ x: Expedition; rows: StayRow[]; cx: number; cy: number } | null>(null);
+	let hover = $state<{ exp: Expedition; rows: StayRow[]; cx: number; cy: number } | null>(null);
 </script>
 
 <div class="flex h-full flex-col">
@@ -98,7 +96,7 @@
 	</div>
 
 	<div bind:this={scrollEl} bind:clientWidth={viewportW} class="scrollbar-thin relative flex-1 overflow-auto">
-		<div class="relative" style="width:{LABEL_W + plotW}px; height:{HEADER_H + lives.length * LANE_H}px">
+		<div class="relative" style="width:{LABEL_W + plotW}px; height:{HEADER_H + stations.length * LANE_H}px">
 			<!-- gridlines + now line -->
 			<div class="pointer-events-none absolute top-0" style="left:{LABEL_W}px; width:{plotW}px; height:100%">
 				{#each ticks as t (t.ms)}
@@ -141,55 +139,48 @@
 			</div>
 
 			<!-- lanes -->
-			{#each lives as life (life.slug)}
+			{#each stations as life (life.slug)}
 				{@const station = STATIONS[life.slug]}
 				{@const track = span(life.launched, life.deorbited)}
 				<div class="flex" style="height:{LANE_H}px">
-					<svelte:element
-						this={stationHref ? 'a' : 'div'}
-						href={stationHref?.(life.slug)}
-						class="sticky left-0 z-20 flex flex-col justify-center overflow-hidden border-b border-zinc-100 bg-zinc-50 px-3 dark:border-zinc-900 dark:bg-zinc-950 {stationHref
-							? 'hover:bg-zinc-100 dark:hover:bg-zinc-900'
-							: ''}"
+					<a
+						href={stationHref(life.slug)}
+						class="sticky left-0 z-20 flex flex-col justify-center overflow-hidden border-b border-zinc-100 bg-zinc-50 px-3 hover:bg-zinc-100 dark:border-zinc-900 dark:bg-zinc-950 dark:hover:bg-zinc-900"
 						style="width:{LABEL_W}px"
 						title={station.name ? `${station.name} — ${station.note}` : station.note}
 					>
 						<span class="truncate text-[13px] font-medium text-zinc-700 dark:text-zinc-200">{station.short}</span>
 						<span class="text-[11px] tabular-nums text-zinc-400">{years(life)}</span>
-					</svelte:element>
+					</a>
 					<div class="relative flex-1 border-b border-zinc-100/70 dark:border-zinc-900/70">
 						<div
 							class="absolute rounded-[3px] bg-zinc-200/80 dark:bg-zinc-800/80"
 							style="left:{track.x}px; width:{track.w}px; top:{(LANE_H - BAR_H) / 2 + 4}px; height:{BAR_H - 8}px"
 							title="{station.short} in orbit, {formatDate(life.launched)} – {life.deorbited ? formatDate(life.deorbited) : 'now'}"
 						></div>
-						{#each byStation.get(life.slug) ?? [] as x, i (x.slug)}
-							{@const g = span(x.start, x.end)}
-							{@const rows = crew.get(expeditionKey(x.station, x.slug)) ?? []}
+						{#each byStation.get(life.slug) ?? [] as exp, i (exp.slug)}
+							{@const g = span(exp.start, exp.end)}
+							{@const rows = crew.get(expeditionKey(exp.station, exp.slug)) ?? []}
 							{@const values = stripes ? rows.map((r) => valueOf(r.person, stripes)) : []}
 							{@const faded = !!stripes && !!highlight && !values.includes(highlight)}
-							<svelte:element
-								this={expeditionHref ? 'a' : 'div'}
-								href={expeditionHref?.(x)}
-								class="absolute flex flex-col overflow-hidden rounded-[2px] ring-1 ring-zinc-50 transition-opacity dark:ring-zinc-950 {x.ongoing
-									? 'station-ongoing'
+							<!-- a faded bar doesn't pulse: the pulse animates opacity, and would undo the fading -->
+							<a
+								href={expeditionHref(exp)}
+								class="absolute flex flex-col overflow-hidden rounded-[2px] ring-1 ring-zinc-50 transition-opacity dark:ring-zinc-950 {exp.ongoing && !faded
+									? 'piste-pulse'
 									: ''} {stripes ? '' : i % 2 ? 'bg-zinc-500 dark:bg-zinc-400' : 'bg-zinc-400 dark:bg-zinc-500'} {faded
 									? 'opacity-25'
 									: ''}"
 								style="left:{g.x}px; width:{g.w}px; top:{(LANE_H - BAR_H) / 2}px; height:{BAR_H}px"
-								onmouseenter={(e: MouseEvent) => (hover = { x, rows, cx: e.clientX, cy: e.clientY })}
-								onmousemove={(e: MouseEvent) => (hover = { x, rows, cx: e.clientX, cy: e.clientY })}
+								onmouseenter={(e: MouseEvent) => (hover = { exp, rows, cx: e.clientX, cy: e.clientY })}
+								onmousemove={(e: MouseEvent) => (hover = { exp, rows, cx: e.clientX, cy: e.clientY })}
 								onmouseleave={() => (hover = null)}
-								role={expeditionHref ? undefined : 'presentation'}
-								aria-label={expeditionHref ? `${x.name}, ${station.short}` : undefined}
+								aria-label="{exp.name}, {station.short}"
 							>
 								{#each values as v, j (j)}
-									<div
-										class="min-h-0 flex-1 {highlight && v !== highlight ? 'opacity-25' : ''}"
-										style="background:{colorFor(stripes!, v)}"
-									></div>
+									<div class="min-h-0 flex-1" style="background:{colorFor(stripes!, v)}"></div>
 								{/each}
-							</svelte:element>
+							</a>
 						{/each}
 					</div>
 				</div>
@@ -203,13 +194,13 @@
 		class="pointer-events-none fixed z-50 max-w-xs rounded-lg border border-zinc-200 bg-white/95 px-3 py-2 text-xs shadow-xl backdrop-blur dark:border-zinc-700 dark:bg-zinc-900/95"
 		style="left:{Math.min(hover.cx + 14, viewportW - 240)}px; top:{hover.cy + 14}px"
 	>
-		<div class="font-semibold text-zinc-800 dark:text-zinc-100">{hover.x.name}</div>
-		<div class="text-zinc-500">{STATIONS[hover.x.station].short}</div>
+		<div class="font-semibold text-zinc-800 dark:text-zinc-100">{hover.exp.name}</div>
+		<div class="text-zinc-500">{STATIONS[hover.exp.station].short}</div>
 		<div class="mt-1 flex items-center gap-1.5 text-zinc-500">
-			<span>{formatDate(hover.x.start)}</span>
+			<span>{formatDate(hover.exp.start)}</span>
 			<span>→</span>
-			<span>{hover.x.ongoing ? 'now' : formatDate(hover.x.end)}</span>
-			<span class="text-zinc-400">· {formatDuration(hover.x.start, hover.x.ongoing ? null : hover.x.end)}</span>
+			<span>{hover.exp.ongoing ? 'now' : formatDate(hover.exp.end)}</span>
+			<span class="text-zinc-400">· {formatDuration(hover.exp.start, hover.exp.ongoing ? null : hover.exp.end)}</span>
 		</div>
 		<ul class="mt-1.5 space-y-0.5">
 			{#each hover.rows as r (r.person.slug)}
@@ -221,18 +212,3 @@
 		</ul>
 	</div>
 {/if}
-
-<style>
-	.station-ongoing {
-		animation: station-pulse 2s ease-in-out infinite;
-	}
-	@keyframes station-pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.55;
-		}
-	}
-</style>

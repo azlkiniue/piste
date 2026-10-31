@@ -11,7 +11,7 @@
  *    and arrivals by one craft type for a stay of another (Solovyev and Budarin up on Atlantis). A craft's
  *    consecutive dockings at one Station are one run — moving to another port doesn't end a Stay — while
  *    flying to another Station does: Soyuz T-15 makes three Stays, Mir, Salyut 7, Mir.
- *  - EXPEDITIONS are LL2's expedition records, less the guest crews and the crews who never went aboard
+ *  - EXPEDITIONS are LL2's expedition records, less the Visitor crews and the crews who never went aboard
  *    (both listed below). A Stay belongs to every Expedition whose LL2 crew list names that Person during
  *    it, so Pesquet's one Stay is in Expeditions 50 and 51; a Stay in none is a Visitor's.
  *  - Where a crew list names someone the docking events never put aboard (an event LL2 lacks), the Stay
@@ -22,6 +22,7 @@
  * reproduces the run that fetched it.
  */
 import { STATIONS } from '../src/lib/stations';
+import { expeditionKey, isVisitor } from '../src/lib/station-index';
 import type { Expedition, Flight, Person, Stay, StationData, StationLife } from '../src/lib/types';
 
 // ---------------------------------------------------------------- LL2 records (the fields read here)
@@ -64,7 +65,7 @@ export interface StationInput {
 	personByLL2: Map<number, Person>;
 	/** LL2's other records of people already in the dataset under a name variant (Evgeny/Yevgeny Tarelkin):
 	 *  a crew list may name either record, and a person's launches are those of all their records. */
-	aliasByLL2?: Map<number, Person>;
+	aliasByLL2: Map<number, Person>;
 }
 
 // ---------------------------------------------------------------- researched lists
@@ -81,26 +82,26 @@ const NEVER_ABOARD = [
 ];
 const neverAboard = (name?: string | null) => !!name && NEVER_ABOARD.some((re) => re.test(name.trim()));
 
-// LL2 expedition records that are guest crews, not Expeditions: their Stays are Visitors'. A list rather
-// than a rule, because neither obvious rule holds. By length ("an Expedition lasts 30 days or more"),
-// Salyut 1's only crew (Soyuz 11, 23 days) and Tiangong-1's first (Shenzhou 9, 13 days) would be guests,
-// and Merbold's 31-day Euromir 94 visit to Mir an Expedition. By nesting ("a Stay inside another crew's
-// is a guest's"), residents would be guests, since Rubio's 371-day Stay holds other residents' whole ones.
-const GUEST_CREWS = [
-	/^Salyut [67] EP-\d+$/, // the Soviet "visiting expeditions": about a week, often with an Interkosmos guest
+// LL2 expedition records that are Visitor crews, not Expeditions. A list rather than a rule, because
+// neither obvious rule holds. By length ("an Expedition lasts 30 days or more"), Salyut 1's only crew
+// (Soyuz 11, 23 days) and Tiangong-1's first (Shenzhou 9, 13 days) would be Visitors, and Merbold's 31-day
+// Euromir 94 Stay on Mir an Expedition. By nesting ("a Stay inside another crew's is a Visitor's"),
+// residents would be Visitors, since Rubio's 371-day Stay holds other residents' whole ones.
+const VISITOR_CREWS = [
+	/^Salyut [67] EP-\d+$/, // Salyut 6 and 7's week-long Visitor crews, often with an Interkosmos cosmonaut
 	/^Axiom Mission \d+$/, // Ax-1 to Ax-4: two or three weeks on the ISS alongside its Expedition
-	/^Soyuz MS-20$/, // Maezawa and Hirano's 12-day visit, December 2021
+	/^Soyuz MS-20$/, // Maezawa and Hirano's 12-day Stay, December 2021
 	/^Challenge Movie Crew$/ // Peresild and Shipenko, filming "The Challenge", October 2021
 ];
-const guestCrew = (name: string) => GUEST_CREWS.some((re) => re.test(name.trim()));
+const visitorCrew = (name: string) => VISITOR_CREWS.some((re) => re.test(name.trim()));
 
-// …and guests that a resident record lists among its crew: [record, person].
-const GUEST_MEMBERS: [RegExp, RegExp][] = [
+// …and Visitors that a resident record lists among its crew: [record, person].
+const VISITOR_MEMBERS: [RegExp, RegExp][] = [
 	[/^Mir EO-27$/, /^Ivan Bella$/], // Slovakia's first cosmonaut: a week aboard in February 1999, home with EO-26
 	[/^Expedition 70$/, /^Marina Vasilevskaya$/] // Belarus's first cosmonaut: two weeks aboard in March–April 2024
 ];
-const guestMember = (record: string, person?: string | null) =>
-	!!person && GUEST_MEMBERS.some(([r, p]) => r.test(record.trim()) && p.test(person.trim()));
+const visitorMember = (record: string, person?: string | null) =>
+	!!person && VISITOR_MEMBERS.some(([r, p]) => r.test(record.trim()) && p.test(person.trim()));
 
 // Craft whose docking events LL2 has wrong or lacks, replaced whole by these runs (UTC, from the missions'
 // records; a bare date where the hour isn't known). A run spans its port moves. Matched by craft name, as above.
@@ -160,8 +161,9 @@ interface Run {
 	undock: number | null;
 }
 
-/** Each craft's runs, by launch id. `names` gives each launch's craft name, for the researched lists. */
-function runsByLaunch(dockings: LL2Docking[], names: Map<string, string>): Map<string, Run[]> {
+/** Each craft's runs, by launch id. `names` gives each crewed launch's craft name, for the researched lists;
+ *  a crewed docking at a Station the registry doesn't know adds LL2's name for it to `unknown`. */
+function runsByLaunch(dockings: LL2Docking[], names: Map<string, string>, unknown: Set<string>): Map<string, Run[]> {
 	const byLaunch = new Map<string, { station: string; dock: number; undock: number | null }[]>();
 	const seen = new Set<number>();
 	for (const d of dockings) {
@@ -170,6 +172,7 @@ function runsByLaunch(dockings: LL2Docking[], names: Map<string, string>): Map<s
 		const station = stationSlug(d.docking_location?.spacestation?.name);
 		const dock = ms(d.docking);
 		const name = names.get(d.launch_id ?? '');
+		if (!station && name && d.docking_location?.spacestation?.name) unknown.add(d.docking_location.spacestation.name);
 		if (!d.launch_id || !station || Number.isNaN(dock) || neverAboard(name) || DOCKING_FIXES.some((x) => x.craft.test(name ?? ''))) continue;
 		const undock = ms(d.departure);
 		const list = byLaunch.get(d.launch_id) ?? [];
@@ -200,7 +203,7 @@ interface RawStay {
 	depart: number | null;
 }
 
-/** Walk a rider's boardings and departures in time order. Only those within the rider's own trip count:
+/** Walk a rider's boardings and departures in time order. Only those within the rider's own Flight count:
  *  the craft they came home in may have undocked to change ports long before they launched (and LL2 can
  *  lack the re-docking). A departure with no boarding before it (a docking LL2 lacks) or a boarding never
  *  followed by one (still aboard, or a missing undocking) leaves that end open, for placeOnFlight to fill
@@ -289,6 +292,17 @@ const stayEnd = (s: Stay, today: string) => s.depart ?? today;
 const overlapDays = (a0: string, a1: string, b0: string, b1: string) =>
 	(Math.min(Date.parse(a1), Date.parse(b1)) - Math.max(Date.parse(a0), Date.parse(b0))) / DAY;
 
+// ---------------------------------------------------------------- Expedition membership
+/** The person's Stays an Expedition [start, end] claims, aboard its Station: every one it overlaps (both of
+ *  Kizim's Mir Stays on Soyuz T-15 are EO-1's) — or, failing that, one that just touches it, for a one-day
+ *  record or dates a day apart. Shared by buildStations and the crew corrections in enrich-manual. */
+function staysDuring(p: Person, station: string, start: string, end: string | null, today: string): Stay[] {
+	const at = p.flights.flatMap((f) => f.stays ?? []).filter((s) => s.station === station);
+	const days = (s: Stay) => overlapDays(s.arrive, stayEnd(s, today), start, end ?? today);
+	const overlapping = at.filter((s) => days(s) > 0);
+	return overlapping.length ? overlapping : at.filter((s) => days(s) === 0).slice(0, 1);
+}
+
 // ---------------------------------------------------------------- Expedition crews (for enrich-manual)
 /** The slugs of everyone whose Stays name an Expedition, in the dataset's order. */
 export function expeditionCrew(people: Person[], x: Expedition): string[] {
@@ -309,10 +323,7 @@ export function setExpeditionCrew(people: Person[], x: Expedition, crew: string[
 	const missed: string[] = [];
 	for (const slug of crew) {
 		const p = bySlug.get(slug);
-		const at = (p?.flights ?? []).flatMap((f) => f.stays ?? []).filter((s) => s.station === x.station);
-		const days = (s: Stay) => overlapDays(s.arrive, stayEnd(s, today), x.start, x.end ?? today);
-		let mine = at.filter((s) => days(s) > 0);
-		if (!mine.length) mine = at.filter((s) => days(s) === 0).slice(0, 1);
+		const mine = p ? staysDuring(p, x.station, x.start, x.end, today) : [];
 		if (!mine.length) missed.push(p ? `${p.name} (no Stay aboard during ${x.name})` : `"${slug}" (no such person)`);
 		for (const s of mine) {
 			s.expeditions.push(x.slug);
@@ -320,6 +331,37 @@ export function setExpeditionCrew(people: Person[], x: Expedition, crew: string[
 		}
 	}
 	return missed;
+}
+
+// ---------------------------------------------------------------- checks on every write (scripts/dataset.ts)
+/** Warn — never fail — about Stays that look wrong against the station dataset: a long one in no Expedition
+ *  (a crew list LL2 left someone off), an Expedition member aboard at none of its dates, and any Station or
+ *  Expedition the registry or dataset doesn't know. Fix them with an Expedition correction (scripts/overrides.ts)
+ *  or a researched list in scripts/stations.ts. */
+export function checkStays(people: Person[], { expeditions }: StationData) {
+	const today = new Date().toISOString().slice(0, 10);
+	const days = (a: string, b: string) => (Date.parse(b) - Date.parse(a)) / 86400000;
+	const byKey = new Map(expeditions.map((x) => [expeditionKey(x.station, x.slug), x]));
+	const long: string[] = [];
+	const outside: string[] = [];
+	const unknown: string[] = [];
+	for (const p of people)
+		for (const f of p.flights)
+			for (const s of f.stays ?? []) {
+				const end = s.depart ?? today;
+				const where = `${p.name} (${s.station}, ${s.arrive} → ${s.depart ?? 'now'})`;
+				if (!STATIONS[s.station]) unknown.push(`Station "${s.station}" — ${where}`);
+				if (isVisitor(s) && days(s.arrive, end) >= 30) long.push(where);
+				for (const slug of s.expeditions) {
+					const x = byKey.get(expeditionKey(s.station, slug));
+					if (!x) unknown.push(`Expedition "${s.station}/${slug}" — ${where}`);
+					else if (s.arrive > (x.end ?? today) || end < x.start) outside.push(`${where} in ${x.name} (${x.start} → ${x.end ?? 'now'})`);
+				}
+			}
+	for (const x of expeditions) if (!STATIONS[x.station]) unknown.push(`Station "${x.station}" — Expedition ${x.name}`);
+	if (long.length) console.warn(`  ⚠ Stays of 30+ days in no Expedition — a crew list missing them? ${long.join(', ')}`);
+	if (outside.length) console.warn(`  ⚠ Expedition crew aboard at none of its dates: ${outside.join(', ')}`);
+	for (const u of unknown) console.warn(`  ⚠ unknown ${u}`);
 }
 
 // ---------------------------------------------------------------- Wikidata cross-check
@@ -364,7 +406,7 @@ export interface StationReport {
 	visitorStays: number;
 	approxStays: number;
 	expeditions: Record<string, number>;
-	guestRecords: number;
+	visitorCrews: number;
 	neverAboard: string[];
 	/** Crew a record names whom no Person matches, or whose Flight we can't find — by record. */
 	unresolvedCrew: string[];
@@ -374,6 +416,8 @@ export interface StationReport {
 	unplaced: string[];
 	/** Expeditions no Stay names. */
 	empty: string[];
+	/** LL2's names for crewed Stations the registry (src/lib/stations.ts) doesn't know: their data is dropped. */
+	unknownStations: string[];
 }
 
 /** Build the station dataset and put each Person's Stays on their Flights (replacing any already there). */
@@ -381,9 +425,9 @@ export function buildStations({ stations, expeditions, dockings, riders, personB
 	data: StationData;
 	report: StationReport;
 } {
-	const asOf = Math.min(...riders.map((r) => r.fetchedAt ?? Date.now()));
+	const asOf = riders.length ? Math.min(...riders.map((r) => r.fetchedAt ?? Date.now())) : Date.now();
 	const today = dayISO(asOf);
-	const people = new Set([...personByLL2.values(), ...(aliasByLL2?.values() ?? [])]);
+	const people = new Set([...personByLL2.values(), ...aliasByLL2.values()]);
 	for (const p of people) for (const f of p.flights) delete f.stays;
 
 	const report: StationReport = {
@@ -391,27 +435,29 @@ export function buildStations({ stations, expeditions, dockings, riders, personB
 		visitorStays: 0,
 		approxStays: 0,
 		expeditions: {},
-		guestRecords: 0,
+		visitorCrews: 0,
 		neverAboard: [],
 		unresolvedCrew: [],
 		unmatchedRiders: [],
 		unplaced: [],
-		empty: []
+		empty: [],
+		unknownStations: []
 	};
 
 	// Craft names by launch, for the researched lists.
 	const names = new Map<string, string>();
 	for (const r of riders) for (const f of r.flights ?? []) if (f.id) names.set(f.id, craftName(f.name));
 	for (const name of new Set(names.values())) if (neverAboard(name)) report.neverAboard.push(name);
-	const runs = runsByLaunch(dockings, names);
+	const unknown = new Set<string>();
+	const runs = runsByLaunch(dockings, names, unknown);
 
 	// 1. Stays from dockings, from each person's launches across all their LL2 records.
 	const ridesOf = new Map<Person, LL2Rider>();
 	for (const r of riders) {
-		const p = personByLL2.get(r.id) ?? aliasByLL2?.get(r.id);
+		const p = personByLL2.get(r.id) ?? aliasByLL2.get(r.id);
 		if (!p) {
 			const docked = [...(r.flights ?? []).map((f) => f.id), ...(r.landings ?? []).map((l) => l.launch?.id)].find((id) => runs.has(id ?? ''));
-			if (docked) report.unmatchedRiders.push(`${r.name ?? `LL2 #${r.id}`} (${names.get(docked) ?? docked})`);
+			if (docked) report.unmatchedRiders.push(`${r.name ?? `LL2 #${r.id}`} (${names.get(docked) ?? docked}, ${runs.get(docked)![0].station})`);
 			continue;
 		}
 		const had = ridesOf.get(p);
@@ -431,7 +477,7 @@ export function buildStations({ stations, expeditions, dockings, riders, personB
 		for (const raw of staysFromDockings(r, runs, asOf))
 			if (!placeOnFlight(p, raw, today)) report.unplaced.push(`${p.name} (${raw.station}, ${dayISO(raw.arrive ?? raw.depart!)})`);
 
-	// 2. Expeditions and guest crews, with the flight-date fallback for anyone the dockings missed.
+	// 2. Expeditions and Visitor crews, with the flight-date fallback for anyone the dockings missed.
 	const seen = new Set<number>();
 	const out: Expedition[] = [];
 	const slugsByStation = new Map<string, Set<string>>();
@@ -441,14 +487,15 @@ export function buildStations({ stations, expeditions, dockings, riders, personB
 	for (const e of records) {
 		const station = stationSlug(e.spacestation?.name);
 		const start = ms(e.start);
+		if (!station && e.crew?.length && e.spacestation?.name) unknown.add(e.spacestation.name);
 		if (!station || Number.isNaN(start) || start > asOf) continue;
 		if (neverAboard(e.name)) {
 			if (!report.neverAboard.includes(e.name)) report.neverAboard.push(e.name);
 			continue;
 		}
-		const guest = guestCrew(e.name);
+		const visitors = visitorCrew(e.name);
 		let exp: Expedition | null = null;
-		if (guest) report.guestRecords++;
+		if (visitors) report.visitorCrews++;
 		else {
 			const name = expeditionName(e.name);
 			const taken = slugsByStation.get(station) ?? new Set<string>();
@@ -465,29 +512,26 @@ export function buildStations({ stations, expeditions, dockings, riders, personB
 		const e1 = exp ? (exp.end ?? today) : Number.isNaN(ms(e.end)) ? today : dayISO(Math.min(ms(e.end), asOf));
 		for (const c of e.crew ?? []) {
 			const id = c.astronaut?.id ?? -1;
-			const p = personByLL2.get(id) ?? aliasByLL2?.get(id);
+			const p = personByLL2.get(id) ?? aliasByLL2.get(id);
 			if (!p) {
 				report.unresolvedCrew.push(`${c.astronaut?.name ?? '?'} (${e.name})`);
 				continue;
 			}
-			// Their Stays at this Station during the record (both of Kizim's Mir Stays on T-15 are EO-1's)…
-			const at = p.flights.flatMap((f) => f.stays ?? []).filter((s) => s.station === station);
-			const days = (s: Stay) => overlapDays(s.arrive, stayEnd(s, today), e0, e1);
-			let mine = at.filter((s) => days(s) > 0);
-			if (!mine.length) mine = at.filter((s) => days(s) === 0).slice(0, 1); // a one-day record, or dates a day apart
-			// …or, if the dockings never put them aboard, a Stay as long as the Flight that overlaps the record.
+			// Their Stays aboard during the record — or, if the dockings never put them aboard, a Stay as long as
+			// the Flight that overlaps it.
+			let mine = staysDuring(p, station, e0, e1, today);
 			if (!mine.length) {
 				const during = p.flights.filter((f) => overlapDays(f.launch, flightEnd(f, today), e0, e1) >= 0);
 				const f = during.find((f) => !f.stays?.length);
 				if (!f) {
-					// A guest record LL2 filed under the wrong Station (Salyut 6 EP-5, under Salyut 5) needs nothing:
+					// A Visitor crew's record LL2 filed under the wrong Station (Salyut 6 EP-5, under Salyut 5) needs nothing:
 					// the dockings already put its crew aboard the right one.
-					if (!(guest && during.length)) report.unresolvedCrew.push(`${p.name} (${e.name})`);
+					if (!(visitors && during.length)) report.unresolvedCrew.push(`${p.name} (${e.name})`);
 					continue;
 				}
 				mine = [addStay(f, { station, arrive: null, depart: null }, today)];
 			}
-			if (exp && !guestMember(e.name, c.astronaut?.name))
+			if (exp && !visitorMember(e.name, c.astronaut?.name))
 				for (const s of mine) if (!s.expeditions.includes(exp.slug)) s.expeditions.push(exp.slug);
 		}
 	}
@@ -500,16 +544,16 @@ export function buildStations({ stations, expeditions, dockings, riders, personB
 			f.stays.sort((a, b) => a.arrive.localeCompare(b.arrive));
 			for (const s of f.stays) {
 				report.stays++;
-				if (!s.expeditions.length) report.visitorStays++;
+				if (isVisitor(s)) report.visitorStays++;
 				if (s.approx) report.approxStays++;
-				for (const x of s.expeditions) named.add(`${s.station}/${x}`);
+				for (const slug of s.expeditions) named.add(expeditionKey(s.station, slug));
 			}
 		}
 	const order = Object.keys(STATIONS);
 	out.sort((a, b) => order.indexOf(a.station) - order.indexOf(b.station) || a.start.localeCompare(b.start));
 	for (const x of out) {
 		report.expeditions[x.station] = (report.expeditions[x.station] ?? 0) + 1;
-		if (!named.has(`${x.station}/${x.slug}`)) report.empty.push(`${x.station}/${x.slug}`);
+		if (!named.has(expeditionKey(x.station, x.slug))) report.empty.push(expeditionKey(x.station, x.slug));
 	}
 
 	const lives: StationLife[] = [];
@@ -518,5 +562,6 @@ export function buildStations({ stations, expeditions, dockings, riders, personB
 		if (slug && s.founded) lives.push({ slug, launched: s.founded.slice(0, 10), deorbited: s.deorbited ? s.deorbited.slice(0, 10) : null });
 	}
 	lives.sort((a, b) => order.indexOf(a.slug) - order.indexOf(b.slug));
+	report.unknownStations = [...unknown];
 	return { data: { stations: lives, expeditions: out }, report };
 }

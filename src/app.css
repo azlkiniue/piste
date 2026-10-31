@@ -31,3 +31,17 @@ body {
 	scrollbar-width: thin;
 	scrollbar-color: color-mix(in oklab, currentColor 25%, transparent) transparent;
 }
+
+/* The slow pulse of anything still under way: a flight in space, a Stay or an Expedition aboard now. */
+.piste-pulse {
+	animation: piste-pulse 2s ease-in-out infinite;
+}
+@keyframes piste-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.55;
+	}
+}

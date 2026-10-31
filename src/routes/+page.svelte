@@ -11,14 +11,14 @@
 	import metaData from '$lib/data/meta.json';
 	import type { Person, Meta } from '$lib/types';
 	import { COLOR_BY_OPTIONS, type ColorBy } from '$lib/colors';
-	import { colour, personColour, setColour } from '$lib/colour.svelte';
+	import { colorChoice, personColor, setColorChoice } from '$lib/color-choice.svelte';
 	import { Filters as FilterState, applyFilters, SORT_OPTIONS } from '$lib/filters.svelte';
 
 	const people = astronautsData as Person[];
 	const meta = metaData as Meta;
 
 	const filters = new FilterState();
-	const colorBy = $derived(personColour(colour.by));
+	const colorBy = $derived(personColor(colorChoice.by));
 	let selected = $state<Person | null>(null);
 	let drawerOpen = $state(false);
 
@@ -80,7 +80,7 @@
 			Colour
 			<select
 				value={colorBy}
-				onchange={(e) => setColour(e.currentTarget.value as ColorBy)}
+				onchange={(e) => setColorChoice(e.currentTarget.value as ColorBy)}
 				class="rounded-md border border-zinc-300 bg-transparent px-2 py-1 text-zinc-700 focus:outline-none dark:border-zinc-700 dark:text-zinc-200"
 			>
 				{#each COLOR_BY_OPTIONS as opt (opt.id)}<option value={opt.id}>{opt.label}</option>{/each}

@@ -14,9 +14,9 @@
 	import type { Person, StationData } from '$lib/types';
 	import { STATIONS } from '$lib/stations';
 	import { COLOR_BY_OPTIONS, type ColorBy } from '$lib/colors';
-	import { colour, personColour, setColour } from '$lib/colour.svelte';
+	import { colorChoice, personColor, setColorChoice } from '$lib/color-choice.svelte';
 	import { Filters as FilterState, matches } from '$lib/filters.svelte';
-	import { endMs, staysByStation, type StayRow } from '$lib/station-index';
+	import { endMs, isVisitor, staysByStation, type StayRow } from '$lib/station-index';
 
 	let { data } = $props();
 
@@ -27,7 +27,7 @@
 	const slug = $derived(data.slug);
 	const station = $derived(STATIONS[slug]);
 	const life = $derived(stations.find((s) => s.slug === slug)!);
-	const stationExpeditions = $derived(expeditions.filter((x) => x.station === slug));
+	const stationExpeditions = $derived(expeditions.filter((exp) => exp.station === slug));
 	const all = $derived(byStation.get(slug) ?? []);
 	const occupied = $derived<[number, number]>([
 		Math.min(...all.map((r) => Date.parse(r.stay.arrive))),
@@ -46,17 +46,17 @@
 	});
 
 	// Filters are this page's own, cleared when the Station changes. The Stay filter keeps a person's
-	// matching Stays (Scott Kelly's STS-118 visit, under "Visitor") and drops anyone left with none.
+	// matching Stays (Scott Kelly's STS-118 Stay, under "Visitor") and drops anyone left with none.
 	const filters = new FilterState();
 	$effect(() => {
 		slug;
 		untrack(() => filters.reset());
 	});
-	const keep = (r: StayRow) => filters.stayType === 'all' || (filters.stayType === 'crew') === r.stay.expeditions.length > 0;
-	const byStay = $derived(rows.map((row) => ({ person: row.person, stays: row.stays.filter(keep) })).filter((row) => row.stays.length));
-	const stayPeople = $derived(byStay.map((row) => row.person));
-	const visible = $derived(byStay.filter((row) => matches(row.person, filters)));
-	const colorBy = $derived(personColour(colour.by));
+	const keep = (r: StayRow) => filters.stayType === 'all' || (filters.stayType === 'visitor') === isVisitor(r.stay);
+	const withStays = $derived(rows.map((row) => ({ person: row.person, stays: row.stays.filter(keep) })).filter((row) => row.stays.length));
+	const stayPeople = $derived(withStays.map((row) => row.person));
+	const visible = $derived(withStays.filter((row) => matches(row.person, filters)));
+	const colorBy = $derived(personColor(colorChoice.by));
 	let drawerOpen = $state(false);
 
 	// Deep links: ?person= opens the detail panel, ?expedition= zooms to an Expedition. Read only in the browser —
@@ -120,7 +120,7 @@
 			Colour
 			<select
 				value={colorBy}
-				onchange={(e) => setColour(e.currentTarget.value as ColorBy)}
+				onchange={(e) => setColorChoice(e.currentTarget.value as ColorBy)}
 				class="rounded-md border border-zinc-300 bg-transparent px-2 py-1 text-zinc-700 focus:outline-none dark:border-zinc-700 dark:text-zinc-200"
 			>
 				{#each COLOR_BY_OPTIONS as opt (opt.id)}<option value={opt.id}>{opt.label}</option>{/each}
@@ -129,7 +129,7 @@
 
 		<nav class="flex items-center gap-3 text-xs text-zinc-500">
 			<a href="{base}/stations" class="underline-offset-2 hover:text-zinc-800 hover:underline dark:hover:text-zinc-200">All stations</a>
-			<a href="{base}/" class="hidden underline-offset-2 hover:text-zinc-800 hover:underline sm:inline dark:hover:text-zinc-200">People</a>
+			<a href="{base}/" class="underline-offset-2 hover:text-zinc-800 hover:underline dark:hover:text-zinc-200">People</a>
 		</nav>
 		<ThemeToggle />
 		<button

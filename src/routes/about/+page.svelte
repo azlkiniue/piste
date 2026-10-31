@@ -36,7 +36,7 @@
 		page follows the twelve stations that have had a crew, from Salyut 1 to Tiangong. Each bar is an
 		<em>expedition</em> — a station's long-duration crew for one stretch, named as that station named it
 		(Expedition 72, Mir's EO-27, Shenzhou 19). Open a station for everyone who stayed aboard, from the
-		docking of the craft they arrived in to the undocking of the one they left in. Short visits — Shuttle
+		docking of the craft they arrived in to the undocking of the one they left in. Short stays — Shuttle
 		crews, Interkosmos cosmonauts, private missions and tourists — belong to no expedition and are drawn
 		thinner, as <em>visitors</em>.
 	</p>

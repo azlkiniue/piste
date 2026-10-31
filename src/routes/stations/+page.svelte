@@ -7,7 +7,7 @@
 	import stationData from '$lib/data/stations.min.json';
 	import type { Person, StationData } from '$lib/types';
 	import { COLOR_BY_OPTIONS } from '$lib/colors';
-	import { colour, personColour, setColour, type ColourChoice } from '$lib/colour.svelte';
+	import { colorChoice, personColor, setColorChoice, type ColorChoice } from '$lib/color-choice.svelte';
 	import { crewByExpedition, staysByStation } from '$lib/station-index';
 
 	const people = astronautsData as Person[];
@@ -20,7 +20,7 @@
 
 	let highlight = $state<string | null>(null);
 	$effect(() => {
-		colour.by; // a new colour dimension has new values: drop the pick
+		colorChoice.by; // a new colour dimension has new values: drop the pick
 		highlight = null;
 	});
 </script>
@@ -44,8 +44,8 @@
 		<label class="flex items-center gap-1.5 text-xs text-zinc-500">
 			Colour
 			<select
-				value={colour.by}
-				onchange={(e) => setColour(e.currentTarget.value as ColourChoice)}
+				value={colorChoice.by}
+				onchange={(e) => setColorChoice(e.currentTarget.value as ColorChoice)}
 				class="rounded-md border border-zinc-300 bg-transparent px-2 py-1 text-zinc-700 focus:outline-none dark:border-zinc-700 dark:text-zinc-200"
 			>
 				<option value="expedition">Expedition</option>
@@ -63,18 +63,18 @@
 	<main class="flex min-h-0 flex-1 flex-col">
 		<div class="min-h-0 flex-1">
 			<StationLanes
-				lives={stations}
+				{stations}
 				{expeditions}
 				{crew}
-				colourBy={colour.by}
+				colorBy={colorChoice.by}
 				{highlight}
 				stationHref={(slug) => `${base}/stations/${slug}`}
-				expeditionHref={(x) => `${base}/stations/${x.station}?expedition=${x.slug}`}
+				expeditionHref={(exp) => `${base}/stations/${exp.station}?expedition=${exp.slug}`}
 			/>
 		</div>
-		{#if colour.by !== 'expedition'}
+		{#if colorChoice.by !== 'expedition'}
 			<div class="border-t border-zinc-200 px-4 py-2 dark:border-zinc-800">
-				<Legend people={crewPeople} by={personColour(colour.by)} bind:highlight />
+				<Legend people={crewPeople} by={personColor(colorChoice.by)} bind:highlight />
 			</div>
 		{/if}
 	</main>

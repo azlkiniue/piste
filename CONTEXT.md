@@ -27,7 +27,7 @@ A Person's time aboard one Station, from the docking of the craft they arrived i
 _Avoid_: visit, residency, increment
 
 **Expedition**:
-A Station's long-duration resident crew for one continuous stretch, under whatever name that Station gave it: Expedition 72 (ISS), EO-27 (Mir), Skylab 4, Shenzhou-19 (Tiangong). Its dates are crew handovers, not any one Person's Stay. Short guest crews are never Expeditions, even when a source calls them one.
+A Station's long-duration resident crew for one continuous stretch, under whatever name that Station gave it: Expedition 72 (ISS), EO-27 (Mir), Skylab 4, Shenzhou-19 (Tiangong). Its dates are crew handovers, not any one Person's Stay. A Visitor crew is never an Expedition, even when a source calls it one.
 _Avoid_: increment, principal expedition, EO, visiting expedition, EP
 
 **Expedition crew**:
@@ -35,5 +35,5 @@ The Stays that belong to an Expedition. A Stay can belong to two (Pesquet's cove
 _Avoid_: resident crew, long-duration crew
 
 **Visitor**:
-A Person on a Stay that belongs to no Expedition: Shuttle crews docked at Mir or the ISS, Soyuz taxi crews, Interkosmos guests, private-mission crews and tourists. It describes the Stay, not the Person: Scott Kelly was a Visitor on STS-118 and Expedition crew later.
+A Person on a Stay that belongs to no Expedition: Shuttle crews docked at Mir or the ISS, week-long Soyuz crews, Interkosmos cosmonauts, private-mission crews and tourists. It describes the Stay, not the Person: Scott Kelly was a Visitor on STS-118 and Expedition crew later.
 _Avoid_: guest, taxi crew, visiting expedition, spaceflight participant

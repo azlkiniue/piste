@@ -845,12 +845,14 @@ async function main() {
 		console.log(
 			`stays:             ${r.stays}  (${r.visitorStays} Visitor, ${r.approxStays} approximate — an end taken from the flight)`
 		);
-		console.log(`expeditions:       ${Object.entries(r.expeditions).map(([s, n]) => `${s} ${n}`).join(', ')}  (+${r.guestRecords} guest crews)`);
+		console.log(`expeditions:       ${Object.entries(r.expeditions).map(([s, n]) => `${s} ${n}`).join(', ')}  (+${r.visitorCrews} Visitor crews)`);
 		if (r.neverAboard.length) console.log(`   never went aboard (dropped): ${r.neverAboard.join(', ')}`);
 		if (r.unresolvedCrew.length) console.log(`   ⚠ crew with no Person or flight to put aboard: ${r.unresolvedCrew.join(', ')}`);
 		if (r.unmatchedRiders.length) console.log(`   ⚠ docked crew LL2 lists whom no person matches: ${r.unmatchedRiders.join(', ')}`);
 		if (r.unplaced.length) console.log(`   ⚠ docking Stays outside every flight: ${r.unplaced.join(', ')}`);
 		if (r.empty.length) console.log(`   ⚠ Expeditions no Stay names: ${r.empty.join(', ')}`);
+		if (r.unknownStations.length)
+			console.log(`   ⚠ crewed Stations src/lib/stations.ts doesn't know (their data is dropped — add them): ${r.unknownStations.join(', ')}`);
 	} else console.log('stays:             none — station records not loaded; re-run `bun run enrich-ll2`');
 	console.log(`network calls:     ${calls}`);
 	if (stalePages) console.log(`stale list pages:  ${stalePages}  ← older than ${CACHE_HOURS}h and couldn't be refreshed; re-run \`bun run enrich-ll2\``);

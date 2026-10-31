@@ -4,7 +4,7 @@
 	import { makeScale, fineTicks, formatDate, formatDuration, DAY, YEAR } from '$lib/time-scale';
 	import { colorFor, valueOf, type ColorBy } from '$lib/colors';
 	import { STATIONS } from '$lib/stations';
-	import { endMs, type StayRow } from '$lib/station-index';
+	import { endMs, isVisitor, type StayRow } from '$lib/station-index';
 	import Flags from './Flags.svelte';
 
 	interface Props {
@@ -70,7 +70,7 @@
 	}
 
 	// Open on the focused Expedition, or the occupied period; refocus when the focus changes.
-	const focused = $derived(focus ? expeditions.find((x) => x.slug === focus) ?? null : null);
+	const focused = $derived(focus ? (expeditions.find((exp) => exp.slug === focus) ?? null) : null);
 	let placedFor: string | undefined;
 	$effect(() => {
 		if (!scrollEl || viewportW <= 0) return;
@@ -93,7 +93,7 @@
 	};
 
 	let hover = $state<{ r: StayRow; cx: number; cy: number } | null>(null);
-	const names = $derived(new Map(expeditions.map((x) => [x.slug, x.name])));
+	const names = $derived(new Map(expeditions.map((exp) => [exp.slug, exp.name])));
 </script>
 
 <div class="flex h-full flex-col">
@@ -138,10 +138,10 @@
 			<div class="relative" style="width:{LABEL_W + plotW}px; height:{HEADER_H + bodyH}px">
 				<!-- Expedition stripes, gridlines, now line -->
 				<div class="pointer-events-none absolute top-0" style="left:{LABEL_W}px; width:{plotW}px; height:100%">
-					{#each expeditions as x, i (x.slug)}
-						{@const g = span(Date.parse(x.start), endMs(x.end), 1)}
+					{#each expeditions as exp, i (exp.slug)}
+						{@const g = span(Date.parse(exp.start), endMs(exp.end), 1)}
 						<div
-							class="absolute top-0 h-full {x.slug === focus
+							class="absolute top-0 h-full {exp.slug === focus
 								? 'bg-sky-500/10'
 								: i % 2
 									? 'bg-zinc-200/40 dark:bg-zinc-800/30'
@@ -187,18 +187,18 @@
 								now
 							</div>
 						{/if}
-						{#each expeditions as x, i (x.slug)}
-							{@const g = span(Date.parse(x.start), endMs(x.end), 2)}
+						{#each expeditions as exp, i (exp.slug)}
+							{@const g = span(Date.parse(exp.start), endMs(exp.end), 2)}
 							<div
-								class="absolute flex items-center overflow-hidden whitespace-nowrap border-l px-1 text-[11px] {x.slug === focus
+								class="absolute flex items-center overflow-hidden whitespace-nowrap border-l px-1 text-[11px] {exp.slug === focus
 									? 'border-sky-500 bg-sky-500/15 font-semibold text-sky-700 dark:text-sky-300'
 									: i % 2
 										? 'border-zinc-300 bg-zinc-200/60 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-400'
-										: 'border-zinc-300 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400'} {x.ongoing ? 'station-ongoing' : ''}"
+										: 'border-zinc-300 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400'} {exp.ongoing ? 'piste-pulse' : ''}"
 								style="left:{g.x}px; width:{g.w}px; top:{AXIS_H}px; height:{BAND_H - 2}px"
-								title="{x.name}: {formatDate(x.start)} – {x.ongoing ? 'now' : formatDate(x.end)}"
+								title="{exp.name}: {formatDate(exp.start)} – {exp.ongoing ? 'now' : formatDate(exp.end)}"
 							>
-								{#if g.w > 44}{x.name}{/if}
+								{#if g.w > 44}{exp.name}{/if}
 							</div>
 						{/each}
 					</div>
@@ -232,9 +232,9 @@
 						<div class="relative flex-1 border-b border-zinc-100/70 dark:border-zinc-900/70">
 							{#each row.stays as r, i (i)}
 								{@const g = span(Date.parse(r.stay.arrive), endMs(r.stay.depart), 3)}
-								{@const visitor = r.stay.expeditions.length === 0}
+								{@const visitor = isVisitor(r.stay)}
 								<div
-									class="absolute top-1/2 -translate-y-1/2 rounded-[2px] {r.stay.ongoing ? 'station-ongoing' : ''}"
+									class="absolute top-1/2 -translate-y-1/2 rounded-[2px] {r.stay.ongoing ? 'piste-pulse' : ''}"
 									style="left:{g.x}px; width:{g.w}px; height:{visitor ? 5 : 13}px; background:{color}; {r.stay.approx
 										? 'opacity:0.6'
 										: ''}"
@@ -260,7 +260,7 @@
 	>
 		<div class="font-semibold text-zinc-800 dark:text-zinc-100">{hover.r.person.name}</div>
 		<div class="mt-0.5 text-zinc-600 dark:text-zinc-300">
-			{STATIONS[s.station].short} · {s.expeditions.length ? s.expeditions.map((x) => names.get(x) ?? x).join(', ') : 'Visitor'}
+			{STATIONS[s.station].short} · {isVisitor(s) ? 'Visitor' : s.expeditions.map((slug) => names.get(slug) ?? slug).join(', ')}
 		</div>
 		<div class="mt-1 flex items-center gap-1.5 text-zinc-500">
 			<span>{formatDate(s.arrive)}</span>
@@ -275,18 +275,3 @@
 		</div>
 	</div>
 {/if}
-
-<style>
-	.station-ongoing {
-		animation: station-pulse 2s ease-in-out infinite;
-	}
-	@keyframes station-pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.55;
-		}
-	}
-</style>

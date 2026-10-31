@@ -205,24 +205,24 @@ their crews; and the docking events.
   continuous stretch, named as that Station named it: Expedition 72, Mir's EO-27, Skylab 4, Shenzhou 19.
   A Stay belongs to every Expedition whose LL2 crew list names that person during it (Pesquet's one Stay
   is Expeditions 50 and 51); a Stay in none is a **Visitor**'s — Shuttle crews docked at Mir or the ISS,
-  week-long Soyuz visits, Interkosmos cosmonauts, private-mission crews and tourists. It describes the Stay, not the
+  week-long Soyuz crews, Interkosmos cosmonauts, private-mission crews and tourists. It describes the Stay, not the
   person: Scott Kelly was a Visitor on STS-118 and Expedition crew later.
 
 LL2 calls more things expeditions than that, and gets some dockings wrong, so researched lists in
 `scripts/stations.ts` sort it out before anything is built — lists rather than rules, because neither
 obvious rule holds. By length ("an Expedition lasts 30 days or more"), Salyut 1's only crew (Soyuz 11,
-23 days) would be Visitors, and Merbold's 31-day visit to Mir an Expedition; by nesting ("a Stay inside
+23 days) would be Visitors, and Merbold's 31-day Stay on Mir an Expedition; by nesting ("a Stay inside
 another crew's is a Visitor's"), residents would be Visitors, since Rubio's 371-day Stay holds other
 residents' whole ones.
 
-- **Visitor crews** — the LL2 records that are visits, not Expeditions: Salyut 6 and 7's week-long
+- **Visitor crews** — the LL2 records that aren't Expeditions: Salyut 6 and 7's week-long
   visiting crews, Ax-1 to Ax-4, Maezawa's Soyuz MS-20 and the "Challenge" film crew — plus individual
   Visitors a resident record lists (Ivan Bella in Mir EO-27, Marina Vasilevskaya in Expedition 70).
 - **Never aboard** — crews who reached a Station but didn't go in: Soyuz 10, which docked to Salyut 1
   but couldn't open the hatch, and the failed dockings LL2 lists as expeditions (Soyuz 15, 23, 25, 33,
   T-8).
 - **Docking corrections** — craft whose dockings LL2 lacks or has wrong, replaced by the missions'
-  records: Soyuz T-15's trip between Mir and Salyut 7; Mir's missing Soyuz TM-24 and STS-76; the
+  records: Soyuz T-15's Flight between Mir and Salyut 7; Mir's missing Soyuz TM-24 and STS-76; the
   1987–88 Soyuz craft whose undockings LL2 files under the next craft; and the undockings of Soyuz 11
   and TM-28.
 

@@ -8,11 +8,10 @@
  */
 import { AGENCIES } from '../src/lib/agencies';
 import { COUNTRY_CODE } from '../src/lib/countries';
-import { STATIONS } from '../src/lib/stations';
 import type { Person, StationData } from '../src/lib/types';
 import { undefinedKeys } from './agency';
 import { syncFlags } from './flags';
-import { crossCheckWikidata } from './stations';
+import { checkStays, crossCheckWikidata } from './stations';
 
 const ROOT = new URL('..', import.meta.url);
 export const DATA = new URL('src/lib/data/astronauts.json', ROOT);
@@ -45,35 +44,6 @@ export async function writeStations(data: StationData) {
 	await Bun.write(STATION_DATA_MIN, JSON.stringify(data));
 }
 
-/** Warn — never fail — about Stays that look wrong against the station dataset: a long one in no Expedition
- *  (a crew list LL2 left someone off), an Expedition member aboard at none of its dates, and any Station or
- *  Expedition the registry or dataset doesn't know. Fix them with an Expedition correction (scripts/overrides.ts)
- *  or a researched list in scripts/stations.ts. */
-function checkStays(people: Person[], { expeditions }: StationData) {
-	const today = new Date().toISOString().slice(0, 10);
-	const days = (a: string, b: string) => (Date.parse(b) - Date.parse(a)) / 86400000;
-	const byKey = new Map(expeditions.map((x) => [`${x.station}/${x.slug}`, x]));
-	const long: string[] = [];
-	const outside: string[] = [];
-	const unknown: string[] = [];
-	for (const p of people)
-		for (const f of p.flights)
-			for (const s of f.stays ?? []) {
-				const end = s.depart ?? today;
-				const where = `${p.name} (${s.station}, ${s.arrive} → ${s.depart ?? 'now'})`;
-				if (!STATIONS[s.station]) unknown.push(`Station "${s.station}" — ${where}`);
-				if (!s.expeditions.length && days(s.arrive, end) >= 30) long.push(where);
-				for (const slug of s.expeditions) {
-					const x = byKey.get(`${s.station}/${slug}`);
-					if (!x) unknown.push(`Expedition "${s.station}/${slug}" — ${where}`);
-					else if (s.arrive > (x.end ?? today) || end < x.start) outside.push(`${where} in ${x.name} (${x.start} → ${x.end ?? 'now'})`);
-				}
-			}
-	for (const x of expeditions) if (!STATIONS[x.station]) unknown.push(`Station "${x.station}" — Expedition ${x.name}`);
-	if (long.length) console.warn(`  ⚠ Stays of 30+ days in no Expedition — a crew list missing them? ${long.join(', ')}`);
-	if (outside.length) console.warn(`  ⚠ Expedition crew aboard at none of its dates: ${outside.join(', ')}`);
-	for (const u of unknown) console.warn(`  ⚠ unknown ${u}`);
-}
 
 /** Warn — never fail — about anyone with no agency, or one src/lib/agencies.ts doesn't know. */
 function checkAgencies(people: Person[]) {
