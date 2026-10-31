@@ -12,6 +12,7 @@
 		"enrich-supercluster": "bun run scripts/enrich-supercluster.ts",
 		"enrich-manual": "bun run scripts/enrich-manual.ts",
 		"flags": "bun run scripts/flags.ts",
+		"test": "bun test",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"

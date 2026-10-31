@@ -4,6 +4,6 @@ Each Stay is stored on the Flight that made it, in the people dataset (`astronau
 
 ## Consequences
 
-- The people file grows by about 70 KB, on top of its current 553 KB.
+- The people file grows by about 100 KB: the compact copy the app loads went from 553 KB to 656 KB.
 - An Expedition's crew isn't stored on the Expedition: it comes from scanning the Stays that list it. A crew correction in `enrich-manual` rewrites those Stays.
 - Correcting a single Stay means restating that Person's whole `flights` list, and any `flights` correction for someone with Stays must include them, or they are lost.

@@ -18,6 +18,53 @@ export interface Flight {
 	approx: boolean;
 	/** When a trip merges several missions (e.g. Soyuz up + seat-swap down), their names. */
 	segments?: string[];
+	/** The Stays this flight made aboard Stations, in order — absent when it visited none. */
+	stays?: Stay[];
+}
+
+export interface Stay {
+	/** Station slug — a key of src/lib/stations.ts. */
+	station: string;
+	/** Docking of the craft they arrived in, ISO YYYY-MM-DD. */
+	arrive: string;
+	/** Undocking of the craft they left in (ISO YYYY-MM-DD), or null while still aboard. */
+	depart: string | null;
+	/** Still aboard — the bar runs to "today". */
+	ongoing: boolean;
+	/** Slugs of the Expeditions this Stay belongs to; empty for a Visitor. */
+	expeditions: string[];
+	/** No docking data for one end — that date is the flight's, so render with caution. */
+	approx: boolean;
+}
+
+/** A Station's long-duration resident crew for one continuous stretch. Its crew are the Stays naming it. */
+export interface Expedition {
+	/** Unique within its Station, e.g. "expedition-50", "eo-27", "shenzhou-19". */
+	slug: string;
+	/** Station slug — a key of src/lib/stations.ts. */
+	station: string;
+	/** As the Station named it, e.g. "Expedition 50", "EO-27", "Skylab 2", "Shenzhou 19". */
+	name: string;
+	/** Start and end — crew handovers, not anyone's Stay. ISO YYYY-MM-DD; end is null while under way. */
+	start: string;
+	end: string | null;
+	ongoing: boolean;
+}
+
+/** When a Station was in orbit. */
+export interface StationLife {
+	/** Station slug — a key of src/lib/stations.ts. */
+	slug: string;
+	/** Launch, ISO YYYY-MM-DD. */
+	launched: string;
+	/** Deorbit (ISO YYYY-MM-DD), or null while still in orbit. */
+	deorbited: string | null;
+}
+
+/** The station dataset (src/lib/data/stations.min.json). Produced by scripts/stations.ts. */
+export interface StationData {
+	stations: StationLife[];
+	expeditions: Expedition[];
 }
 
 export interface Person {

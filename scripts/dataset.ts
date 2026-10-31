@@ -3,16 +3,20 @@
  * as a clean per-field git diff, and astronauts.min.json is the identical compact copy the app
  * imports. Every script that rewrites the dataset goes through writeAstronauts so the two never drift —
  * and so every write checks the nationalities and agencies, and brings the flags they need (scripts/flags.ts).
+ * The station dataset (Stations' lifetimes and Expeditions, see scripts/stations.ts) is written the same two
+ * ways by writeStations.
  */
 import { AGENCIES } from '../src/lib/agencies';
 import { COUNTRY_CODE } from '../src/lib/countries';
-import type { Person } from '../src/lib/types';
+import type { Person, StationData } from '../src/lib/types';
 import { undefinedKeys } from './agency';
 import { syncFlags } from './flags';
 
 const ROOT = new URL('..', import.meta.url);
 export const DATA = new URL('src/lib/data/astronauts.json', ROOT);
 export const DATA_MIN = new URL('src/lib/data/astronauts.min.json', ROOT);
+export const STATION_DATA = new URL('src/lib/data/stations.json', ROOT);
+export const STATION_DATA_MIN = new URL('src/lib/data/stations.min.json', ROOT);
 
 /** A dataset date (dob/dod) as LL2 and Supercluster store it, for matching people across them: a date
  *  known only to the month or year is padded to its 1st there ("1975-10" → "1975-10-01", "1988" →
@@ -25,6 +29,11 @@ export async function writeAstronauts(people: Person[]) {
 	checkNationalities(people);
 	checkAgencies(people);
 	await syncFlags(people);
+}
+
+export async function writeStations(data: StationData) {
+	await Bun.write(STATION_DATA, JSON.stringify(data, null, 2) + '\n');
+	await Bun.write(STATION_DATA_MIN, JSON.stringify(data));
 }
 
 /** Warn — never fail — about anyone with no agency, or one src/lib/agencies.ts doesn't know. */

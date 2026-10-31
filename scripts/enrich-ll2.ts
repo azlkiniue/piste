@@ -23,6 +23,10 @@
  * present-day one, so scripts/agency.ts then dates it flight by flight — NASDA before JAXA). Also
  * fills spacewalk counts and photos.
  *
+ * And it builds the Station data (scripts/stations.ts): LL2's space stations, expeditions and docking events
+ * (~9 more calls, cached and paced the same way) become each person's Stays, put on their flights, and the
+ * station dataset of Expeditions and Station lifetimes.
+ *
  * Data comes from the astronaut LIST fetched with `?mode=detailed`, which inlines each person's
  * flights & landings — so the whole dataset is ~9 paginated calls, not one per astronaut. (If a
  * record lacks inline flights — e.g. an older cached page — it falls back to the per-astronaut
@@ -47,16 +51,19 @@
  */
 import type { Flight, Gender, Meta, Person, Status } from '../src/lib/types';
 import { agencyOf, settleAgencies } from './agency';
-import { DATA, paddedDate, writeAstronauts } from './dataset';
+import { DATA, paddedDate, writeAstronauts, writeStations } from './dataset';
 import { settleNationalities } from './nationality';
 import { neverReachedSpace, suborbitalAbort } from './spaceflight';
+import { buildStations, type LL2Docking, type LL2Expedition, type LL2Station, type StationReport } from './stations';
 
 const UA = 'PisteDataPipeline/1.0 (https://github.com/piste; static people-in-space timeline)';
-const LL2 = 'https://ll.thespacedevs.com/2.2.0/astronaut/';
+const API = 'https://ll.thespacedevs.com/2.2.0/';
+const LL2 = `${API}astronaut/`;
 const PAGE = 100;
 const ROOT = new URL('..', import.meta.url);
 const CACHE = new URL('scripts/cache/ll2/', ROOT);
 const DETAIL_CACHE = new URL('scripts/cache/ll2/detail/', ROOT);
+const STATION_CACHE = new URL('scripts/cache/ll2/stations/', ROOT);
 const META = new URL('src/lib/data/meta.json', ROOT);
 
 // ---- throttle / budget knobs ----
@@ -278,6 +285,67 @@ async function loadList(): Promise<LL2Astro[]> {
 	return records;
 }
 
+// ---------------------------------------------------------------- Layer 4: station records
+type Page<T> = { count?: number; results?: T[] };
+
+/** One page of an LL2 list endpoint, cached and refreshed like the astronaut pages. Null when it's neither
+ *  cached nor fetchable (budget spent, LL2 down): the station data then waits for a re-run rather than going
+ *  out half-built. */
+async function loadPage<T>(name: string, path: string): Promise<Page<T> | null> {
+	const cacheFile = Bun.file(new URL(`${name}.json`, STATION_CACHE));
+	const cached = await cacheFile.exists();
+	if (cached && Date.now() - cacheFile.lastModified < CACHE_HOURS * 3600_000) return cacheFile.json();
+	const r = await fetchJSON(`${API}${path}`);
+	if (r && r !== BUDGET) {
+		await Bun.write(cacheFile, JSON.stringify(r));
+		console.log(`  ${name}: fetched (${calls} calls)`);
+		return r;
+	}
+	if (cached) {
+		stalePages++;
+		return cacheFile.json();
+	}
+	console.log(`  ${name}: ${r === BUDGET ? 'call budget reached' : 'fetch failed'} — re-run to build the station data.`);
+	return null;
+}
+
+/** Every page of an endpoint LL2 can order by id (unordered, its pages overlap and drop records). */
+async function loadPages<T>(kind: string, query = ''): Promise<T[] | null> {
+	const out: T[] = [];
+	for (let offset = 0, total = Infinity; offset < total; offset += PAGE) {
+		const data = await loadPage<T>(`${kind}-${offset}`, `${kind}/?${query}${query ? '&' : ''}ordering=id&limit=${PAGE}&offset=${offset}`);
+		if (!data) return null;
+		total = data.count ?? 0;
+		out.push(...(data.results ?? []));
+	}
+	return out;
+}
+
+// Docking events can't be ordered (LL2 ignores `ordering` there), so they're fetched by date range, each
+// range one page; one holding more than a page is split in two.
+const DOCKING_RANGES = ['1971-01-01', '1990-01-01', '2000-01-01', '2008-01-01', '2013-01-01', '2018-01-01', '2022-01-01', '2025-01-01', '2100-01-01'];
+async function loadDockings(): Promise<LL2Docking[] | null> {
+	const out: LL2Docking[] = [];
+	const ranges = DOCKING_RANGES.slice(0, -1).map((from, i) => [from, DOCKING_RANGES[i + 1]]);
+	while (ranges.length) {
+		const [from, to] = ranges.shift()!;
+		const data = await loadPage<LL2Docking>(`docking_event-${from}-${to}`, `docking_event/?docking__gte=${from}&docking__lt=${to}&limit=${PAGE}`);
+		if (!data) return null;
+		if ((data.count ?? 0) > PAGE) {
+			const mid = dayISO((Date.parse(from) + Date.parse(to)) / 2);
+			ranges.unshift([from, mid], [mid, to]);
+		} else out.push(...(data.results ?? []));
+	}
+	return out;
+}
+
+async function loadStationRecords() {
+	const stations = await loadPages<LL2Station>('spacestation');
+	const expeditions = stations && (await loadPages<LL2Expedition>('expedition', 'mode=detailed'));
+	const dockings = expeditions && (await loadDockings());
+	return stations && expeditions && dockings ? { stations, expeditions, dockings } : null;
+}
+
 // ---------------------------------------------------------------- Layer 2: per-astronaut detail
 function slimDetail(d: any): SlimDetail {
 	return {
@@ -429,29 +497,28 @@ function genderFromBio(bio?: string | null): Gender {
 	return 'unknown';
 }
 
-/** Already in the dataset under a name variant? True when the candidate shares an exact birth date and
- *  a ≥3-char name token with an existing person — catches Evgeny/Yevgeny Tarelkin, Wang Haozhe/Haoze,
+/** Already in the dataset under a name variant? The person when the candidate shares an exact birth date
+ *  and a ≥3-char name token with them — catches Evgeny/Yevgeny Tarelkin, Wang Haozhe/Haoze,
  *  Uznański/Uznański-Wiśniewski, Robert S./Shane Kimbrough, Gregory R./Reid Wiseman (the surname+initial
  *  matcher misses these). Exact-DOB keeps it tight: same-surname-same-year collisions don't trip it. */
-function isVariantDuplicate(r: LL2Astro, tokensByDob: Map<string, Set<string>>): boolean {
+const nameTokens = (name: string) => normName(name).replace(/-/g, ' ').split(' ').filter((tok) => tok.length >= 3);
+function variantOf(r: LL2Astro, peopleByDob: Map<string, Person[]>): Person | undefined {
 	const dob = r.date_of_birth?.slice(0, 10);
-	const have = dob ? tokensByDob.get(dob) : undefined;
-	if (!have) return false;
-	for (const tok of normName(r.name).replace(/-/g, ' ').split(' ')) if (tok.length >= 3 && have.has(tok)) return true;
-	return false;
+	const tokens = new Set(nameTokens(r.name));
+	return (dob ? peopleByDob.get(dob) : undefined)?.find((p) => nameTokens(p.name).some((tok) => tokens.has(tok)));
 }
 
 /** Build new Person records for flown LL2 people no existing person matched. Pure cache work — no
- *  network. Returns the additions and a skip tally for the report. */
+ *  network. Returns the additions, the name-variant duplicates by LL2 id (for the station crews) and a skip
+ *  tally for the report. */
 function backfillFromLL2(records: LL2Astro[], people: Person[], matchedIds: Set<number>, usedSlugs: Set<string>) {
-	const tokensByDob = new Map<string, Set<string>>();
+	const peopleByDob = new Map<string, Person[]>();
 	for (const p of people) {
 		if (!p.dob) continue;
 		const dob = paddedDate(p.dob); // LL2's form of it, so a month-only "1975-10" still meets its "1975-10-01"
-		const s = tokensByDob.get(dob) ?? new Set<string>();
-		for (const tok of normName(p.name).replace(/-/g, ' ').split(' ')) if (tok.length >= 3) s.add(tok);
-		tokensByDob.set(dob, s);
+		peopleByDob.set(dob, [...(peopleByDob.get(dob) ?? []), p]);
 	}
+	const variants = new Map<number, Person>();
 	const added: Person[] = [];
 	const skipped = { nonHuman: 0, neverSpace: 0, variantDup: 0, noFlights: 0 };
 	const byAgency: Record<string, number> = {};
@@ -461,7 +528,8 @@ function backfillFromLL2(records: LL2Astro[], people: Person[], matchedIds: Set<
 		const key = normName(r.name);
 		if (NON_HUMAN.has(key)) { skipped.nonHuman++; continue; }
 		if (NEVER_REACHED_SPACE.has(key)) { skipped.neverSpace++; continue; }
-		if (isVariantDuplicate(r, tokensByDob)) { skipped.variantDup++; continue; }
+		const variant = variantOf(r, peopleByDob);
+		if (variant) { variants.set(r.id, variant); skipped.variantDup++; continue; }
 
 		const dod = r.date_of_death ? r.date_of_death.slice(0, 10) : null;
 		const slim = slimDetail(r);
@@ -502,7 +570,7 @@ function backfillFromLL2(records: LL2Astro[], people: Person[], matchedIds: Set<
 		const label = agency ?? r.agency?.name?.trim() ?? 'none';
 		byAgency[label] = (byAgency[label] ?? 0) + 1;
 	}
-	return { added, skipped, byAgency };
+	return { added, variants, skipped, byAgency };
 }
 
 // ---------------------------------------------------------------- matching
@@ -573,6 +641,7 @@ async function main() {
 		console.log('  nothing to apply (no cache, no budget). Skipping.');
 		return;
 	}
+	const stationRecords = await loadStationRecords();
 	const findLL2 = buildIndex(records);
 	const people: Person[] = await Bun.file(DATA).json();
 	const usedSlugs = new Set(people.map((p) => p.slug));
@@ -593,6 +662,7 @@ async function main() {
 	const agencyBlanked: { name: string; from: string }[] = [];
 	const lagging: string[] = []; // LL2 hasn't caught up with a flight Wikidata already has
 	const matchedIds = new Set<number>(); // LL2 records claimed by a person — the rest feed the backfill
+	const personByLL2 = new Map<number, Person>(); // …and by whom, for the station crews
 	const natBefore = new Map(people.map((p) => [p.id, p.nationalities.join(' + ')]));
 	const agencyBefore = new Map(people.map((p) => [p.id, p.agencies.join(' + ')]));
 
@@ -603,6 +673,7 @@ async function main() {
 			continue;
 		}
 		matchedIds.add(r.id);
+		personByLL2.set(r.id, p);
 
 		// ----- Name recovery: Wikidata had no label, so build-data fell back to the bare QID -----
 		// (e.g. Q957368 → Franco Malerba). Take LL2's name and rebuild a real, unique slug.
@@ -683,8 +754,9 @@ async function main() {
 
 	// ----- Layer 3: backfill people Wikidata missed (mostly recent suborbital tourists) -----
 	const before = people.length;
-	const { added, skipped, byAgency } = backfillFromLL2(records, people, matchedIds, usedSlugs);
+	const { added, variants, skipped, byAgency } = backfillFromLL2(records, people, matchedIds, usedSlugs);
 	people.push(...added);
+	for (const p of added) personByLL2.set(Number(p.id.slice('ll2-'.length)), p);
 
 	// Settle nationalities and agencies against the rebuilt flights (a flight before 26 Dec 1991 is a
 	// Soviet one, a Japanese flight before October 2003 NASDA's).
@@ -697,6 +769,17 @@ async function main() {
 		const agencyFrom = agencyBefore.get(p.id);
 		const agencyTo = p.agencies.join(' + ');
 		if (agencyFrom !== undefined && agencyFrom !== agencyTo) agencyChanges.push({ name: p.name, from: agencyFrom, to: agencyTo });
+	}
+
+	// ----- Layer 4: Stations, Expeditions and Stays, onto the final flights -----
+	// Without the station records (budget spent before they loaded), no one gets Stays this run, rather than
+	// some keeping last run's: a re-run builds them.
+	for (const p of people) for (const f of p.flights) delete f.stays;
+	let stationReport: StationReport | null = null;
+	if (stationRecords) {
+		const { data, report } = buildStations({ ...stationRecords, riders: records, personByLL2, aliasByLL2: variants });
+		await writeStations(data);
+		stationReport = report;
 	}
 
 	// firstLaunch may have shifted for detailed people — keep the canonical ordering.
@@ -722,6 +805,17 @@ async function main() {
 	if (unmappedAgencies.size) console.log(`   ⚠ unmapped LL2 agencies (add to scripts/agency.ts): ${[...unmappedAgencies].join(', ')}`);
 	console.log(`spacewalk counts:  ${spacewalks}`);
 	console.log(`photos filled:     ${photos}`);
+	if (stationReport) {
+		const r = stationReport;
+		console.log(
+			`stays:             ${r.stays}  (${r.visitorStays} Visitor, ${r.approxStays} approximate — an end taken from the flight)`
+		);
+		console.log(`expeditions:       ${Object.entries(r.expeditions).map(([s, n]) => `${s} ${n}`).join(', ')}  (+${r.guestRecords} guest crews)`);
+		if (r.neverAboard.length) console.log(`   never went aboard (dropped): ${r.neverAboard.join(', ')}`);
+		if (r.unresolvedCrew.length) console.log(`   ⚠ crew with no Person or flight to put aboard: ${r.unresolvedCrew.join(', ')}`);
+		if (r.unplaced.length) console.log(`   ⚠ docking Stays outside every flight: ${r.unplaced.join(', ')}`);
+		if (r.empty.length) console.log(`   ⚠ Expeditions no Stay names: ${r.empty.join(', ')}`);
+	} else console.log('stays:             none — station records not loaded; re-run `bun run enrich-ll2`');
 	console.log(`network calls:     ${calls}`);
 	if (stalePages) console.log(`stale list pages:  ${stalePages}  ← older than ${CACHE_HOURS}h and couldn't be refreshed; re-run \`bun run enrich-ll2\``);
 	if (detailRemaining) console.log(`detail remaining:  ${detailRemaining}  ← re-run \`bun run enrich-ll2\` to fetch more`);
