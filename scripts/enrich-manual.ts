@@ -21,12 +21,17 @@
  *
  *   bun run enrich-manual    # apply overrides.ts as the final layer (idempotent, offline)
  *
+ * Expedition corrections (`expeditionOverrides` in overrides.ts) work the same way on the station dataset:
+ * their dates, name and Station, and `crew`, which sets who is in the Expedition by rewriting the Stays that
+ * name it. Their baseline entries share the file, keyed `expedition:<station>/<expedition>`.
+ *
  * NOTE: run AFTER the other enrichers. Re-running `update-data` resets astronauts.json — run the
  * three enrichers then this, in order.
  */
-import type { Meta, Person, Status } from '../src/lib/types';
-import { DATA, writeAstronauts } from './dataset';
-import { overrides } from './overrides';
+import type { Expedition, Meta, Person, StationData, Status } from '../src/lib/types';
+import { DATA, STATION_DATA, writeAstronauts, writeStations } from './dataset';
+import { expeditionOverrides, overrides } from './overrides';
+import { expeditionCrew, setExpeditionCrew } from './stations';
 
 const ROOT = new URL('..', import.meta.url);
 const META = new URL('src/lib/data/meta.json', ROOT);
@@ -40,6 +45,9 @@ const clone = <T>(v: T): T => (v === undefined ? v : structuredClone(v));
 
 type FieldSnap = { base: unknown; applied: unknown };
 type Baseline = Record<string, Record<string, FieldSnap>>;
+
+const EXP = 'expedition:'; // baseline keys of Expedition corrections
+const EXPEDITION_FIELDS = ['start', 'end', 'name', 'station'] as const;
 
 // Derived fields recomputed from an overridden flights[] unless the override sets them explicitly.
 const DERIVED = ['firstLaunch', 'lastLanding', 'totalDaysInSpace', 'status'] as const;
@@ -97,6 +105,7 @@ async function refreshMeta(people: Person[]) {
 async function main() {
 	console.log('▶ Manual overrides (final layer)…');
 	const people: Person[] = await Bun.file(DATA).json();
+	const stationData: StationData | null = (await Bun.file(STATION_DATA).exists()) ? await Bun.file(STATION_DATA).json() : null;
 	const prior: Baseline = (await Bun.file(BASELINE).exists()) ? await Bun.file(BASELINE).json() : {};
 
 	const byId = new Map(people.map((p) => [p.id, p]));
@@ -117,6 +126,35 @@ async function main() {
 				(p as Record<string, unknown>)[field] = clone(snap.base);
 				reverted++;
 			}
+		}
+	}
+
+	// Expedition corrections likewise — after the people's, since a reverted `flights` brings its Stays back.
+	// An Expedition moved to another Station is found where it was moved to; its crew is cleared there and put
+	// back where it came from.
+	const expeditions = stationData?.expeditions ?? [];
+	const findExpedition = (station: string, slug: string) => expeditions.find((x) => x.station === station && x.slug === slug);
+	const crewAt = (x: Expedition, station: string) => expeditionCrew(people, { ...x, station });
+	const setCrewAt = (x: Expedition, station: string, crew: string[]) => setExpeditionCrew(people, { ...x, station }, crew, expeditions);
+	for (const [key, fields] of Object.entries(prior)) {
+		if (!key.startsWith(EXP)) continue;
+		const [station, slug] = key.slice(EXP.length).split('/');
+		const movedTo = (fields.station?.applied as string | undefined) ?? station;
+		const x = findExpedition(movedTo, slug);
+		if (!x) continue;
+		const rec = x as unknown as Record<string, unknown>;
+		for (const field of EXPEDITION_FIELDS) {
+			const snap = fields[field];
+			if (snap && jsonEq(rec[field], snap.applied)) {
+				rec[field] = clone(snap.base);
+				reverted++;
+			}
+		}
+		const crew = fields.crew;
+		if (crew && jsonEq(crewAt(x, movedTo), crew.applied)) {
+			if (movedTo !== x.station) setCrewAt(x, movedTo, []);
+			setCrewAt(x, x.station, crew.base as string[]);
+			reverted++;
 		}
 	}
 
@@ -160,24 +198,60 @@ async function main() {
 		if (Object.keys(entry).length) next[p.id] = entry;
 	}
 
+	// Expedition corrections: the record's fields, then its crew (placed by the corrected dates and Station).
+	const unplaced: string[] = [];
+	for (const [key, ov] of Object.entries(expeditionOverrides)) {
+		const [station, slug] = key.split('/');
+		const x = findExpedition(station, slug);
+		if (!x) {
+			unmatched.push(key);
+			continue;
+		}
+		const entry: Record<string, FieldSnap> = {};
+		const rec = x as unknown as Record<string, unknown>;
+		const label = `${x.name} (${key})`;
+		for (const field of EXPEDITION_FIELDS) {
+			const value = ov[field];
+			if (isEmpty(value) || jsonEq(rec[field], value)) continue;
+			changes.push({ name: label, field, from: rec[field], to: value });
+			entry[field] = { base: clone(rec[field]), applied: clone(value) };
+			rec[field] = clone(value);
+		}
+		const moved = x.station !== station;
+		if (moved && isEmpty(ov.crew)) console.warn(`  ⚠ ${label} moved to ${x.station} — give it a crew there too.`);
+		if (!isEmpty(ov.crew) || moved) {
+			const before = crewAt(x, station);
+			if (moved) setCrewAt(x, station, []);
+			if (!isEmpty(ov.crew)) unplaced.push(...setCrewAt(x, x.station, ov.crew!).map((m) => `${m} — ${key}`));
+			const after = crewAt(x, x.station);
+			if (!jsonEq(before, after) || moved) {
+				changes.push({ name: label, field: 'crew', from: before, to: after });
+				entry.crew = { base: before, applied: after };
+			}
+		}
+		if (Object.keys(entry).length) next[`${EXP}${key}`] = entry;
+	}
+
 	people.sort((a, b) => a.firstLaunch.localeCompare(b.firstLaunch) || a.name.localeCompare(b.name));
+	if (stationData) await writeStations(stationData);
 	await writeAstronauts(people);
 	await Bun.write(BASELINE, JSON.stringify(next, null, 2));
 	await refreshMeta(people);
 
-	const fmt = (v: unknown) => (Array.isArray(v) ? `[${v.length} flights]` : JSON.stringify(v));
+	const fmt = (v: unknown, field = '') => (Array.isArray(v) ? `[${v.length} ${field === 'crew' ? 'people' : 'flights'}]` : JSON.stringify(v));
 	console.log('\n──────── Manual overrides report ────────');
 	console.log(
-		`override entries:  ${Object.keys(overrides).length}  (matched ${seen.size}, unmatched ${unmatched.length}${dupes ? `, ${dupes} dupes` : ''})`
+		`override entries:  ${Object.keys(overrides).length} people, ${Object.keys(expeditionOverrides).length} Expeditions  (unmatched ${unmatched.length}${dupes ? `, ${dupes} dupes` : ''})`
 	);
 	console.log(`fields applied:    ${changes.length}`);
 	console.log(`fields reverted:   ${reverted}  (emptied/removed since last run → back to pipeline value)`);
 	if (changes.length) {
 		console.log('changes:');
-		for (const c of changes) console.log(`   ${c.name} · ${c.field}: ${fmt(c.from)} → ${fmt(c.to)}`);
+		for (const c of changes) console.log(`   ${c.name} · ${c.field}: ${fmt(c.from, c.field)} → ${fmt(c.to, c.field)}`);
 	}
+	if (unplaced.length) console.log(`   ⚠ crew not aboard during the Expedition: ${unplaced.join(', ')}`);
 	if (unmatched.length) {
-		console.log('unmatched keys (no person by id / slug / name):');
+		console.log('unmatched keys (no person by id / slug / name, or Expedition by <station>/<expedition>):');
 		for (const k of unmatched) console.log(`   ${k}`);
 	}
 	console.log('  (re-running `update-data` resets astronauts.json — run the 3 enrichers then this, in order.)');

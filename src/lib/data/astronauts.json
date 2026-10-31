@@ -18610,7 +18610,9 @@
             "arrive": "2022-10-06",
             "depart": "2023-03-11",
             "ongoing": false,
-            "expeditions": [],
+            "expeditions": [
+              "expedition-68"
+            ],
             "approx": false
           }
         ]
@@ -24474,7 +24476,8 @@
             "depart": "2026-01-14",
             "ongoing": false,
             "expeditions": [
-              "expedition-73"
+              "expedition-73",
+              "expedition-74"
             ],
             "approx": false
           }
@@ -24717,7 +24720,8 @@
             "depart": "2021-05-02",
             "ongoing": false,
             "expeditions": [
-              "expedition-64"
+              "expedition-64",
+              "expedition-65"
             ],
             "approx": false
           }
@@ -25568,7 +25572,8 @@
             "depart": "2025-03-18",
             "ongoing": false,
             "expeditions": [
-              "expedition-71"
+              "expedition-71",
+              "expedition-72"
             ],
             "approx": false
           }
@@ -26892,7 +26897,9 @@
             "arrive": "2020-05-31",
             "depart": "2020-08-01",
             "ongoing": false,
-            "expeditions": [],
+            "expeditions": [
+              "expedition-63"
+            ],
             "approx": false
           }
         ]
@@ -27240,7 +27247,8 @@
             "depart": "2021-11-08",
             "ongoing": false,
             "expeditions": [
-              "expedition-65"
+              "expedition-65",
+              "expedition-66"
             ],
             "approx": false
           }
@@ -27875,7 +27883,8 @@
             "depart": "2021-11-08",
             "ongoing": false,
             "expeditions": [
-              "expedition-65"
+              "expedition-65",
+              "expedition-66"
             ],
             "approx": false
           }
@@ -27972,7 +27981,8 @@
             "depart": "2023-09-03",
             "ongoing": false,
             "expeditions": [
-              "expedition-68"
+              "expedition-68",
+              "expedition-69"
             ],
             "approx": false
           }
@@ -28263,7 +28273,8 @@
             "ongoing": false,
             "expeditions": [
               "expedition-70",
-              "expedition-71"
+              "expedition-71",
+              "expedition-72"
             ],
             "approx": false
           }
@@ -28419,7 +28430,8 @@
             "depart": "2021-11-08",
             "ongoing": false,
             "expeditions": [
-              "expedition-65"
+              "expedition-65",
+              "expedition-66"
             ],
             "approx": false
           }
@@ -28698,7 +28710,9 @@
             "arrive": "2020-05-31",
             "depart": "2020-08-01",
             "ongoing": false,
-            "expeditions": [],
+            "expeditions": [
+              "expedition-63"
+            ],
             "approx": false
           }
         ]
@@ -28780,7 +28794,8 @@
             "depart": "2022-05-05",
             "ongoing": false,
             "expeditions": [
-              "expedition-66"
+              "expedition-66",
+              "expedition-67"
             ],
             "approx": false
           }
@@ -29208,7 +29223,8 @@
             "depart": "2025-03-18",
             "ongoing": false,
             "expeditions": [
-              "expedition-71"
+              "expedition-71",
+              "expedition-72"
             ],
             "approx": false
           }
@@ -29771,7 +29787,8 @@
             "depart": "2021-05-02",
             "ongoing": false,
             "expeditions": [
-              "expedition-64"
+              "expedition-64",
+              "expedition-65"
             ],
             "approx": false
           }
@@ -30100,7 +30117,8 @@
             "depart": "2024-03-11",
             "ongoing": false,
             "expeditions": [
-              "expedition-69"
+              "expedition-69",
+              "expedition-70"
             ],
             "approx": false
           }
@@ -30562,9 +30580,7 @@
             "arrive": "2024-03-25",
             "depart": "2024-04-06",
             "ongoing": false,
-            "expeditions": [
-              "expedition-70"
-            ],
+            "expeditions": [],
             "approx": false
           }
         ]
@@ -30930,7 +30946,8 @@
             "depart": "2021-05-02",
             "ongoing": false,
             "expeditions": [
-              "expedition-64"
+              "expedition-64",
+              "expedition-65"
             ],
             "approx": false
           }
@@ -31311,7 +31328,8 @@
             "depart": "2022-10-14",
             "ongoing": false,
             "expeditions": [
-              "expedition-67"
+              "expedition-67",
+              "expedition-68"
             ],
             "approx": false
           }
@@ -31376,7 +31394,8 @@
             "depart": "2026-01-14",
             "ongoing": false,
             "expeditions": [
-              "expedition-73"
+              "expedition-73",
+              "expedition-74"
             ],
             "approx": false
           }
@@ -31441,7 +31460,8 @@
             "depart": "2022-10-14",
             "ongoing": false,
             "expeditions": [
-              "expedition-67"
+              "expedition-67",
+              "expedition-68"
             ],
             "approx": false
           }
@@ -31507,7 +31527,8 @@
             "depart": "2024-03-11",
             "ongoing": false,
             "expeditions": [
-              "expedition-69"
+              "expedition-69",
+              "expedition-70"
             ],
             "approx": false
           }
@@ -31832,7 +31853,8 @@
             "depart": "2025-08-08",
             "ongoing": false,
             "expeditions": [
-              "expedition-72"
+              "expedition-72",
+              "expedition-73"
             ],
             "approx": false
           }
@@ -32068,7 +32090,8 @@
             "depart": "2021-11-08",
             "ongoing": false,
             "expeditions": [
-              "expedition-65"
+              "expedition-65",
+              "expedition-66"
             ],
             "approx": false
           }
@@ -32462,7 +32485,9 @@
             "arrive": "2024-09-29",
             "depart": "2025-03-18",
             "ongoing": false,
-            "expeditions": [],
+            "expeditions": [
+              "expedition-72"
+            ],
             "approx": false
           }
         ]
@@ -32527,7 +32552,8 @@
             "depart": "2025-08-08",
             "ongoing": false,
             "expeditions": [
-              "expedition-72"
+              "expedition-72",
+              "expedition-73"
             ],
             "approx": false
           }
@@ -33009,7 +33035,8 @@
             "depart": "2026-10-07",
             "ongoing": false,
             "expeditions": [
-              "expedition-74"
+              "expedition-74",
+              "expedition-75"
             ],
             "approx": false
           }
@@ -33185,7 +33212,8 @@
             "depart": "2021-05-02",
             "ongoing": false,
             "expeditions": [
-              "expedition-64"
+              "expedition-64",
+              "expedition-65"
             ],
             "approx": false
           }
@@ -33263,6 +33291,7 @@
             "depart": null,
             "ongoing": true,
             "expeditions": [
+              "expedition-74",
               "expedition-75"
             ],
             "approx": false
@@ -34039,7 +34068,8 @@
             "depart": "2022-05-05",
             "ongoing": false,
             "expeditions": [
-              "expedition-66"
+              "expedition-66",
+              "expedition-67"
             ],
             "approx": false
           }
@@ -34083,7 +34113,8 @@
             "depart": "2022-05-05",
             "ongoing": false,
             "expeditions": [
-              "expedition-66"
+              "expedition-66",
+              "expedition-67"
             ],
             "approx": false
           }
@@ -34127,7 +34158,8 @@
             "depart": "2022-05-05",
             "ongoing": false,
             "expeditions": [
-              "expedition-66"
+              "expedition-66",
+              "expedition-67"
             ],
             "approx": false
           }
@@ -34887,7 +34919,8 @@
             "depart": "2022-10-14",
             "ongoing": false,
             "expeditions": [
-              "expedition-67"
+              "expedition-67",
+              "expedition-68"
             ],
             "approx": false
           }
@@ -34951,7 +34984,8 @@
             "depart": "2022-10-14",
             "ongoing": false,
             "expeditions": [
-              "expedition-67"
+              "expedition-67",
+              "expedition-68"
             ],
             "approx": false
           }
@@ -35520,7 +35554,9 @@
             "arrive": "2022-10-06",
             "depart": "2023-03-11",
             "ongoing": false,
-            "expeditions": [],
+            "expeditions": [
+              "expedition-68"
+            ],
             "approx": false
           }
         ]
@@ -35539,6 +35575,7 @@
             "depart": null,
             "ongoing": true,
             "expeditions": [
+              "expedition-74",
               "expedition-75"
             ],
             "approx": false
@@ -35582,7 +35619,9 @@
             "arrive": "2022-10-06",
             "depart": "2023-03-11",
             "ongoing": false,
-            "expeditions": [],
+            "expeditions": [
+              "expedition-68"
+            ],
             "approx": false
           }
         ]
@@ -35624,7 +35663,9 @@
             "arrive": "2022-10-06",
             "depart": "2023-03-11",
             "ongoing": false,
-            "expeditions": [],
+            "expeditions": [
+              "expedition-68"
+            ],
             "approx": false
           }
         ]
@@ -35775,7 +35816,8 @@
             "depart": "2023-09-03",
             "ongoing": false,
             "expeditions": [
-              "expedition-68"
+              "expedition-68",
+              "expedition-69"
             ],
             "approx": false
           }
@@ -35795,7 +35837,8 @@
             "depart": "2026-10-07",
             "ongoing": false,
             "expeditions": [
-              "expedition-74"
+              "expedition-74",
+              "expedition-75"
             ],
             "approx": false
           }
@@ -35839,7 +35882,8 @@
             "depart": "2023-09-03",
             "ongoing": false,
             "expeditions": [
-              "expedition-68"
+              "expedition-68",
+              "expedition-69"
             ],
             "approx": false
           }
@@ -35883,7 +35927,8 @@
             "depart": "2023-09-03",
             "ongoing": false,
             "expeditions": [
-              "expedition-68"
+              "expedition-68",
+              "expedition-69"
             ],
             "approx": false
           }
@@ -36585,7 +36630,8 @@
             "depart": "2024-03-11",
             "ongoing": false,
             "expeditions": [
-              "expedition-69"
+              "expedition-69",
+              "expedition-70"
             ],
             "approx": false
           }
@@ -36629,7 +36675,8 @@
             "depart": "2024-03-11",
             "ongoing": false,
             "expeditions": [
-              "expedition-69"
+              "expedition-69",
+              "expedition-70"
             ],
             "approx": false
           }
@@ -37362,7 +37409,8 @@
             "ongoing": false,
             "expeditions": [
               "expedition-70",
-              "expedition-71"
+              "expedition-71",
+              "expedition-72"
             ],
             "approx": false
           }
@@ -37407,7 +37455,8 @@
             "ongoing": false,
             "expeditions": [
               "expedition-70",
-              "expedition-71"
+              "expedition-71",
+              "expedition-72"
             ],
             "approx": false
           }
@@ -37452,7 +37501,8 @@
             "ongoing": false,
             "expeditions": [
               "expedition-70",
-              "expedition-71"
+              "expedition-71",
+              "expedition-72"
             ],
             "approx": false
           }
@@ -38275,7 +38325,9 @@
             "arrive": "2024-09-29",
             "depart": "2025-03-18",
             "ongoing": false,
-            "expeditions": [],
+            "expeditions": [
+              "expedition-72"
+            ],
             "approx": false
           }
         ]
@@ -38690,7 +38742,8 @@
             "depart": "2025-08-08",
             "ongoing": false,
             "expeditions": [
-              "expedition-72"
+              "expedition-72",
+              "expedition-73"
             ],
             "approx": false
           }
@@ -38734,7 +38787,8 @@
             "depart": "2025-08-08",
             "ongoing": false,
             "expeditions": [
-              "expedition-72"
+              "expedition-72",
+              "expedition-73"
             ],
             "approx": false
           }
@@ -39790,7 +39844,8 @@
             "depart": "2026-01-14",
             "ongoing": false,
             "expeditions": [
-              "expedition-73"
+              "expedition-73",
+              "expedition-74"
             ],
             "approx": false
           }
@@ -39834,7 +39889,8 @@
             "depart": "2026-01-14",
             "ongoing": false,
             "expeditions": [
-              "expedition-73"
+              "expedition-73",
+              "expedition-74"
             ],
             "approx": false
           }
@@ -40761,7 +40817,8 @@
             "depart": "2026-10-07",
             "ongoing": false,
             "expeditions": [
-              "expedition-74"
+              "expedition-74",
+              "expedition-75"
             ],
             "approx": false
           }
@@ -40805,7 +40862,8 @@
             "depart": "2026-10-07",
             "ongoing": false,
             "expeditions": [
-              "expedition-74"
+              "expedition-74",
+              "expedition-75"
             ],
             "approx": false
           }
@@ -40969,6 +41027,7 @@
             "depart": null,
             "ongoing": true,
             "expeditions": [
+              "expedition-74",
               "expedition-75"
             ],
             "approx": false

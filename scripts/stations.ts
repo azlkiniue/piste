@@ -289,6 +289,39 @@ const stayEnd = (s: Stay, today: string) => s.depart ?? today;
 const overlapDays = (a0: string, a1: string, b0: string, b1: string) =>
 	(Math.min(Date.parse(a1), Date.parse(b1)) - Math.max(Date.parse(a0), Date.parse(b0))) / DAY;
 
+// ---------------------------------------------------------------- Expedition crews (for enrich-manual)
+/** The slugs of everyone whose Stays name an Expedition, in the dataset's order. */
+export function expeditionCrew(people: Person[], x: Expedition): string[] {
+	return people
+		.filter((p) => p.flights.some((f) => f.stays?.some((s) => s.station === x.station && s.expeditions.includes(x.slug))))
+		.map((p) => p.slug);
+}
+
+/** Make `crew` the Expedition's whole membership: it's added to each listed person's Stays aboard its Station
+ *  during it — by the same rule buildStations uses — and taken off everyone else's. Each Stay's Expeditions
+ *  stay in date order. Returns the people it couldn't place, to report. */
+export function setExpeditionCrew(people: Person[], x: Expedition, crew: string[], all: Expedition[]): string[] {
+	const today = dayISO(Date.now());
+	const starts = new Map(all.filter((e) => e.station === x.station).map((e) => [e.slug, e.start]));
+	const bySlug = new Map(people.map((p) => [p.slug, p]));
+	for (const p of people)
+		for (const f of p.flights) for (const s of f.stays ?? []) if (s.station === x.station) s.expeditions = s.expeditions.filter((e) => e !== x.slug);
+	const missed: string[] = [];
+	for (const slug of crew) {
+		const p = bySlug.get(slug);
+		const at = (p?.flights ?? []).flatMap((f) => f.stays ?? []).filter((s) => s.station === x.station);
+		const days = (s: Stay) => overlapDays(s.arrive, stayEnd(s, today), x.start, x.end ?? today);
+		let mine = at.filter((s) => days(s) > 0);
+		if (!mine.length) mine = at.filter((s) => days(s) === 0).slice(0, 1);
+		if (!mine.length) missed.push(p ? `${p.name} (no Stay aboard during ${x.name})` : `"${slug}" (no such person)`);
+		for (const s of mine) {
+			s.expeditions.push(x.slug);
+			s.expeditions.sort((a, b) => (starts.get(a) ?? '').localeCompare(starts.get(b) ?? ''));
+		}
+	}
+	return missed;
+}
+
 // ---------------------------------------------------------------- Wikidata cross-check
 /** A row of Wikidata's ISS Expedition crews: the Expedition's English label, and a crew member. */
 export interface WikidataCrew {

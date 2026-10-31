@@ -153,6 +153,19 @@ describe('known history', () => {
 		expect(stayIn('ivan-bella', 'mir', '1999')).toMatchObject({ arrive: '1999-02-22', depart: '1999-02-27', approx: false }); // down TM-28
 	});
 
+	// LL2's crew lists leave these out; enrich-manual's Expedition corrections put them in.
+	test('Williams and Wilmore are in Expeditions 71 and 72, and Crew-9 is Expedition 72 crew', () => {
+		for (const slug of ['sunita-williams', 'barry-e-wilmore']) expect(stayIn(slug, 'iss', '2024').expeditions).toEqual(['expedition-71', 'expedition-72']);
+		for (const slug of ['nick-hague', 'aleksandr-gorbunov']) expect(stayIn(slug, 'iss', '2024').expeditions).toEqual(['expedition-72']);
+	});
+
+	test('Crew Dragon crews still aboard when the next Expedition began are its crew too', () => {
+		for (const slug of ['robert-l-behnken', 'douglas-g-hurley']) expect(stayIn(slug, 'iss', '2020').expeditions).toEqual(['expedition-63']); // Demo-2
+		expect(stayIn('thomas-pesquet', 'iss', '2021').expeditions).toEqual(['expedition-65', 'expedition-66']); // Crew-2
+		expect(stayIn('jessica-watkins', 'iss', '2022').expeditions).toEqual(['expedition-67', 'expedition-68']); // Crew-4
+		expect(stayIn('nicole-mann', 'iss', '2022').expeditions).toEqual(['expedition-68']); // Crew-5
+	});
+
 	test('guest crews and guests are Visitors', () => {
 		const visits: [string, string, string][] = [
 			['michael-lopez-alegria', 'iss', '2022'], // Ax-1
@@ -166,7 +179,8 @@ describe('known history', () => {
 			['vladimir-remek', 'salyut-6', '1978'],
 			['ulf-merbold', 'mir', '1994'], // Euromir 94
 			['ivan-bella', 'mir', '1999'], // listed in Mir EO-27's crew
-			['marina-vasilevskaya', 'iss', '2024'] // listed in Expedition 70's crew
+			['marina-vasilevskaya', 'iss', '2024'], // listed in Expedition 70's crew
+			['oleg-novitskiy', 'iss', '2024'] // …as was her Soyuz MS-25 commander, up for 13 days
 		];
 		expect(visits.filter(([slug, station, when]) => !isVisitor(stayIn(slug, station, when))).map(([slug]) => slug)).toEqual([]);
 	});
