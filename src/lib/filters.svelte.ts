@@ -1,5 +1,5 @@
 import type { Person } from './types';
-import { valuesOf, type ColorBy } from './colors';
+import { valuesOf } from './colors';
 
 export type SortKey = 'firstLaunch' | 'lastFlight' | 'name' | 'days' | 'flights';
 export type FlightType = 'all' | 'orbital' | 'suborbital';
@@ -13,7 +13,7 @@ export const SORT_OPTIONS: { id: SortKey; label: string }[] = [
 	{ id: 'flights', label: 'Flight count' }
 ];
 
-/** Reactive filter/sort/colour state for the whole app. */
+/** Reactive filter/sort state for one page. (The Colour choice is shared across pages: colour.svelte.ts.) */
 export class Filters {
 	search = $state('');
 	nationalities = $state(new Set<string>());
@@ -22,7 +22,6 @@ export class Filters {
 	statuses = $state(new Set<string>());
 	flightType = $state<FlightType>('all');
 	sort = $state<SortKey>('firstLaunch');
-	colorBy = $state<ColorBy>('nationality');
 
 	setOf(dim: Dim): Set<string> {
 		return dim === 'nationality'

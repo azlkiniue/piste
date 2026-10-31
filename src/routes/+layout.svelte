@@ -3,10 +3,14 @@
 	import { onMount } from 'svelte';
 	import favicon from '$lib/assets/favicon.svg';
 	import { initTheme } from '$lib/theme.svelte';
+	import { initColour } from '$lib/colour.svelte';
 
 	let { children } = $props();
 
-	onMount(initTheme);
+	onMount(() => {
+		initTheme();
+		initColour();
+	});
 </script>
 
 <svelte:head>

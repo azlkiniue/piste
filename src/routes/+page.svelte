@@ -10,13 +10,15 @@
 	import astronautsData from '$lib/data/astronauts.min.json';
 	import metaData from '$lib/data/meta.json';
 	import type { Person, Meta } from '$lib/types';
-	import { COLOR_BY_OPTIONS } from '$lib/colors';
+	import { COLOR_BY_OPTIONS, type ColorBy } from '$lib/colors';
+	import { colour, personColour, setColour } from '$lib/colour.svelte';
 	import { Filters as FilterState, applyFilters, SORT_OPTIONS } from '$lib/filters.svelte';
 
 	const people = astronautsData as Person[];
 	const meta = metaData as Meta;
 
 	const filters = new FilterState();
+	const colorBy = $derived(personColour(colour.by));
 	let selected = $state<Person | null>(null);
 	let drawerOpen = $state(false);
 
@@ -77,7 +79,8 @@
 		<label class="flex items-center gap-1.5 text-xs text-zinc-500">
 			Colour
 			<select
-				bind:value={filters.colorBy}
+				value={colorBy}
+				onchange={(e) => setColour(e.currentTarget.value as ColorBy)}
 				class="rounded-md border border-zinc-300 bg-transparent px-2 py-1 text-zinc-700 focus:outline-none dark:border-zinc-700 dark:text-zinc-200"
 			>
 				{#each COLOR_BY_OPTIONS as opt (opt.id)}<option value={opt.id}>{opt.label}</option>{/each}
@@ -130,10 +133,10 @@
 		<!-- timeline + legend -->
 		<main class="flex min-w-0 flex-1 flex-col">
 			<div class="min-h-0 flex-1">
-				<Timeline people={visible} colorBy={filters.colorBy} selectedSlug={selected?.slug ?? null} onselect={(p) => (selected = p)} />
+				<Timeline people={visible} {colorBy} selectedSlug={selected?.slug ?? null} onselect={(p) => (selected = p)} />
 			</div>
 			<div class="border-t border-zinc-200 px-4 py-2 dark:border-zinc-800">
-				<Legend people={visible} {filters} />
+				<Legend people={visible} by={colorBy} {filters} />
 			</div>
 		</main>
 	</div>
