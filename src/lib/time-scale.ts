@@ -43,6 +43,32 @@ export function timeTicks(minMs: number, maxMs: number, pxPerYear: number): Tick
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+/** Ticks for zooms closer than timeTicks goes — the station view reaches Salyut 1's 23 days of crew. Years as
+ *  timeTicks gives them, then months (a year's January labelled with the year), then days (a month's 1st
+ *  labelled with the month). Only the span [minMs, maxMs] is ticked, so a caller can pass just what's in view. */
+export function fineTicks(minMs: number, maxMs: number, pxPerYear: number): Tick[] {
+	if (pxPerYear < 400) return timeTicks(minMs, maxMs, pxPerYear);
+	const ticks: Tick[] = [];
+	const pxPerDay = pxPerYear / 365.25;
+	const from = new Date(minMs);
+	if (pxPerDay < 4) {
+		const step = pxPerYear / 12 >= 36 ? 1 : 3;
+		for (let y = from.getUTCFullYear(), m = from.getUTCMonth(); Date.UTC(y, m, 1) <= maxMs; m === 11 ? (y++, (m = 0)) : m++) {
+			const ms = Date.UTC(y, m, 1);
+			if (ms >= minMs && m % step === 0) ticks.push({ ms, label: m === 0 ? String(y) : MONTHS[m], major: m === 0 });
+		}
+		return ticks;
+	}
+	const shown = (d: number) => (pxPerDay >= 22 ? true : pxPerDay >= 8 ? d === 1 || d % 5 === 0 : d === 1 || d === 10 || d === 20);
+	for (let ms = Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()); ms <= maxMs; ms += DAY) {
+		const d = new Date(ms);
+		const day = d.getUTCDate();
+		if (ms < minMs || !shown(day) || (day === 30 && pxPerDay < 22)) continue;
+		ticks.push({ ms, label: day === 1 ? `${MONTHS[d.getUTCMonth()]} '${String(d.getUTCFullYear()).slice(2)}` : String(day), major: day === 1 });
+	}
+	return ticks;
+}
+
 /** "12 Apr 1961" — or "Oct 1975" / "1988" for a date known only to the month or year ("1975-10", "1988"). */
 export function formatDate(iso: string | null): string {
 	if (!iso) return '—';

@@ -62,7 +62,15 @@
 
 	<main class="flex min-h-0 flex-1 flex-col">
 		<div class="min-h-0 flex-1">
-			<StationLanes lives={stations} {expeditions} {crew} colourBy={colour.by} {highlight} />
+			<StationLanes
+				lives={stations}
+				{expeditions}
+				{crew}
+				colourBy={colour.by}
+				{highlight}
+				stationHref={(slug) => `${base}/stations/${slug}`}
+				expeditionHref={(x) => `${base}/stations/${x.station}?expedition=${x.slug}`}
+			/>
 		</div>
 		{#if colour.by !== 'expedition'}
 			<div class="border-t border-zinc-200 px-4 py-2 dark:border-zinc-800">

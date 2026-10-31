@@ -3,6 +3,8 @@ import { valuesOf } from './colors';
 
 export type SortKey = 'firstLaunch' | 'lastFlight' | 'name' | 'days' | 'flights';
 export type FlightType = 'all' | 'orbital' | 'suborbital';
+/** The station view's Stay filter: every Stay, only Expedition crew's, or only Visitors'. */
+export type StayType = 'all' | 'crew' | 'visitor';
 export type Dim = 'nationality' | 'agency' | 'gender' | 'status';
 
 export const SORT_OPTIONS: { id: SortKey; label: string }[] = [
@@ -21,6 +23,7 @@ export class Filters {
 	genders = $state(new Set<string>());
 	statuses = $state(new Set<string>());
 	flightType = $state<FlightType>('all');
+	stayType = $state<StayType>('all');
 	sort = $state<SortKey>('firstLaunch');
 
 	setOf(dim: Dim): Set<string> {
@@ -49,6 +52,7 @@ export class Filters {
 			this.genders.size +
 			this.statuses.size +
 			(this.flightType !== 'all' ? 1 : 0) +
+			(this.stayType !== 'all' ? 1 : 0) +
 			(this.search.trim() ? 1 : 0)
 		);
 	}
@@ -60,6 +64,7 @@ export class Filters {
 		this.genders = new Set();
 		this.statuses = new Set();
 		this.flightType = 'all';
+		this.stayType = 'all';
 	}
 }
 

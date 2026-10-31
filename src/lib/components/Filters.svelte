@@ -1,10 +1,16 @@
 <script lang="ts">
 	import type { Person } from '$lib/types';
-	import { facetCounts, type Filters, type Dim, type FlightType } from '$lib/filters.svelte';
+	import { facetCounts, type Filters, type Dim, type FlightType, type StayType } from '$lib/filters.svelte';
 	import { colorFor, fullLabelFor, labelFor } from '$lib/colors';
 	import Flags from './Flags.svelte';
 
-	let { people, filters }: { people: Person[]; filters: Filters } = $props();
+	interface Props {
+		people: Person[];
+		filters: Filters;
+		/** The station view filters Stays (Expedition crew or Visitor) instead of flights (orbital or suborbital). */
+		mode?: 'flights' | 'stays';
+	}
+	let { people, filters, mode = 'flights' }: Props = $props();
 
 	const counts = $derived({
 		nationality: facetCounts(people, filters, 'nationality'),
@@ -24,6 +30,11 @@
 		{ id: 'all', label: 'All' },
 		{ id: 'orbital', label: 'Orbital' },
 		{ id: 'suborbital', label: 'Suborbital' }
+	];
+	const STAY_TYPES: { id: StayType; label: string }[] = [
+		{ id: 'all', label: 'All' },
+		{ id: 'crew', label: 'Expedition crew' },
+		{ id: 'visitor', label: 'Visitor' }
 	];
 </script>
 
@@ -68,17 +79,32 @@
 
 <div class="space-y-4 text-sm">
 	<section>
-		<h3 class="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">Flight type</h3>
-		<div class="flex rounded-md border border-zinc-200 p-0.5 dark:border-zinc-800">
-			{#each FLIGHT_TYPES as ft (ft.id)}
-				<button
-					class="flex-1 rounded px-2 py-1 text-xs transition-colors {filters.flightType === ft.id
-						? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-						: 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}"
-					onclick={() => (filters.flightType = ft.id)}>{ft.label}</button
-				>
-			{/each}
-		</div>
+		{#if mode === 'stays'}
+			<h3 class="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">Stay</h3>
+			<div class="flex rounded-md border border-zinc-200 p-0.5 dark:border-zinc-800">
+				{#each STAY_TYPES as st (st.id)}
+					<button
+						class="flex-1 rounded px-2 py-1 text-xs transition-colors {filters.stayType === st.id
+							? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+							: 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}"
+						onclick={() => (filters.stayType = st.id)}
+						aria-pressed={filters.stayType === st.id}>{st.label}</button
+					>
+				{/each}
+			</div>
+		{:else}
+			<h3 class="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">Flight type</h3>
+			<div class="flex rounded-md border border-zinc-200 p-0.5 dark:border-zinc-800">
+				{#each FLIGHT_TYPES as ft (ft.id)}
+					<button
+						class="flex-1 rounded px-2 py-1 text-xs transition-colors {filters.flightType === ft.id
+							? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
+							: 'text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200'}"
+						onclick={() => (filters.flightType = ft.id)}>{ft.label}</button
+					>
+				{/each}
+			</div>
+		{/if}
 	</section>
 
 	<section>

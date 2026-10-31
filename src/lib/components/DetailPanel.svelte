@@ -3,7 +3,20 @@
 	import { formatDate, formatDuration } from '$lib/time-scale';
 	import { colorFor, valueOf, valuesOf, STATUS_LABEL, GENDER_LABEL } from '$lib/colors';
 	import { AGENCIES } from '$lib/agencies';
+	import { STATIONS } from '$lib/stations';
+	import { base } from '$app/paths';
+	import stationData from '$lib/data/stations.min.json';
+	import type { StationData } from '$lib/types';
+	import { expeditionKey } from '$lib/station-index';
 	import Flags from './Flags.svelte';
+
+	// Expedition names, for each flight's Station lines: "Expedition 50, 51" rather than the word twice.
+	const EXPEDITION_NAMES = new Map((stationData as StationData).expeditions.map((x) => [expeditionKey(x.station, x.slug), x.name]));
+	function expeditionList(station: string, slugs: string[]): string {
+		const names = slugs.map((x) => EXPEDITION_NAMES.get(expeditionKey(station, x)) ?? x);
+		const nums = names.map((n) => n.match(/^Expedition (\d+)$/)?.[1]);
+		return nums.every(Boolean) && nums.length > 1 ? `Expedition ${nums.join(', ')}` : names.join(', ');
+	}
 
 	let { person, onclose }: { person: Person; onclose: () => void } = $props();
 
@@ -159,6 +172,16 @@
 					{#if f.segments}
 						<div class="mt-1 text-[11px] text-zinc-400">via {f.segments.join(' · ')}</div>
 					{/if}
+					<!-- a line per Stay aboard a Station, to its station view (zoomed to its first Expedition) -->
+					{#each f.stays ?? [] as stay, j (j)}
+						<a
+							href="{base}/stations/{stay.station}{stay.expeditions.length ? `?expedition=${stay.expeditions[0]}` : ''}"
+							class="mt-1 flex items-center gap-1.5 text-[11px] text-zinc-500 underline-offset-2 hover:text-zinc-800 hover:underline dark:text-zinc-400 dark:hover:text-zinc-200"
+						>
+							<svg viewBox="0 0 24 24" class="h-3 w-3 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12h4M17 12h4M7 9h10v6H7zM12 5v4M12 15v4" /></svg>
+							<span>{STATIONS[stay.station]?.short ?? stay.station} · {stay.expeditions.length ? expeditionList(stay.station, stay.expeditions) : 'Visitor'}{#if stay.approx}<span class="text-zinc-400"> · approx.</span>{/if}</span>
+						</a>
+					{/each}
 				</li>
 			{/each}
 		</ol>
