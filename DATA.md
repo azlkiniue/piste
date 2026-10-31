@@ -182,6 +182,61 @@ Dragon flier), so it's a cross-check rather than a source: each run reports anyo
 don't — after dating its list by flight and dropping launch providers — for review in `scripts/agency.ts`.
 Every write also warns about anyone with no agency, or one missing from `agencies.ts`.
 
+## Stations
+
+The station pages show the twelve **Stations** that have had a crew — Salyut 1, 3, 4, 5, 6 and 7, Skylab,
+Mir, the ISS, Tiangong-1, Tiangong-2 and Tiangong — each with its **Expeditions** and everyone who stayed
+aboard. The words are defined in [CONTEXT.md](CONTEXT.md); the two choices that shape the data are in
+[docs/adr/](docs/adr/). [`scripts/stations.ts`](scripts/stations.ts) builds it all inside `enrich-ll2`, from
+three more Launch Library 2 endpoints (~9 calls, paced and cached like the astronaut pages, and replayed
+offline the same way): the space stations, for each one's launch and deorbit dates; the expeditions, with
+their crews; and the docking events.
+
+- **Stays** — a person's time aboard one Station, from the docking of the craft they arrived in to the
+  undocking of the one they left in. A docking event names no crew, only the launch of the craft that
+  docked, so the crew comes from the astronaut records: the craft someone rode up boards them at its
+  docking, the craft they came home in takes them off at its undocking. That handles seat-swaps (Thagard
+  up on Soyuz TM-21, home on STS-71) and Shuttle crews swapping in (Solovyev and Budarin up on Atlantis
+  for a stay on Mir). Moving a craft to another port doesn't end a Stay; flying to another Station does,
+  so Soyuz T-15 makes three — Mir, Salyut 7, Mir. Where LL2 lacks a docking, the Stay takes that end from
+  the flight and is marked approximate. Stays are stored on the flights in `astronauts.json`
+  (docs/adr/0002); `stations.json` holds the Stations' lifetimes and the Expeditions.
+- **Expedition crew or Visitor** — an Expedition is a Station's long-duration resident crew for one
+  continuous stretch, named as that Station named it: Expedition 72, Mir's EO-27, Skylab 4, Shenzhou 19.
+  A Stay belongs to every Expedition whose LL2 crew list names that person during it (Pesquet's one Stay
+  is Expeditions 50 and 51); a Stay in none is a **Visitor**'s — Shuttle crews docked at Mir or the ISS,
+  week-long Soyuz visits, Interkosmos cosmonauts, private-mission crews and tourists. It describes the Stay, not the
+  person: Scott Kelly was a Visitor on STS-118 and Expedition crew later.
+
+LL2 calls more things expeditions than that, and gets some dockings wrong, so researched lists in
+`scripts/stations.ts` sort it out before anything is built — lists rather than rules, because neither
+obvious rule holds. By length ("an Expedition lasts 30 days or more"), Salyut 1's only crew (Soyuz 11,
+23 days) would be Visitors, and Merbold's 31-day visit to Mir an Expedition; by nesting ("a Stay inside
+another crew's is a Visitor's"), residents would be Visitors, since Rubio's 371-day Stay holds other
+residents' whole ones.
+
+- **Visitor crews** — the LL2 records that are visits, not Expeditions: Salyut 6 and 7's week-long
+  visiting crews, Ax-1 to Ax-4, Maezawa's Soyuz MS-20 and the "Challenge" film crew — plus individual
+  Visitors a resident record lists (Ivan Bella in Mir EO-27, Marina Vasilevskaya in Expedition 70).
+- **Never aboard** — crews who reached a Station but didn't go in: Soyuz 10, which docked to Salyut 1
+  but couldn't open the hatch, and the failed dockings LL2 lists as expeditions (Soyuz 15, 23, 25, 33,
+  T-8).
+- **Docking corrections** — craft whose dockings LL2 lacks or has wrong, replaced by the missions'
+  records: Soyuz T-15's trip between Mir and Salyut 7; Mir's missing Soyuz TM-24 and STS-76; the
+  1987–88 Soyuz craft whose undockings LL2 files under the next craft; and the undockings of Soyuz 11
+  and TM-28.
+
+Every write warns, never fails, about a Stay of 30 days or more in no Expedition (a crew list someone was
+left off), an Expedition member aboard at none of its dates, and any Station or Expedition the registry
+([`src/lib/stations.ts`](src/lib/stations.ts)) or the dataset doesn't know — and checks the ISS crews
+against Wikidata's, from a cached query `enrich-ll2` refreshes. `enrich-ll2`'s own report adds the
+crews it couldn't put aboard. Those warnings found LL2's biggest gap: from 2020 its ISS crew lists name
+each Expedition's arrivals but not the crews still aboard from the one before, which the Expedition
+corrections below fill in.
+
+`bun test` checks the result against known history (T-15's three Stays, the STS-71 crews, Soyuz 10, the
+Visitor crews…) and rules every record must keep, such as each Stay lying within its flight.
+
 ## Manual overrides
 
 **Manual overrides** run last (`scripts/overrides.ts` → `bun run enrich-manual`). Every other layer
@@ -191,7 +246,14 @@ value wins over everything the pipeline computed. **Empty a field** (`''`, `null
 delete the line) and the override drops, so the field falls back to the pipeline's value — _the last
 value that was there before_. (So this layer can only set values, never blank them; emptying means
 revert. To genuinely clear a field, fix it upstream.) Overriding `flights` replaces the whole array
-and recomputes `firstLaunch` / `lastLanding` / `totalDaysInSpace` / `status` from it.
+and recomputes `firstLaunch` / `lastLanding` / `totalDaysInSpace` / `status` from it — Stays included, so
+restate those of anyone who has them.
+
+**Expedition corrections** (`expeditionOverrides`, in the same file) work the same way on the station
+data. Key each by `<station>/<expedition>`, as `stations.json` has them (`iss/expedition-72`,
+`mir/eo-27`), since names repeat across Stations, and set its `start`, `end`, `name` or `station`, or its
+`crew`: the slugs of everyone in it. A crew list is the whole crew — the Expedition is added to those
+people's Stays aboard the Station during it and taken off anyone else's.
 
 Reverting works without re-running the whole chain: a gitignored baseline
 (`scripts/cache/manual/baseline.json`) remembers each touched field's pipeline value and the value
@@ -209,6 +271,7 @@ bun run enrich-manual    # apply scripts/overrides.ts as the final layer (idempo
 **Wikidata** (CC0, base dataset),
 **[International Space Station APIs](https://github.com/corquaid/international-space-station-APIs)**
 (MIT, in-space cross-check), **Launch Library 2** (CC BY-NC 4.0 — authoritative for agency, day
-counts, timelines & backfilling the people Wikidata misses) and **Supercluster** (editorial —
+counts, timelines & backfilling the people Wikidata misses, and the source of the station data: Stations,
+Expeditions and docking events; Wikidata's ISS crews cross-check it) and **Supercluster** (editorial —
 nationalities, gender, the Space Adventures tourists, the SpaceShipOne pilots, and an agency
 cross-check). See the in-app About page for methodology.

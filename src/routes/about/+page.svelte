@@ -32,6 +32,15 @@
 		launches that aborted on the way to orbit but still arced past 80 km (Soyuz 18a in 1975, MS-10 in 2018).
 	</p>
 	<p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
+		The <a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="{base}/stations">space stations</a>
+		page follows the twelve stations that have had a crew, from Salyut 1 to Tiangong. Each bar is an
+		<em>expedition</em> — a station's long-duration crew for one stretch, named as that station named it
+		(Expedition 72, Mir's EO-27, Shenzhou 19). Open a station for everyone who stayed aboard, from the
+		docking of the craft they arrived in to the undocking of the one they left in. Short visits — Shuttle
+		crews, Interkosmos cosmonauts, private missions and tourists — belong to no expedition and are drawn
+		thinner, as <em>visitors</em>.
+	</p>
+	<p class="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
 		The whole dataset is baked into the page at build time — there are no live API calls, so the site is fast,
 		works offline, and hosts anywhere static.
 	</p>
@@ -51,6 +60,9 @@
 			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="https://thespacedevs.com/llapi" target="_blank" rel="noopener">Launch Library 2</a>
 			<span class="text-zinc-400">· CC BY-NC 4.0</span> — the authoritative source for agency, flight
 			timelines, day counts, spacewalks and photos, and the backfill for recent fliers Wikidata is missing.
+			Its space stations, expeditions and docking events give who was aboard each station, and when —
+			corrected by hand where it lacks a docking or leaves someone off a crew, and checked against
+			Wikidata's ISS crews.
 		</li>
 		<li>
 			<a class="font-medium text-zinc-800 underline-offset-2 hover:underline dark:text-zinc-100" href="https://www.supercluster.com/astronauts" target="_blank" rel="noopener">Supercluster</a>

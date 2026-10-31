@@ -2,7 +2,8 @@
 
 A Gantt-style timeline of **everyone who has been to space** — from Yuri Gagarin (1961) to the
 people in orbit right now. Filter by nationality, agency, gender, status and orbital/suborbital;
-click anyone for their full flight history.
+click anyone for their full flight history. A second timeline follows the twelve space stations that have
+had a crew, with each one's expeditions and everyone who stayed aboard.
 
 _Piste_ is an acronym for "People in space timeline" and also a word originating from French which means a trail or track — each bar traces a person's time in space.
 
@@ -23,26 +24,29 @@ Other scripts:
 bun --bun run build      # static output → ./build
 bun --bun run preview    # preview the production build
 bun --bun run check      # type-check
+bun test                 # check the committed data against known station history
 ```
 
 ## Data
 
-The app reads two committed files in `src/lib/data/`: `astronauts.min.json` (everyone and their
-flights) and `meta.json` (build date, counts and sources). Four Bun scripts rebuild them, each layering
-a source onto the last:
+The app reads three committed files in `src/lib/data/`: `astronauts.min.json` (everyone, their
+flights, and their stays aboard stations), `stations.min.json` (the stations' expeditions) and
+`meta.json` (build date, counts and sources). Four Bun scripts rebuild them, each layering a source
+onto the last:
 
 ```bash
 bun run update-data            # 1. Wikidata + ISS APIs base — no rate limits, ~1 min
-bun run enrich-ll2             # 2. Launch Library 2 — authoritative; rate-limited, resumable
+bun run enrich-ll2             # 2. Launch Library 2 — authoritative, and the station data; rate-limited, resumable
 bun run enrich-supercluster    # 3. Supercluster — nationalities; gap-fills gender & tourist agencies; cross-checks agencies
-bun run enrich-manual          # 4. Manual overrides — hand-fix anything; empty a field to revert
+bun run enrich-manual          # 4. Manual overrides — hand-fix anything, expeditions too; empty a field to revert
 ```
 
 - **Wikidata** (CC0) is the base: the crew list, flight dates, photos, gender, and birth and death dates.
 - The **[International Space Station APIs](https://github.com/corquaid/international-space-station-APIs)**
   (MIT) cross-check who's in space right now.
 - **Launch Library 2** (CC BY-NC 4.0) is authoritative where the two disagree — agencies, flight
-  timelines and days in space — and adds the recent fliers Wikidata is missing.
+  timelines and days in space — and adds the recent fliers Wikidata is missing. Its space stations,
+  expeditions and docking events (~9 more calls) become the station data: who was aboard, and when.
 - **Supercluster** (editorial) supplies nationalities and fills gaps, such as gender for recent
   suborbital tourists; it also cross-checks agencies.
 - **Manual overrides** in `scripts/overrides.ts` have the final say.
@@ -51,8 +55,9 @@ bun run enrich-manual          # 4. Manual overrides — hand-fix anything; empt
 got there (Apollo 1, Challenger, …) don't. Every script also writes `astronauts.json`, a pretty-printed
 copy, so each refresh reads as a per-field diff.
 
-See [DATA.md](DATA.md) for the details: how the sources are merged, the nationality and agency rules, LL2
-caching and offline replays, and how manual overrides revert.
+See [DATA.md](DATA.md) for the details: how the sources are merged, the nationality and agency rules, how
+stays and expeditions are built, LL2 caching and offline replays, and how manual overrides revert. The
+domain's words are defined in [CONTEXT.md](CONTEXT.md).
 
 ## Deploy
 
