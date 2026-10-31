@@ -126,6 +126,33 @@ describe('known history', () => {
 		expect(stayIn('scott-kelly', 'iss', '2015').expeditions).toContain('expedition-46');
 	});
 
+	// Dates from the missions' records; LL2 lacks these dockings.
+	test("Soyuz TM-24's and STS-76's crews have Mir Stays from their real dockings", () => {
+		const dates = (s: Stay) => ({ arrive: s.arrive, depart: s.depart, approx: s.approx });
+		for (const slug of ['valery-korzun', 'aleksandr-kaleri'])
+			expect(dates(stayIn(slug, 'mir', '1996-08'))).toEqual({ arrive: '1996-08-19', depart: '1997-03-02', approx: false });
+		expect(dates(stayIn('claudie-haignere', 'mir', '1996'))).toEqual({ arrive: '1996-08-19', depart: '1996-09-02', approx: false });
+		expect(dates(stayIn('reinhold-ewald', 'mir', '1997'))).toEqual({ arrive: '1997-02-12', depart: '1997-03-02', approx: false });
+		const lucid = stayIn('shannon-lucid', 'mir', '1996');
+		expect([lucid.arrive, lucid.approx]).toEqual(['1996-03-24', false]);
+	});
+
+	// LL2 files these craft's undockings under the next craft (TM-2's under TM-3, and so on).
+	test('the 1987–88 Soyuz seat-swaps put each crew aboard Mir for their real dates', () => {
+		const dates = (s: Stay) => [s.arrive, s.depart, s.approx];
+		expect(dates(stayIn('aleksandr-laveykin', 'mir', '1987'))).toEqual(['1987-02-07', '1987-07-29', false]); // up and down TM-2
+		expect(dates(stayIn('aleksandr-viktorenko', 'mir', '1987'))).toEqual(['1987-07-24', '1987-07-29', false]); // up TM-3, down TM-2
+		expect(dates(stayIn('anatolii-levchenko', 'mir', '1987'))).toEqual(['1987-12-23', '1987-12-29', false]); // up TM-4, down TM-3
+		expect(dates(stayIn('viktor-savinykh', 'mir', '1988'))).toEqual(['1988-06-09', '1988-06-17', false]); // up TM-5, down TM-4
+		expect(dates(stayIn('vladimir-lyakhov', 'mir', '1988'))).toEqual(['1988-08-31', '1988-09-05', false]); // up TM-6, down TM-5
+		expect(dates(stayIn('jean-loup-chretien', 'mir', '1988'))).toEqual(['1988-11-28', '1988-12-21', false]); // up TM-7, down TM-6
+	});
+
+	test("Soyuz 11's crew left Salyut 1, and Bella left Mir, on their craft's real undockings", () => {
+		expect(stayIn('georgy-dobrovolsky', 'salyut-1', '1971')).toMatchObject({ arrive: '1971-06-07', depart: '1971-06-29', approx: false });
+		expect(stayIn('ivan-bella', 'mir', '1999')).toMatchObject({ arrive: '1999-02-22', depart: '1999-02-27', approx: false }); // down TM-28
+	});
+
 	test('guest crews and guests are Visitors', () => {
 		const visits: [string, string, string][] = [
 			['michael-lopez-alegria', 'iss', '2022'], // Ax-1

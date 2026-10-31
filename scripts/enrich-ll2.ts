@@ -777,7 +777,8 @@ async function main() {
 	for (const p of people) for (const f of p.flights) delete f.stays;
 	let stationReport: StationReport | null = null;
 	if (stationRecords) {
-		const { data, report } = buildStations({ ...stationRecords, riders: records, personByLL2, aliasByLL2: variants });
+		const riders = records.filter((r) => !NON_HUMAN.has(normName(r.name))); // Ripley, Starman… ride along but aren't crew
+		const { data, report } = buildStations({ ...stationRecords, riders, personByLL2, aliasByLL2: variants });
 		await writeStations(data);
 		stationReport = report;
 	}
@@ -813,6 +814,7 @@ async function main() {
 		console.log(`expeditions:       ${Object.entries(r.expeditions).map(([s, n]) => `${s} ${n}`).join(', ')}  (+${r.guestRecords} guest crews)`);
 		if (r.neverAboard.length) console.log(`   never went aboard (dropped): ${r.neverAboard.join(', ')}`);
 		if (r.unresolvedCrew.length) console.log(`   ⚠ crew with no Person or flight to put aboard: ${r.unresolvedCrew.join(', ')}`);
+		if (r.unmatchedRiders.length) console.log(`   ⚠ docked crew LL2 lists whom no person matches: ${r.unmatchedRiders.join(', ')}`);
 		if (r.unplaced.length) console.log(`   ⚠ docking Stays outside every flight: ${r.unplaced.join(', ')}`);
 		if (r.empty.length) console.log(`   ⚠ Expeditions no Stay names: ${r.empty.join(', ')}`);
 	} else console.log('stays:             none — station records not loaded; re-run `bun run enrich-ll2`');

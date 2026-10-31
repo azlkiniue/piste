@@ -2199,7 +2199,7 @@
             "expeditions": [
               "soyuz-11"
             ],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -2523,7 +2523,7 @@
             "expeditions": [
               "soyuz-11"
             ],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -2567,7 +2567,7 @@
             "expeditions": [
               "soyuz-11"
             ],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -4166,7 +4166,7 @@
           {
             "station": "mir",
             "arrive": "1987-02-07",
-            "depart": "1987-07-29",
+            "depart": "1987-12-29",
             "ongoing": false,
             "expeditions": [
               "eo-2"
@@ -4574,10 +4574,10 @@
           {
             "station": "mir",
             "arrive": "1988-08-31",
-            "depart": "1988-09-07",
+            "depart": "1988-09-05",
             "ongoing": false,
             "expeditions": [],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -5209,7 +5209,7 @@
             "depart": "1988-06-17",
             "ongoing": false,
             "expeditions": [],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -5541,7 +5541,7 @@
             "depart": "1988-12-21",
             "ongoing": false,
             "expeditions": [],
-            "approx": true
+            "approx": false
           }
         ]
       },
@@ -6084,7 +6084,7 @@
           {
             "station": "mir",
             "arrive": "1987-12-23",
-            "depart": "1988-09-05",
+            "depart": "1988-12-21",
             "ongoing": false,
             "expeditions": [
               "eo-3"
@@ -6378,7 +6378,7 @@
           {
             "station": "mir",
             "arrive": "1987-07-24",
-            "depart": "1987-07-29",
+            "depart": "1987-12-29",
             "ongoing": false,
             "expeditions": [
               "eo-2"
@@ -8554,14 +8554,14 @@
         "stays": [
           {
             "station": "mir",
-            "arrive": "1996-03-22",
+            "arrive": "1996-03-24",
             "depart": "1996-09-24",
             "ongoing": false,
             "expeditions": [
               "eo-21",
               "eo-22"
             ],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -9912,12 +9912,12 @@
           {
             "station": "mir",
             "arrive": "1987-02-07",
-            "depart": "1987-07-30",
+            "depart": "1987-07-29",
             "ongoing": false,
             "expeditions": [
               "eo-2"
             ],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -9962,10 +9962,10 @@
           {
             "station": "mir",
             "arrive": "1987-07-24",
-            "depart": "1987-07-30",
+            "depart": "1987-07-29",
             "ongoing": false,
             "expeditions": [],
-            "approx": true
+            "approx": false
           }
         ]
       },
@@ -10068,10 +10068,10 @@
           {
             "station": "mir",
             "arrive": "1987-07-24",
-            "depart": "1987-07-30",
+            "depart": "1987-07-29",
             "ongoing": false,
             "expeditions": [],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -10117,7 +10117,7 @@
             "depart": "1987-12-29",
             "ongoing": false,
             "expeditions": [],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -10160,7 +10160,7 @@
           {
             "station": "mir",
             "arrive": "1987-12-23",
-            "depart": "1988-09-05",
+            "depart": "1988-12-21",
             "ongoing": false,
             "expeditions": [
               "eo-3"
@@ -10231,7 +10231,7 @@
             "depart": "1988-06-17",
             "ongoing": false,
             "expeditions": [],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -10279,7 +10279,7 @@
             "depart": "1988-06-17",
             "ongoing": false,
             "expeditions": [],
-            "approx": true
+            "approx": false
           }
         ]
       },
@@ -10402,10 +10402,10 @@
           {
             "station": "mir",
             "arrive": "1988-08-31",
-            "depart": "1988-09-07",
+            "depart": "1988-09-05",
             "ongoing": false,
             "expeditions": [],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -12437,7 +12437,17 @@
         "landing": "1996-03-31",
         "ongoing": false,
         "orbital": true,
-        "approx": false
+        "approx": false,
+        "stays": [
+          {
+            "station": "mir",
+            "arrive": "1996-03-24",
+            "depart": "1996-03-29",
+            "ongoing": false,
+            "expeditions": [],
+            "approx": false
+          }
+        ]
       },
       {
         "mission": "STS-108",
@@ -13579,13 +13589,13 @@
         "stays": [
           {
             "station": "mir",
-            "arrive": "1996-08-17",
+            "arrive": "1996-08-19",
             "depart": "1997-03-02",
             "ongoing": false,
             "expeditions": [
               "eo-22"
             ],
-            "approx": true
+            "approx": false
           }
         ]
       },
@@ -13938,7 +13948,17 @@
         "landing": "1996-03-31",
         "ongoing": false,
         "orbital": true,
-        "approx": false
+        "approx": false,
+        "stays": [
+          {
+            "station": "mir",
+            "arrive": "1996-03-24",
+            "depart": "1996-03-29",
+            "ongoing": false,
+            "expeditions": [],
+            "approx": false
+          }
+        ]
       }
     ],
     "spacewalks": 0
@@ -14647,7 +14667,17 @@
         "landing": "1996-03-31",
         "ongoing": false,
         "orbital": true,
-        "approx": false
+        "approx": false,
+        "stays": [
+          {
+            "station": "mir",
+            "arrive": "1996-03-24",
+            "depart": "1996-03-29",
+            "ongoing": false,
+            "expeditions": [],
+            "approx": false
+          }
+        ]
       }
     ],
     "spacewalks": 1
@@ -15855,7 +15885,17 @@
         "landing": "1996-03-31",
         "ongoing": false,
         "orbital": true,
-        "approx": false
+        "approx": false,
+        "stays": [
+          {
+            "station": "mir",
+            "arrive": "1996-03-24",
+            "depart": "1996-03-29",
+            "ongoing": false,
+            "expeditions": [],
+            "approx": false
+          }
+        ]
       },
       {
         "mission": "STS-90",
@@ -16093,7 +16133,17 @@
         "landing": "1996-03-31",
         "ongoing": false,
         "orbital": true,
-        "approx": false
+        "approx": false,
+        "stays": [
+          {
+            "station": "mir",
+            "arrive": "1996-03-24",
+            "depart": "1996-03-29",
+            "ongoing": false,
+            "expeditions": [],
+            "approx": false
+          }
+        ]
       }
     ],
     "spacewalks": 0
@@ -19140,11 +19190,11 @@
         "stays": [
           {
             "station": "mir",
-            "arrive": "1996-08-17",
+            "arrive": "1996-08-19",
             "depart": "1996-09-02",
             "ongoing": false,
             "expeditions": [],
-            "approx": true
+            "approx": false
           }
         ]
       },
@@ -19204,13 +19254,13 @@
         "stays": [
           {
             "station": "mir",
-            "arrive": "1996-08-17",
+            "arrive": "1996-08-19",
             "depart": "1997-03-02",
             "ongoing": false,
             "expeditions": [
               "eo-22"
             ],
-            "approx": true
+            "approx": false
           }
         ]
       },
@@ -19320,7 +19370,7 @@
             "depart": "1997-03-02",
             "ongoing": false,
             "expeditions": [],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -20858,7 +20908,7 @@
           {
             "station": "mir",
             "arrive": "1998-08-15",
-            "depart": "1999-02-07",
+            "depart": "1999-02-27",
             "ongoing": false,
             "expeditions": [
               "eo-26"
@@ -21264,10 +21314,10 @@
           {
             "station": "mir",
             "arrive": "1999-02-22",
-            "depart": "1999-02-28",
+            "depart": "1999-02-27",
             "ongoing": false,
             "expeditions": [],
-            "approx": true
+            "approx": false
           }
         ]
       }

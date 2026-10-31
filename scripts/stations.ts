@@ -49,6 +49,7 @@ export interface LL2Docking {
 /** An astronaut list record (`?mode=detailed`), for the launches it rode up and came home on. */
 export interface LL2Rider {
 	id: number;
+	name?: string;
 	flights?: { id?: string; name?: string | null; net?: string }[];
 	landings?: { mission_end?: string | null; launch?: { id?: string; name?: string | null } | null }[];
 	fetchedAt?: number;
@@ -101,9 +102,19 @@ const GUEST_MEMBERS: [RegExp, RegExp][] = [
 const guestMember = (record: string, person?: string | null) =>
 	!!person && GUEST_MEMBERS.some(([r, p]) => r.test(record.trim()) && p.test(person.trim()));
 
-// Craft whose docking events LL2 has wrong, replaced whole by these runs (UTC; a bare date where the hour
-// isn't known). Matched by craft name, as above.
+// Craft whose docking events LL2 has wrong or lacks, replaced whole by these runs (UTC, from the missions'
+// records; a bare date where the hour isn't known). A run spans its port moves. Matched by craft name, as above.
 const DOCKING_FIXES: { craft: RegExp; runs: { station: string; dock: string; undock: string }[] }[] = [
+	{ craft: /\bSoyuz 11$/, runs: [{ station: 'salyut-1', dock: '1971-06-07T07:45:00Z', undock: '1971-06-29T18:25:15Z' }] }, // no undocking
+	{ craft: /\bSoyuz TM-28$/, runs: [{ station: 'mir', dock: '1998-08-15T10:56:54Z', undock: '1999-02-27T22:55:11Z' }] }, // undocked the 27th, not the 7th
+	{ craft: /^STS-76$/, runs: [{ station: 'mir', dock: '1996-03-24T02:50:09Z', undock: '1996-03-29T01:08:03Z' }] }, // missing
+	{ craft: /\bSoyuz TM-24$/, runs: [{ station: 'mir', dock: '1996-08-19T14:50:23Z', undock: '1997-03-02T03:24:57Z' }] }, // missing
+	// 1987–88: LL2 files each of these undockings under the next craft (TM-2's under TM-3, TM-5's under TM-6…).
+	{ craft: /\bSoyuz TM-2$/, runs: [{ station: 'mir', dock: '1987-02-07T23:27:40Z', undock: '1987-07-29T20:44:00Z' }] },
+	{ craft: /\bSoyuz TM-3$/, runs: [{ station: 'mir', dock: '1987-07-24T03:31:23Z', undock: '1987-12-29T05:58:00Z' }] },
+	{ craft: /\bSoyuz TM-4$/, runs: [{ station: 'mir', dock: '1987-12-23T12:51:00Z', undock: '1988-06-17T06:20:50Z' }] },
+	{ craft: /\bSoyuz TM-5$/, runs: [{ station: 'mir', dock: '1988-06-09T15:57:10Z', undock: '1988-09-05T23:54:57Z' }] },
+	{ craft: /\bSoyuz TM-6$/, runs: [{ station: 'mir', dock: '1988-08-31T05:40:44Z', undock: '1988-12-21T02:32:54Z' }] },
 	{
 		// LL2 has T-15 at Salyut 7 from 15 March to 16 July, overlapping its Mir docking, and no return to Mir.
 		craft: /\bSoyuz T-15$/,
@@ -288,6 +299,8 @@ export interface StationReport {
 	neverAboard: string[];
 	/** Crew a record names whom no Person matches, or whose Flight we can't find — by record. */
 	unresolvedCrew: string[];
+	/** Astronauts LL2 puts on a docked craft whom no Person matches — by craft. */
+	unmatchedRiders: string[];
 	/** Stays from dockings that fall in none of the Person's Flights. */
 	unplaced: string[];
 	/** Expeditions no Stay names. */
@@ -312,6 +325,7 @@ export function buildStations({ stations, expeditions, dockings, riders, personB
 		guestRecords: 0,
 		neverAboard: [],
 		unresolvedCrew: [],
+		unmatchedRiders: [],
 		unplaced: [],
 		empty: []
 	};
@@ -326,7 +340,11 @@ export function buildStations({ stations, expeditions, dockings, riders, personB
 	const ridesOf = new Map<Person, LL2Rider>();
 	for (const r of riders) {
 		const p = personByLL2.get(r.id) ?? aliasByLL2?.get(r.id);
-		if (!p) continue;
+		if (!p) {
+			const docked = [...(r.flights ?? []).map((f) => f.id), ...(r.landings ?? []).map((l) => l.launch?.id)].find((id) => runs.has(id ?? ''));
+			if (docked) report.unmatchedRiders.push(`${r.name ?? `LL2 #${r.id}`} (${names.get(docked) ?? docked})`);
+			continue;
+		}
 		const had = ridesOf.get(p);
 		if (!had) {
 			ridesOf.set(p, r);
