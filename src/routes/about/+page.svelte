@@ -12,7 +12,10 @@
 </svelte:head>
 
 <div class="mx-auto max-w-2xl px-5 py-10 leading-relaxed">
-	<a href="{base}/" class="text-sm text-zinc-500 underline-offset-2 hover:text-zinc-800 hover:underline dark:hover:text-zinc-200">← Back to the timeline</a>
+	<nav class="flex gap-4 text-sm text-zinc-500">
+		<a href="{base}/" class="underline-offset-2 hover:text-zinc-800 hover:underline dark:hover:text-zinc-200">← Back to the timeline</a>
+		<a href="{base}/stations" class="underline-offset-2 hover:text-zinc-800 hover:underline dark:hover:text-zinc-200">Stations</a>
+	</nav>
 
 	<h1 class="mt-6 text-3xl font-bold tracking-tight">People in space timeline (Piste)</h1>
 	<p class="mt-2 text-zinc-600 dark:text-zinc-300">

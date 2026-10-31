@@ -87,11 +87,10 @@
 			</select>
 		</label>
 
-		<a
-			href="{base}/about"
-			class="hidden text-xs text-zinc-500 underline-offset-2 hover:text-zinc-800 hover:underline sm:inline dark:hover:text-zinc-200"
-			>About</a
-		>
+		<nav class="flex items-center gap-3 text-xs text-zinc-500">
+			<a href="{base}/stations" class="underline-offset-2 hover:text-zinc-800 hover:underline dark:hover:text-zinc-200">Stations</a>
+			<a href="{base}/about" class="hidden underline-offset-2 hover:text-zinc-800 hover:underline sm:inline dark:hover:text-zinc-200">About</a>
+		</nav>
 		<ThemeToggle />
 		<button
 			class="flex items-center gap-1.5 rounded-md border border-zinc-300 px-2.5 py-1.5 text-xs md:hidden dark:border-zinc-700"
