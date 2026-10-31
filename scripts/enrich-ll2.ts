@@ -51,7 +51,7 @@
  */
 import type { Flight, Gender, Meta, Person, Status } from '../src/lib/types';
 import { agencyOf, settleAgencies } from './agency';
-import { DATA, paddedDate, writeAstronauts, writeStations } from './dataset';
+import { DATA, paddedDate, WIKIDATA_CREWS, writeAstronauts, writeStations } from './dataset';
 import { settleNationalities } from './nationality';
 import { neverReachedSpace, suborbitalAbort } from './spaceflight';
 import { buildStations, type LL2Docking, type LL2Expedition, type LL2Station, type StationReport } from './stations';
@@ -344,6 +344,39 @@ async function loadStationRecords() {
 	const expeditions = stations && (await loadPages<LL2Expedition>('expedition', 'mode=detailed'));
 	const dockings = expeditions && (await loadDockings());
 	return stations && expeditions && dockings ? { stations, expeditions, dockings } : null;
+}
+
+// ---------------------------------------------------------------- Wikidata's ISS crews (cross-check)
+const WDQS = 'https://query.wikidata.org/sparql';
+// Every ISS Expedition item (class Q18201623) with its crew (P1029). Not update-data's missions query, which
+// drops the Expeditions Wikidata has no dates for (53–56, 70, 72–75).
+const ISS_CREWS_QUERY = `SELECT ?expLabel ?crew ?crewLabel WHERE {
+  ?exp wdt:P31 wd:Q18201623 ; wdt:P1029 ?crew .
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
+}`;
+
+/** Refresh the cached Wikidata ISS crews that every dataset write cross-checks against (scripts/dataset.ts):
+ *  not on an offline run (MAX_LL2_CALLS=0), nor while the cache is fresh, and keeping the old cache when
+ *  Wikidata can't be reached. Wikidata isn't rate-limited, so this doesn't count toward LL2's budget. */
+async function refreshWikidataCrews() {
+	const file = Bun.file(WIKIDATA_CREWS);
+	if (MAX_CALLS === 0 || ((await file.exists()) && Date.now() - file.lastModified < CACHE_HOURS * 3600_000)) return;
+	try {
+		const res = await fetch(WDQS, {
+			method: 'POST',
+			headers: { Accept: 'application/sparql-results+json', 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA },
+			body: new URLSearchParams({ query: ISS_CREWS_QUERY }).toString()
+		});
+		if (!res.ok) throw new Error(`HTTP ${res.status}`);
+		const rows = ((await res.json()) as { results: { bindings: Record<string, { value: string }>[] } }).results.bindings;
+		await Bun.write(
+			file,
+			JSON.stringify(rows.map((b) => ({ expedition: b.expLabel?.value ?? '', qid: b.crew.value.split('/').pop()!, name: b.crewLabel?.value ?? '' })))
+		);
+		console.log(`  Wikidata ISS crews: ${rows.length} rows`);
+	} catch (err) {
+		console.warn(`  Wikidata ISS crews not refreshed (${(err as Error).message}) — cross-checking against the cache, if any.`);
+	}
 }
 
 // ---------------------------------------------------------------- Layer 2: per-astronaut detail
@@ -782,6 +815,7 @@ async function main() {
 		await writeStations(data);
 		stationReport = report;
 	}
+	await refreshWikidataCrews();
 
 	// firstLaunch may have shifted for detailed people — keep the canonical ordering.
 	people.sort((a, b) => a.firstLaunch.localeCompare(b.firstLaunch) || a.name.localeCompare(b.name));

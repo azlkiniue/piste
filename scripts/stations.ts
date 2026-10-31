@@ -289,6 +289,42 @@ const stayEnd = (s: Stay, today: string) => s.depart ?? today;
 const overlapDays = (a0: string, a1: string, b0: string, b1: string) =>
 	(Math.min(Date.parse(a1), Date.parse(b1)) - Math.max(Date.parse(a0), Date.parse(b0))) / DAY;
 
+// ---------------------------------------------------------------- Wikidata cross-check
+/** A row of Wikidata's ISS Expedition crews: the Expedition's English label, and a crew member. */
+export interface WikidataCrew {
+	expedition: string;
+	qid: string;
+	name: string;
+}
+
+/** Where our ISS Expedition crews and Wikidata's disagree, one line per Expedition — warnings only, never a
+ *  change. Only the Expeditions Wikidata lists crew for are compared (its "visiting mission" items have none),
+ *  and only people with a Wikidata item can be matched. */
+export function crossCheckWikidata(people: Person[], rows: WikidataCrew[]): string[] {
+	const theirs = new Map<string, Map<string, string>>();
+	for (const r of rows) {
+		const n = r.expedition.match(/^Expedition (\d+)$/)?.[1];
+		if (n) theirs.set(`expedition-${n}`, (theirs.get(`expedition-${n}`) ?? new Map()).set(r.qid, r.name));
+	}
+	const ours = new Map<string, Map<string, string>>();
+	for (const p of people)
+		for (const f of p.flights)
+			for (const s of f.stays ?? [])
+				if (s.station === 'iss' && p.qid)
+					for (const x of s.expeditions) ours.set(x, (ours.get(x) ?? new Map()).set(p.qid, p.name));
+	const lines: string[] = [];
+	for (const [slug, crew] of [...theirs].sort((a, b) => Number(a[0].slice(11)) - Number(b[0].slice(11)))) {
+		const mine = ours.get(slug) ?? new Map<string, string>();
+		const onlyThem = [...crew].filter(([q]) => !mine.has(q)).map(([, n]) => n);
+		const onlyUs = [...mine].filter(([q]) => !crew.has(q)).map(([, n]) => n);
+		if (onlyThem.length || onlyUs.length)
+			lines.push(
+				`Expedition ${slug.slice(11)}: ${[...onlyThem.map((n) => `${n} (Wikidata only)`), ...onlyUs.map((n) => `${n} (ours only)`)].join(', ')}`
+			);
+	}
+	return lines;
+}
+
 // ---------------------------------------------------------------- build
 export interface StationReport {
 	stays: number;

@@ -2,8 +2,8 @@
  * The people dataset is written twice: astronauts.json is pretty-printed so each data refresh reads
  * as a clean per-field git diff, and astronauts.min.json is the identical compact copy the app
  * imports. Every script that rewrites the dataset goes through writeAstronauts so the two never drift —
- * and so every write checks the nationalities, agencies and Stays, and brings the flags they need
- * (scripts/flags.ts). The station dataset (Stations' lifetimes and Expeditions, see scripts/stations.ts) is
+ * and so every write checks the nationalities, agencies and Stays (the ISS crews against Wikidata's too), and
+ * brings the flags they need (scripts/flags.ts). The station dataset (Stations' lifetimes and Expeditions, see scripts/stations.ts) is
  * written the same two ways by writeStations.
  */
 import { AGENCIES } from '../src/lib/agencies';
@@ -12,12 +12,15 @@ import { STATIONS } from '../src/lib/stations';
 import type { Person, StationData } from '../src/lib/types';
 import { undefinedKeys } from './agency';
 import { syncFlags } from './flags';
+import { crossCheckWikidata } from './stations';
 
 const ROOT = new URL('..', import.meta.url);
 export const DATA = new URL('src/lib/data/astronauts.json', ROOT);
 export const DATA_MIN = new URL('src/lib/data/astronauts.min.json', ROOT);
 export const STATION_DATA = new URL('src/lib/data/stations.json', ROOT);
 export const STATION_DATA_MIN = new URL('src/lib/data/stations.min.json', ROOT);
+/** Wikidata's ISS Expedition crews, cached by enrich-ll2 for the cross-check every write runs. */
+export const WIKIDATA_CREWS = new URL('scripts/cache/wikidata/iss-crews.json', ROOT);
 
 /** A dataset date (dob/dod) as LL2 and Supercluster store it, for matching people across them: a date
  *  known only to the month or year is padded to its 1st there ("1975-10" → "1975-10-01", "1988" →
@@ -30,6 +33,10 @@ export async function writeAstronauts(people: Person[]) {
 	checkNationalities(people);
 	checkAgencies(people);
 	if (await Bun.file(STATION_DATA).exists()) checkStays(people, await Bun.file(STATION_DATA).json());
+	if (people.some((p) => p.flights.some((f) => f.stays)) && (await Bun.file(WIKIDATA_CREWS).exists())) {
+		const differ = crossCheckWikidata(people, await Bun.file(WIKIDATA_CREWS).json());
+		if (differ.length) console.warn(`  ⚠ ISS crews where Wikidata differs (check, then fix whichever is wrong): ${differ.join('; ')}`);
+	}
 	await syncFlags(people);
 }
 
