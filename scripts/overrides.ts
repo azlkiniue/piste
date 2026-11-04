@@ -40,8 +40,9 @@ export const overrides: Record<string, Override> = {
 	'tushar-shah': { nationalities: ['United States'] },
 	'giorgio-manenti': { gender: 'male' },
 	'russel-wilson': { gender: 'male' },
-	'toyohiro-akiyama': { agencies: ['CCCP'] }, // was Roscosmos — in 1990 that was the Soviet programme
+	'toyohiro-akiyama': { agencies: ['CCCP'] },
 	'alan-shepard': {flights: [{"mission":"Mercury-Redstone 3","launch":"1961-05-05","landing":"1961-05-05","ongoing":false,"orbital":false,"approx":false},{"mission":"Apollo 14","launch":"1971-01-31","landing":"1971-02-09","ongoing":false,"orbital":true,"approx":false}]},
+	'wang-haoze': {"flights":[{"mission":"Shenzhou 19","launch":"2024-10-29","landing":"2025-04-30","ongoing":false,"orbital":true,"approx":false,"stays":[{"station":"tiangong","arrive":"2024-10-30","depart":"2025-04-29","ongoing":false,"expeditions":["shenzhou-19"],"approx":false}]}]}
 };
 
 /**

@@ -70,7 +70,7 @@ const META = new URL('src/lib/data/meta.json', ROOT);
 const DELAY_MS = Number(process.env.LL2_DELAY_MS ?? 2000); // pause between successful network calls
 const MAX_CALLS = Number(process.env.MAX_LL2_CALLS ?? Infinity); // network-call budget for this run (0 = offline)
 const MAX_RETRIES = Number(process.env.LL2_MAX_RETRIES ?? 6);
-const CACHE_HOURS = Number(process.env.LL2_CACHE_HOURS ?? 6); // cached list pages older than this are re-fetched
+const CACHE_HOURS = Number(process.env.LL2_CACHE_HOURS ?? 24); // cached list pages older than this are re-fetched
 const API_KEY = process.env.LL2_API_KEY ?? process.env.SPACEDEVS_TOKEN ?? '';
 const HEADERS: Record<string, string> = { 'User-Agent': UA, ...(API_KEY ? { Authorization: `Token ${API_KEY}` } : {}) };
 
@@ -514,7 +514,7 @@ function wikidataAhead(wikidata: Flight[], ll2: Flight[]): boolean {
 //     Apollo 1; McAuliffe, Jarvis and Smith on Challenger.
 const NON_HUMAN = new Set(
 	['Mannequin Skywalker', 'Starman', 'Little Earth', 'Ripley', 'Rosie the Astronaut',
-	 'Commander Moonikin Campos', 'Helga', 'Zohar', 'Shaun the Sheep', 'Snoopy'].map(normName)
+	 'Commander Moonikin Campos', 'Helga', 'Zohar', 'Shaun the Sheep', 'Snoopy', 'Laika'].map(normName)
 );
 const NEVER_REACHED_SPACE = new Set(
 	['Peter Siebold', 'Michael Alsbury', 'Clint Nichols', 'Doug Shane', 'William Brian Binnie', 'Keith Colmer'].map(normName)

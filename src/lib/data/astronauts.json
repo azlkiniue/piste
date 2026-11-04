@@ -2223,9 +2223,9 @@
     "dod": "2018-05-26",
     "wiki": "https://en.wikipedia.org/wiki/Alan_Bean",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Alan%20Bean%20NASA%20portrait%20%28S69-38859%29.jpg?width=320",
-    "totalDaysInSpace": 10,
+    "totalDaysInSpace": 69,
     "firstLaunch": "1969-11-14",
-    "lastLanding": "1973-07-28",
+    "lastLanding": "1973-09-25",
     "flights": [
       {
         "mission": "Apollo 12",
@@ -2238,20 +2238,20 @@
       {
         "mission": "Skylab 3",
         "launch": "1973-07-28",
-        "landing": "1973-07-28",
+        "landing": "1973-09-25",
         "ongoing": false,
         "orbital": true,
-        "approx": true,
+        "approx": false,
         "stays": [
           {
             "station": "skylab",
             "arrive": "1973-07-28",
-            "depart": "1973-07-28",
+            "depart": "1973-09-25",
             "ongoing": false,
             "expeditions": [
               "skylab-3"
             ],
-            "approx": true
+            "approx": false
           }
         ]
       }
@@ -33247,7 +33247,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Pyotr_Dubrov",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Pyotr%20Dubrov%20in%202021.jpg?width=320",
-    "totalDaysInSpace": 441,
+    "totalDaysInSpace": 466,
     "firstLaunch": "2021-04-09",
     "lastLanding": null,
     "flights": [
@@ -33469,7 +33469,7 @@
     "dob": "1988",
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Sirisha_Bandla",
-    "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/255bauto255d__image_thumbnail_20240305190127.jpeg",
+    "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Sirisha%20Bandla%20in%202023%2001.jpg?width=320",
     "totalDaysInSpace": 0,
     "firstLaunch": "2021-07-11",
     "lastLanding": "2021-07-11",
@@ -34901,7 +34901,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Jessica_Watkins",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Jessica%20Watkins%20official%20portrait.jpg?width=320",
-    "totalDaysInSpace": 177,
+    "totalDaysInSpace": 202,
     "firstLaunch": "2022-04-27",
     "lastLanding": null,
     "flights": [
@@ -35537,7 +35537,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Anna_Kikina",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Anna%20Kikina%20Official%20Portrait.jpg?width=320",
-    "totalDaysInSpace": 243,
+    "totalDaysInSpace": 268,
     "firstLaunch": "2022-10-05",
     "lastLanding": null,
     "flights": [
@@ -36286,7 +36286,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Zhu_Yangzhu",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Zhu%20Yangzhu%20%2820260523%29.jpg?width=320",
-    "totalDaysInSpace": 291,
+    "totalDaysInSpace": 316,
     "firstLaunch": "2023-05-30",
     "lastLanding": null,
     "flights": [
@@ -38396,17 +38396,29 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Wang_Haoze",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Wang%20Haoze%20at%20Shenzhou-19%20press%20conference.png?width=320",
-    "totalDaysInSpace": 0,
+    "totalDaysInSpace": 183,
     "firstLaunch": "2024-10-29",
-    "lastLanding": "2024-10-29",
+    "lastLanding": "2025-04-30",
     "flights": [
       {
         "mission": "Shenzhou 19",
         "launch": "2024-10-29",
-        "landing": "2024-10-29",
+        "landing": "2025-04-30",
         "ongoing": false,
         "orbital": true,
-        "approx": true
+        "approx": false,
+        "stays": [
+          {
+            "station": "tiangong",
+            "arrive": "2024-10-30",
+            "depart": "2025-04-29",
+            "ongoing": false,
+            "expeditions": [
+              "shenzhou-19"
+            ],
+            "approx": false
+          }
+        ]
       }
     ]
   },
@@ -38767,7 +38779,7 @@
     "status": "living",
     "dob": "1988-12-14",
     "dod": null,
-    "wiki": "https://en.wikipedia.org/wiki/Nichole_Ayers",
+    "wiki": "https://en.wikipedia.org/wiki/Nichole_Stilwell",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Nichole%20Ayers%20portrait.jpg?width=320",
     "totalDaysInSpace": 147,
     "firstLaunch": "2025-03-14",
@@ -40921,7 +40933,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Lai_Ka-ying",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Lai%20Ka-ying%20%2820260523%29.jpg?width=320",
-    "totalDaysInSpace": 137,
+    "totalDaysInSpace": 162,
     "firstLaunch": "2026-05-24",
     "lastLanding": null,
     "flights": [
@@ -40965,7 +40977,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Zhang_Zhiyuan_(astronaut)",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Zhang%20Zhiyuan%20%2820260523%29.jpg?width=320",
-    "totalDaysInSpace": 137,
+    "totalDaysInSpace": 162,
     "firstLaunch": "2026-05-24",
     "lastLanding": null,
     "flights": [
@@ -41009,7 +41021,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Anil_Menon",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Anil%20Menon%20portrait.jpg?width=320",
-    "totalDaysInSpace": 86,
+    "totalDaysInSpace": 111,
     "firstLaunch": "2026-07-14",
     "lastLanding": null,
     "flights": [
@@ -41035,7 +41047,7 @@
         ]
       }
     ],
-    "spacewalks": 3
+    "spacewalks": 4
   },
   {
     "id": "Q44059568",
@@ -41054,7 +41066,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Joshua_Kutryk",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Josh%20Kutryk%20official%20portrait.jpg?width=320",
-    "totalDaysInSpace": 7,
+    "totalDaysInSpace": 32,
     "firstLaunch": "2026-10-01",
     "lastLanding": null,
     "flights": [
@@ -41079,7 +41091,7 @@
         ]
       }
     ],
-    "spacewalks": 0
+    "spacewalks": 1
   },
   {
     "id": "Q109968497",
@@ -41098,7 +41110,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Luke_Delaney_(astronaut)",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Luke%20Delaney.jpg?width=320",
-    "totalDaysInSpace": 7,
+    "totalDaysInSpace": 32,
     "firstLaunch": "2026-10-01",
     "lastLanding": null,
     "flights": [
@@ -41142,7 +41154,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Sergey_Teteryatnikov",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Sergey%20Teteryatnikov%20%28cropped%29.jpg?width=320",
-    "totalDaysInSpace": 7,
+    "totalDaysInSpace": 32,
     "firstLaunch": "2026-10-01",
     "lastLanding": null,
     "flights": [
