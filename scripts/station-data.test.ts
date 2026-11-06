@@ -26,6 +26,11 @@ const stayIn = (slug: string, station: string, when: string) => {
 	return s;
 };
 const isVisitor = (s: Stay) => s.expeditions.length === 0;
+const expedition = (station: string, slug: string) => {
+	const x = expeditions.find((x) => x.station === station && x.slug === slug);
+	if (!x) throw new Error(`no Expedition ${station}/${slug}`);
+	return x;
+};
 
 describe('every record', () => {
 	const every = all.flatMap((p) => p.flights.flatMap((f) => (f.stays ?? []).map((s) => ({ p, f, s }))));
@@ -83,9 +88,96 @@ describe('every record', () => {
 		const launched = stations.map((s) => s.launched);
 		expect(launched).toEqual([...launched].sort());
 	});
+
+	test("each Expedition and Stay falls within its Station's time in orbit", () => {
+		const life = new Map(stations.map((s) => [s.slug, s]));
+		const outside = (station: string, from: string, to: string | null) => {
+			const l = life.get(station)!;
+			return from < l.launched || (l.deorbited !== null && (to ?? today) > l.deorbited);
+		};
+		expect(expeditions.filter((x) => outside(x.station, x.start, x.end)).map((x) => `${x.station}/${x.slug}`)).toEqual([]);
+		expect(every.filter(({ s }) => outside(s.station, s.arrive, s.depart)).map(({ p, s }) => `${p.name} ${s.station} ${s.arrive}`)).toEqual([]);
+	});
+
+	test("each Expedition's crew are aboard during it", () => {
+		const known = new Map(expeditions.map((x) => [`${x.station}/${x.slug}`, x]));
+		const bad = every.flatMap(({ p, s }) =>
+			s.expeditions
+				.map((slug) => known.get(`${s.station}/${slug}`)!)
+				.filter((x) => s.arrive > (x.end ?? today) || (s.depart ?? today) < x.start)
+				.map((x) => `${p.name} ${s.arrive} in ${x.station}/${x.slug}`)
+		);
+		expect(bad).toEqual([]);
+	});
+
+	test('each ISS Expedition hands over to the next: overlapping by two weeks at most, and from Expedition 20 on the same day', () => {
+		const iss = expeditions.filter((x) => x.station === 'iss');
+		const bad = iss.slice(1).flatMap((x, i) => {
+			const before = iss[i];
+			const overlap = (Date.parse(before.end!) - Date.parse(x.start)) / 86400000;
+			return overlap < 0 || overlap > 14 || (iss.indexOf(x) >= 19 && overlap !== 0) ? [`${before.name} ended ${before.end}, ${x.name} began ${x.start}`] : [];
+		});
+		expect(bad).toEqual([]);
+	});
 });
 
 describe('known history', () => {
+	// Launch and re-entry, checked against McDowell's satellite catalogue. Mir and Salyut 3 launched, and Salyut 4
+	// came down, late in the UTC day before: these are their dates in Moscow, as they're known (see DATA.md).
+	test("the Stations' time in orbit", () => {
+		expect(Object.fromEntries(stations.map((s) => [s.slug, [s.launched, s.deorbited]]))).toEqual({
+			'salyut-1': ['1971-04-19', '1971-10-11'],
+			skylab: ['1973-05-14', '1979-07-11'],
+			'salyut-3': ['1974-06-25', '1975-01-24'],
+			'salyut-4': ['1974-12-26', '1977-02-03'],
+			'salyut-5': ['1976-06-22', '1977-08-08'],
+			'salyut-6': ['1977-09-29', '1982-07-29'],
+			'salyut-7': ['1982-04-19', '1991-02-07'],
+			mir: ['1986-02-20', '2001-03-23'],
+			iss: ['1998-11-20', null],
+			'tiangong-1': ['2011-09-29', '2018-04-02'],
+			'tiangong-2': ['2016-09-15', '2019-07-19'],
+			tiangong: ['2021-04-29', null]
+		});
+	});
+
+	// Dates from the missions' records; LL2 has these wrong. Stays by `stayOverrides`, Expeditions by `expeditionOverrides`.
+	test("Soyuz 17's Expedition has its flight's dates", () => {
+		expect(expedition('salyut-4', 'soyuz-17')).toMatchObject({ start: '1975-01-10', end: '1975-02-09' });
+	});
+
+	test('Shenzhou 11 undocked from Tiangong-2 on 17 November 2016', () => {
+		expect(expedition('tiangong-2', 'shenzhou-11').end).toBe('2016-11-17');
+		for (const slug of ['jing-haipeng', 'chen-dong']) expect(stayIn(slug, 'tiangong-2', '2016').depart).toBe('2016-11-17');
+	});
+
+	test('STS-123 undocked from the ISS on 25 March 2008, taking Eyharts home and leaving Reisman', () => {
+		for (const slug of ['dominic-l-pudwill-gorie', 'takao-doi']) expect(stayIn(slug, 'iss', '2008').depart).toBe('2008-03-25');
+		expect(stayIn('leopold-eyharts', 'iss', '2008').depart).toBe('2008-03-25');
+		expect(stayIn('garrett-reisman', 'iss', '2008').depart).toBe('2008-06-11');
+	});
+
+	test('Expedition 38 ended on 11 March 2014, as Expedition 39 began', () => {
+		expect(expedition('iss', 'expedition-38').end).toBe('2014-03-11');
+		expect(expedition('iss', 'expedition-39').start).toBe('2014-03-11');
+	});
+
+	test("Salyut 7's 1985 crews are EO-4's two stages, and Savinykh, who stayed on, is in both", () => {
+		expect(expeditions.filter((x) => x.station === 'salyut-7' && x.start.startsWith('1985')).map((x) => [x.name, x.start, x.end])).toEqual([
+			['EO-4-1', '1985-06-06', '1985-09-26'],
+			['EO-4-2', '1985-09-17', '1985-11-21']
+		]);
+		const [first, second] = ['eo-4-1a', 'eo-4-2'];
+		expect(stayIn('vladimir-dzhanibekov', 'salyut-7', '1985').expeditions).toEqual([first]);
+		expect(stayIn('viktor-savinykh', 'salyut-7', '1985').expeditions).toEqual([first, second]);
+		for (const slug of ['vladimir-vasyutin', 'aleksandr-aleksandrovich-volkov']) expect(stayIn(slug, 'salyut-7', '1985').expeditions).toEqual([second]);
+		expect(isVisitor(stayIn('georgy-grechko', 'salyut-7', '1985'))).toBe(true); // up on T-14, down on T-13
+	});
+
+	test("Salyut 7's EO-5 is Soyuz T-15's time aboard, not the whole flight", () => {
+		expect(expedition('salyut-7', 'eo-5')).toMatchObject({ start: '1986-05-06', end: '1986-06-25' });
+	});
+
 	test("Soyuz T-15's flight makes three Stays: Mir, Salyut 7, then Mir", () => {
 		for (const slug of ['leonid-kizim', 'vladimir-solovyov']) {
 			const t15 = person(slug).flights.find((f) => f.mission === 'Soyuz T-15')!;

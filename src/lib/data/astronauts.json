@@ -1343,9 +1343,9 @@
     "dod": "2017-01-16",
     "wiki": "https://en.wikipedia.org/wiki/Gene_Cernan",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Cernan%20s71-51308.jpg?width=320",
-    "totalDaysInSpace": 11,
+    "totalDaysInSpace": 23,
     "firstLaunch": "1966-06-03",
-    "lastLanding": "1972-12-07",
+    "lastLanding": "1972-12-19",
     "flights": [
       {
         "mission": "Gemini IX-A",
@@ -1366,7 +1366,7 @@
       {
         "mission": "Apollo 17",
         "launch": "1972-12-07",
-        "landing": "1972-12-07",
+        "landing": "1972-12-19",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -2895,9 +2895,9 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Jack_R._Lousma",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Lousma.jpg?width=320",
-    "totalDaysInSpace": 59,
+    "totalDaysInSpace": 67,
     "firstLaunch": "1973-07-28",
-    "lastLanding": "1982-03-22",
+    "lastLanding": "1982-03-30",
     "flights": [
       {
         "mission": "Skylab 3",
@@ -2922,7 +2922,7 @@
       {
         "mission": "STS-3",
         "launch": "1982-03-22",
-        "landing": "1982-03-22",
+        "landing": "1982-03-30",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -4289,7 +4289,7 @@
             "depart": "1985-09-25",
             "ongoing": false,
             "expeditions": [
-              "eo-4-1b"
+              "eo-4-1a"
             ],
             "approx": false
           }
@@ -5185,7 +5185,8 @@
             "depart": "1985-11-21",
             "ongoing": false,
             "expeditions": [
-              "eo-4-1a"
+              "eo-4-1a",
+              "eo-4-2"
             ],
             "approx": false
           }
@@ -5413,14 +5414,14 @@
     "dod": "2013-08-21",
     "wiki": "https://en.wikipedia.org/wiki/C._Gordon_Fullerton",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Fullerton.jpg?width=320",
-    "totalDaysInSpace": 7,
+    "totalDaysInSpace": 15,
     "firstLaunch": "1982-03-22",
     "lastLanding": "1985-08-06",
     "flights": [
       {
         "mission": "STS-3",
         "launch": "1982-03-22",
-        "landing": "1982-03-22",
+        "landing": "1982-03-30",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -5983,7 +5984,7 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Story_Musgrave",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/StoryMusgrave.jpg?width=320",
-    "totalDaysInSpace": 54,
+    "totalDaysInSpace": 53,
     "firstLaunch": "1983-04-04",
     "lastLanding": "1996-12-07",
     "flights": [
@@ -6014,7 +6015,7 @@
       {
         "mission": "STS-44",
         "launch": "1991-11-24",
-        "landing": "1991-12-02",
+        "landing": "1991-12-01",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -8316,9 +8317,9 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Frederick_D._Gregory",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Gregory-f.jpg?width=320",
-    "totalDaysInSpace": 19,
+    "totalDaysInSpace": 18,
     "firstLaunch": "1985-04-29",
-    "lastLanding": "1991-12-02",
+    "lastLanding": "1991-12-01",
     "flights": [
       {
         "mission": "STS-51-B",
@@ -8339,7 +8340,7 @@
       {
         "mission": "STS-44",
         "launch": "1991-11-24",
-        "landing": "1991-12-02",
+        "landing": "1991-12-01",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -13195,14 +13196,14 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/James_S._Voss",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/James%20Voss.jpg?width=320",
-    "totalDaysInSpace": 203,
+    "totalDaysInSpace": 202,
     "firstLaunch": "1991-11-24",
     "lastLanding": "2001-08-22",
     "flights": [
       {
         "mission": "STS-44",
         "launch": "1991-11-24",
-        "landing": "1991-12-02",
+        "landing": "1991-12-01",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -13281,14 +13282,14 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Mario_Runco_Jr.",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Mario%20Runco%20-%20STS-54%20Mission%20Specialist.jpg?width=320",
-    "totalDaysInSpace": 23,
+    "totalDaysInSpace": 22,
     "firstLaunch": "1991-11-24",
     "lastLanding": "1996-05-29",
     "flights": [
       {
         "mission": "STS-44",
         "launch": "1991-11-24",
-        "landing": "1991-12-02",
+        "landing": "1991-12-01",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -13329,14 +13330,14 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Terence_T._Henricks",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Terence%20Henricks.jpg?width=320",
-    "totalDaysInSpace": 43,
+    "totalDaysInSpace": 42,
     "firstLaunch": "1991-11-24",
     "lastLanding": "1996-07-07",
     "flights": [
       {
         "mission": "STS-44",
         "launch": "1991-11-24",
-        "landing": "1991-12-02",
+        "landing": "1991-12-01",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -13378,6 +13379,7 @@
     ],
     "gender": "male",
     "agencies": [
+      "NASA",
       "US Army"
     ],
     "status": "living",
@@ -13385,14 +13387,14 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Thomas_J._Hennen_(astronaut)",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Thomas%20Hennen.jpg?width=320",
-    "totalDaysInSpace": 7,
+    "totalDaysInSpace": 6,
     "firstLaunch": "1991-11-24",
-    "lastLanding": "1991-12-02",
+    "lastLanding": "1991-12-01",
     "flights": [
       {
         "mission": "STS-44",
         "launch": "1991-11-24",
-        "landing": "1991-12-02",
+        "landing": "1991-12-01",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -19093,7 +19095,7 @@
           {
             "station": "iss",
             "arrive": "2008-03-13",
-            "depart": "2008-03-26",
+            "depart": "2008-03-25",
             "ongoing": false,
             "expeditions": [],
             "approx": false
@@ -20185,7 +20187,7 @@
           {
             "station": "iss",
             "arrive": "2008-03-13",
-            "depart": "2008-03-26",
+            "depart": "2008-03-25",
             "ongoing": false,
             "expeditions": [],
             "approx": false
@@ -20482,7 +20484,7 @@
           {
             "station": "iss",
             "arrive": "2008-02-09",
-            "depart": "2008-03-26",
+            "depart": "2008-03-25",
             "ongoing": false,
             "expeditions": [
               "expedition-16"
@@ -20800,7 +20802,7 @@
           {
             "station": "iss",
             "arrive": "2008-03-13",
-            "depart": "2008-03-26",
+            "depart": "2008-03-25",
             "ongoing": false,
             "expeditions": [],
             "approx": false
@@ -21233,14 +21235,6 @@
         "mission": "VSS Unity VF-03",
         "launch": "2021-05-22",
         "landing": "2021-05-22",
-        "ongoing": false,
-        "orbital": false,
-        "approx": false
-      },
-      {
-        "mission": "VSS Unity 24",
-        "launch": "2023-04-26",
-        "landing": "2023-04-26",
         "ongoing": false,
         "orbital": false,
         "approx": false
@@ -26739,7 +26733,7 @@
           {
             "station": "iss",
             "arrive": "2008-03-13",
-            "depart": "2008-03-26",
+            "depart": "2008-03-25",
             "ongoing": false,
             "expeditions": [],
             "approx": false
@@ -26799,7 +26793,7 @@
           {
             "station": "iss",
             "arrive": "2008-03-13",
-            "depart": "2008-03-26",
+            "depart": "2008-03-25",
             "ongoing": false,
             "expeditions": [],
             "approx": false
@@ -26859,7 +26853,7 @@
           {
             "station": "iss",
             "arrive": "2008-03-13",
-            "depart": "2008-03-26",
+            "depart": "2008-03-25",
             "ongoing": false,
             "expeditions": [],
             "approx": false
@@ -27566,7 +27560,7 @@
           {
             "station": "tiangong-2",
             "arrive": "2016-10-18",
-            "depart": "2016-11-14",
+            "depart": "2016-11-17",
             "ongoing": false,
             "expeditions": [
               "shenzhou-11"
@@ -31895,7 +31889,7 @@
           {
             "station": "tiangong-2",
             "arrive": "2016-10-18",
-            "depart": "2016-11-14",
+            "depart": "2016-11-17",
             "ongoing": false,
             "expeditions": [
               "shenzhou-11"
@@ -33630,14 +33624,14 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Christopher_Sembroski",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Christopher%20Sembroski%20at%20NASA%27s%20JSC%20%28cropped%29.jpg?width=320",
-    "totalDaysInSpace": 3,
+    "totalDaysInSpace": 2,
     "firstLaunch": "2021-09-16",
-    "lastLanding": "2021-09-19",
+    "lastLanding": "2021-09-18",
     "flights": [
       {
         "mission": "Inspiration4",
         "launch": "2021-09-16",
-        "landing": "2021-09-19",
+        "landing": "2021-09-18",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -33662,14 +33656,14 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Hayley_Arceneaux",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Hayley%20Arceneaux%20%28cropped%29.jpg?width=320",
-    "totalDaysInSpace": 3,
+    "totalDaysInSpace": 2,
     "firstLaunch": "2021-09-16",
-    "lastLanding": "2021-09-19",
+    "lastLanding": "2021-09-18",
     "flights": [
       {
         "mission": "Inspiration4",
         "launch": "2021-09-16",
-        "landing": "2021-09-19",
+        "landing": "2021-09-18",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -33694,14 +33688,14 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Jared_Isaacman",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Jared%20isaacman%20official%20portrait.jpg?width=320",
-    "totalDaysInSpace": 8,
+    "totalDaysInSpace": 7,
     "firstLaunch": "2021-09-16",
     "lastLanding": "2024-09-15",
     "flights": [
       {
         "mission": "Inspiration4",
         "launch": "2021-09-16",
-        "landing": "2021-09-19",
+        "landing": "2021-09-18",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -33734,14 +33728,14 @@
     "dod": null,
     "wiki": "https://en.wikipedia.org/wiki/Sian_Proctor",
     "image": "https://commons.wikimedia.org/wiki/Special:FilePath/Dr.%20Sian%20Proctor%20at%20Launch%20Complex%2039A.jpg?width=320",
-    "totalDaysInSpace": 3,
+    "totalDaysInSpace": 2,
     "firstLaunch": "2021-09-16",
-    "lastLanding": "2021-09-19",
+    "lastLanding": "2021-09-18",
     "flights": [
       {
         "mission": "Inspiration4",
         "launch": "2021-09-16",
-        "landing": "2021-09-19",
+        "landing": "2021-09-18",
         "ongoing": false,
         "orbital": true,
         "approx": false
@@ -35938,70 +35932,6 @@
     "spacewalks": 2
   },
   {
-    "id": "ll2-760",
-    "qid": null,
-    "name": "Nicola Pecile",
-    "slug": "nicola-pecile",
-    "nationalities": [
-      "Italy"
-    ],
-    "gender": "male",
-    "agencies": [
-      "Virgin Galactic"
-    ],
-    "status": "living",
-    "dob": "1973-03-11",
-    "dod": null,
-    "wiki": null,
-    "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/nicola_pecile_image_20230508155154.jpg",
-    "totalDaysInSpace": 0,
-    "firstLaunch": "2023-04-26",
-    "lastLanding": "2024-06-08",
-    "flights": [
-      {
-        "mission": "VSS Unity 24",
-        "launch": "2023-04-26",
-        "landing": "2023-04-26",
-        "ongoing": false,
-        "orbital": false,
-        "approx": false
-      },
-      {
-        "mission": "Galactic 01",
-        "launch": "2023-06-29",
-        "landing": "2023-06-29",
-        "ongoing": false,
-        "orbital": false,
-        "approx": false
-      },
-      {
-        "mission": "Galactic 03",
-        "launch": "2023-09-08",
-        "landing": "2023-09-08",
-        "ongoing": false,
-        "orbital": false,
-        "approx": false
-      },
-      {
-        "mission": "Galactic 06",
-        "launch": "2024-01-26",
-        "landing": "2024-01-26",
-        "ongoing": false,
-        "orbital": false,
-        "approx": false
-      },
-      {
-        "mission": "Galactic 07",
-        "launch": "2024-06-08",
-        "landing": "2024-06-08",
-        "ongoing": false,
-        "orbital": false,
-        "approx": false
-      }
-    ],
-    "spacewalks": 0
-  },
-  {
     "id": "Q116765522",
     "qid": "Q116765522",
     "name": "Ali AlQarni",
@@ -36359,6 +36289,62 @@
         "mission": "Galactic 01",
         "launch": "2023-06-29",
         "landing": "2023-06-29",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      }
+    ],
+    "spacewalks": 0
+  },
+  {
+    "id": "ll2-760",
+    "qid": null,
+    "name": "Nicola Pecile",
+    "slug": "nicola-pecile",
+    "nationalities": [
+      "Italy"
+    ],
+    "gender": "male",
+    "agencies": [
+      "Virgin Galactic"
+    ],
+    "status": "living",
+    "dob": "1973-03-11",
+    "dod": null,
+    "wiki": null,
+    "image": "https://thespacedevs-prod.nyc3.digitaloceanspaces.com/media/images/nicola_pecile_image_20230508155154.jpg",
+    "totalDaysInSpace": 0,
+    "firstLaunch": "2023-06-29",
+    "lastLanding": "2024-06-08",
+    "flights": [
+      {
+        "mission": "Galactic 01",
+        "launch": "2023-06-29",
+        "landing": "2023-06-29",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      },
+      {
+        "mission": "Galactic 03",
+        "launch": "2023-09-08",
+        "landing": "2023-09-08",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      },
+      {
+        "mission": "Galactic 06",
+        "launch": "2024-01-26",
+        "landing": "2024-01-26",
+        "ongoing": false,
+        "orbital": false,
+        "approx": false
+      },
+      {
+        "mission": "Galactic 07",
+        "launch": "2024-06-08",
+        "landing": "2024-06-08",
         "ongoing": false,
         "orbital": false,
         "approx": false

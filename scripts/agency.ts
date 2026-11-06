@@ -154,7 +154,7 @@ const RESEARCHED: Record<string, string[]> = {
 	// Terra Scout specialist.
 	'Gary Payton': ['USAF'], // STS-51-C
 	'William A. Pailes': ['USAF'], // STS-51-J
-	'Thomas J. Hennen': ['US Army'], // STS-44
+	'Thomas J. Hennen': ['NASA', 'US Army'], // STS-44
 	// NASA astronauts who flew again for a company.
 	'Frederick W. Sturckow': ['NASA', 'Virgin Galactic'], // Shuttle pilot, then SpaceShipTwo pilot
 	'Peggy Whitson': ['NASA', 'Axiom Space'], // retired from NASA in 2018; Axiom's commander on Ax-2 and Ax-4

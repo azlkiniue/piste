@@ -4,13 +4,14 @@
  * every log, and someone they leave with no flight at all isn't in the dataset (Chaffee on Apollo 1;
  * McAuliffe, Jarvis and Smith on Challenger). Matched by name — a Wikidata label, or an LL2 launch's
  * spacecraft or mission name. (SpaceShipTwo's glide and powered test runs are dropped by their test codes
- * in scripts/enrich-ll2.ts.)
+ * in scripts/enrich-ll2.ts; the ones numbered like its spaceflights are listed here.)
  */
 const NEVER_REACHED_SPACE = [
 	/^Apollo 1\b/, // 27 Jan 1967 — the cabin fire, in a launch rehearsal on the pad
 	/^Soyuz (7K-ST No\. ?16L|T-10-1\b|T-10a\b)/, // 26 Sep 1983 — Soyuz T-10-1's pad abort: the escape tower pulled the capsule off the burning rocket
 	/^STS-51-L$/, // 28 Jan 1986 — Challenger broke apart 73 s after liftoff, ~15 km up
-	/^VSS Unity VF-02$/ // 12 Dec 2020 — the rocket motor never lit after release, so Unity glided home
+	/^VSS Unity VF-02$/, // 12 Dec 2020 — the rocket motor never lit after release, so Unity glided home
+	/^VSS Unity 24$/ // 26 Apr 2023 — an unpowered glide test from ~47,000 ft, numbered like the spaceflights either side of it
 ];
 
 export const neverReachedSpace = (name?: string | null) => !!name && NEVER_REACHED_SPACE.some((re) => re.test(name));

@@ -52,9 +52,10 @@ articles LL2 lists as astronauts (Starman, the Artemis-I manikins, zero-g-indica
 name-variant duplicates already in the set (caught by an exact-DOB guard), and "flights" that never
 reached space — the SpaceShipTwo glide/powered atmospheric tests, and the crewed launches listed in
 [`scripts/spaceflight.ts`](scripts/spaceflight.ts): the Apollo 1 pad fire, Soyuz T-10-1's pad abort,
-Challenger's breakup on STS-51-L (~15 km up) and VSS Unity VF-02, whose motor never lit. Wikidata logs
+Challenger's breakup on STS-51-L (~15 km up), VSS Unity VF-02, whose motor never lit, and VSS Unity 24, a
+glide test numbered like a spaceflight. Wikidata logs
 some of those launches too, so `update-data` drops them as well. That trims real astronauts' logs
-(Scobee, Titov; Sturckow 17→11) and leaves out anyone with no other flight — Chaffee, and Challenger's
+(Scobee, Titov; Sturckow 17→10) and leaves out anyone with no other flight — Chaffee, and Challenger's
 McAuliffe, Jarvis and Smith. Two aborts did cross 80 km on a ballistic arc, so they stay, marked
 suborbital: Soyuz 18a (1975, ~190 km) and MS-10 (2018, ~93 km), listed in the same file, since neither
 source marks them so (LL2 gives the orbit they were bound for). LL2 carries no gender, so backfilled
@@ -234,8 +235,22 @@ crews it couldn't put aboard. Those warnings found LL2's biggest gap: from 2020 
 each Expedition's arrivals but not the crews still aboard from the one before, which the Expedition
 corrections below fill in.
 
-`bun test` checks the result against known history (T-15's three Stays, the STS-71 crews, Soyuz 10, the
-Visitor crews…) and rules every record must keep, such as each Stay lying within its flight.
+`bun test` checks the result against known history (each Station's time in orbit, T-15's three Stays, the
+STS-71 crews, Soyuz 10, the Visitor crews…) and rules every record must keep, such as each Stay lying within
+its flight, and each ISS Expedition handing over to the next.
+
+**Checked against other sources.** In November 2026 every Station, Expedition and Stay was compared with
+three sources independent of LL2: [Spacefacts](http://www.spacefacts.de)' mission and expedition pages for
+dockings, undockings and crews, Wikipedia's Expedition articles and lists, and Jonathan McDowell's
+[satellite catalogue](https://planet4589.org/space/gcat/) for launches and re-entries. What LL2 had wrong is
+now corrected in the Manual overrides. Where the sources disagree on how to count, LL2's reading stays:
+Spacefacts alone also lists Skripochka and Meir in Expedition 60, and doesn't count Soyuz T-3's crew as Salyut 6
+EO-5. Dates are UTC, like those from the docking events. Four are left at the date they're known by, a day later
+than UTC because they fell around midnight local time: Salyut 3's launch (22:38 UTC on 24 June 1974), Mir's
+launch (21:28 UTC on 19 February 1986), Salyut 4's re-entry (around midnight UTC on 2–3 February 1977) and
+Shenzhou 10's undocking (23:05 UTC on 24 June 2013). Comparing the flights with Spacefacts' mission pages the
+same way turned up four Missions whose landing the pipeline has wrong — Apollo 17 and STS-3 landing on launch
+day, STS-44 and Inspiration4 a day late — also corrected in the Manual overrides.
 
 ## Manual overrides
 
@@ -249,11 +264,27 @@ revert. To genuinely clear a field, fix it upstream.) Overriding `flights` repla
 and recomputes `firstLaunch` / `lastLanding` / `totalDaysInSpace` / `status` from it — Stays included, so
 restate those of anyone who has them.
 
-**Expedition corrections** (`expeditionOverrides`, in the same file) work the same way on the station
-data. Key each by `<station>/<expedition>`, as `stations.json` has them (`iss/expedition-72`,
-`mir/eo-27`), since names repeat across Stations, and set its `start`, `end`, `name` or `station`, or its
-`crew`: the slugs of everyone in it. A crew list is the whole crew — the Expedition is added to those
-people's Stays aboard the Station during it and taken off anyone else's.
+**Flight, Station, Stay and Expedition corrections**, in the same file, work the same way on many records at
+once:
+
+- **`flightOverrides`** — a Mission's `landing` the pipeline has wrong, for its whole crew, so nobody's `flights`
+  need restating. Key each by `<mission>/<date>`, with the landing as the pipeline has it (`STS-44/1991-12-02`),
+  so anyone who came home in another craft keeps theirs. Each one's `lastLanding` moves with it, and their
+  `totalDaysInSpace` by as many days: LL2's `time_in_space` carries the same error, hours and all. `remove: true`
+  drops a "flight" that never reached space instead, re-dating its crew's first and last flights; until a full
+  rebuild applies a new entry in `scripts/spaceflight.ts`, that's how VSS Unity 24 is kept out. It won't remove
+  anyone's only flight — that's a person who isn't in the dataset, which takes the upstream list. A person's own
+  `flights`, or a field moved here, set in their override wins.
+- **`stationOverrides`** — a Station's `launched` or `deorbited`, keyed by its slug (`salyut-5`).
+- **`stayOverrides`** — a craft's docking or undocking date LL2 has wrong, for everyone it carried, so nobody's
+  `flights` need restating. Key each by `<station>/<date>`, with the date as the pipeline has it: `depart` moves
+  every Stay aboard that Station that ended that day (`iss/2008-03-26` → all who left in STS-123, whichever craft
+  they came up in), and `arrive` every one that began that day.
+- **`expeditionOverrides`** — keyed by `<station>/<expedition>`, as `stations.json` has them (`iss/expedition-72`,
+  `mir/eo-27`), since names repeat across Stations. Set its `start`, `end`, `name` or `station`, or its `crew`:
+  the slugs of everyone in it. A crew list is the whole crew — the Expedition is added to those people's Stays
+  aboard the Station during it and taken off anyone else's. `remove: true` drops a record that isn't really an
+  Expedition (LL2's `EO-4-1b`, half of a split crew).
 
 Reverting works without re-running the whole chain: a gitignored baseline
 (`scripts/cache/manual/baseline.json`) remembers each touched field's pipeline value and the value

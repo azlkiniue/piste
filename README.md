@@ -24,7 +24,7 @@ Other scripts:
 bun --bun run build      # static output → ./build
 bun --bun run preview    # preview the production build
 bun --bun run check      # type-check
-bun test                 # check the committed data against known station history
+bun test                 # check the committed data against known station and flight history
 ```
 
 ## Data
@@ -38,7 +38,7 @@ onto the last:
 bun run update-data            # 1. Wikidata + ISS APIs base — no rate limits, ~1 min
 bun run enrich-ll2             # 2. Launch Library 2 — authoritative, and the station data; rate-limited, resumable
 bun run enrich-supercluster    # 3. Supercluster — nationalities; gap-fills gender & tourist agencies; cross-checks agencies
-bun run enrich-manual          # 4. Manual overrides — hand-fix anything, expeditions too; empty a field to revert
+bun run enrich-manual          # 4. Manual overrides — hand-fix anything, stations and expeditions too; empty a field to revert
 ```
 
 - **Wikidata** (CC0) is the base: the crew list, flight dates, photos, gender, and birth and death dates.

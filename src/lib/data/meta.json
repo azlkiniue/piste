@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-04T01:51:09.371Z",
+  "generatedAt": "2026-11-04T05:26:59.790Z",
   "asOf": "2026-11-04",
   "sources": [
     {
@@ -25,10 +25,10 @@
   ],
   "counts": {
     "people": 787,
-    "flights": 1609,
+    "flights": 1607,
     "inSpace": 10,
     "orbital": 1426,
-    "suborbital": 183,
+    "suborbital": 181,
     "countries": 56,
     "agencies": 38
   },
@@ -36,7 +36,7 @@
     "genderKnown": 787,
     "withImage": 767,
     "withAgency": 787,
-    "realLandingFlights": 1609,
+    "realLandingFlights": 1607,
     "approxFlights": 0
   },
   "inSpaceUnmatched": []

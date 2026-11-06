@@ -7,4 +7,4 @@ Each Stay is stored on the Flight that made it, in the people dataset (`astronau
 - The people file grows by about 100 KB: the compact copy the app loads went from 553 KB to 656 KB.
 - The detail panel still loads the small station file (about 17 KB) — for Expedition names, not for any Stay.
 - An Expedition's crew isn't stored on the Expedition: it comes from scanning the Stays that list it. A crew correction in `enrich-manual` rewrites those Stays.
-- Correcting a single Stay means restating that Person's whole `flights` list, and any `flights` correction for someone with Stays must include them, or they are lost.
+- Correcting one Person's Stay means restating their whole `flights` list, and any `flights` correction for someone with Stays must include them, or they are lost. A date wrong for a whole crew, because a craft's docking or undocking is, is corrected across their Stays by a Stay correction in `enrich-manual`.

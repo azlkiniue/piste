@@ -23,7 +23,7 @@
     {
       "slug": "salyut-5",
       "launched": "1976-06-22",
-      "deorbited": "1988-08-08"
+      "deorbited": "1977-08-08"
     },
     {
       "slug": "salyut-6",
@@ -106,8 +106,8 @@
       "slug": "soyuz-17",
       "station": "salyut-4",
       "name": "Soyuz 17",
-      "start": "1975-01-11",
-      "end": "1975-02-10",
+      "start": "1975-01-10",
+      "end": "1975-02-09",
       "ongoing": false
     },
     {
@@ -209,15 +209,7 @@
     {
       "slug": "eo-4-1a",
       "station": "salyut-7",
-      "name": "EO-4-1a",
-      "start": "1985-06-06",
-      "end": "1985-11-21",
-      "ongoing": false
-    },
-    {
-      "slug": "eo-4-1b",
-      "station": "salyut-7",
-      "name": "EO-4-1b",
+      "name": "EO-4-1",
       "start": "1985-06-06",
       "end": "1985-09-26",
       "ongoing": false
@@ -234,8 +226,8 @@
       "slug": "eo-5",
       "station": "salyut-7",
       "name": "EO-5",
-      "start": "1986-03-13",
-      "end": "1986-07-16",
+      "start": "1986-05-06",
+      "end": "1986-06-25",
       "ongoing": false
     },
     {
@@ -474,8 +466,8 @@
       "slug": "expedition-2",
       "station": "iss",
       "name": "Expedition 2",
-      "start": "2001-03-08",
-      "end": "2001-08-22",
+      "start": "2001-03-10",
+      "end": "2001-08-20",
       "ongoing": false
     },
     {
@@ -650,7 +642,7 @@
       "slug": "expedition-24",
       "station": "iss",
       "name": "Expedition 24",
-      "start": "2010-06-01",
+      "start": "2010-06-02",
       "end": "2010-09-25",
       "ongoing": false
     },
@@ -763,7 +755,7 @@
       "station": "iss",
       "name": "Expedition 38",
       "start": "2013-11-10",
-      "end": "2014-05-11",
+      "end": "2014-03-11",
       "ongoing": false
     },
     {
@@ -939,22 +931,22 @@
       "station": "iss",
       "name": "Expedition 60",
       "start": "2019-06-24",
-      "end": "2019-10-02",
+      "end": "2019-10-03",
       "ongoing": false
     },
     {
       "slug": "expedition-61",
       "station": "iss",
       "name": "Expedition 61",
-      "start": "2019-10-02",
-      "end": "2020-02-05",
+      "start": "2019-10-03",
+      "end": "2020-02-06",
       "ongoing": false
     },
     {
       "slug": "expedition-62",
       "station": "iss",
       "name": "Expedition 62",
-      "start": "2020-02-05",
+      "start": "2020-02-06",
       "end": "2020-04-17",
       "ongoing": false
     },
@@ -963,14 +955,14 @@
       "station": "iss",
       "name": "Expedition 63",
       "start": "2020-04-17",
-      "end": "2020-10-20",
+      "end": "2020-10-21",
       "ongoing": false
     },
     {
       "slug": "expedition-64",
       "station": "iss",
       "name": "Expedition 64",
-      "start": "2020-10-20",
+      "start": "2020-10-21",
       "end": "2021-04-17",
       "ongoing": false
     },
@@ -995,14 +987,14 @@
       "station": "iss",
       "name": "Expedition 67",
       "start": "2022-03-30",
-      "end": "2022-09-28",
+      "end": "2022-09-29",
       "ongoing": false
     },
     {
       "slug": "expedition-68",
       "station": "iss",
       "name": "Expedition 68",
-      "start": "2022-09-28",
+      "start": "2022-09-29",
       "end": "2023-03-28",
       "ongoing": false
     },
@@ -1011,14 +1003,14 @@
       "station": "iss",
       "name": "Expedition 69",
       "start": "2023-03-28",
-      "end": "2023-09-26",
+      "end": "2023-09-27",
       "ongoing": false
     },
     {
       "slug": "expedition-70",
       "station": "iss",
       "name": "Expedition 70",
-      "start": "2023-09-26",
+      "start": "2023-09-27",
       "end": "2024-04-06",
       "ongoing": false
     },
@@ -1083,7 +1075,7 @@
       "station": "tiangong-2",
       "name": "Shenzhou 11",
       "start": "2016-10-18",
-      "end": "2016-11-14",
+      "end": "2016-11-17",
       "ongoing": false
     },
     {
@@ -1091,7 +1083,7 @@
       "station": "tiangong",
       "name": "Shenzhou 12",
       "start": "2021-06-17",
-      "end": "2021-09-17",
+      "end": "2021-09-16",
       "ongoing": false
     },
     {
